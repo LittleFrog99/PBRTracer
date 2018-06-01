@@ -3,14 +3,14 @@
 void Report::severe(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    processError(Parser::parserLoc, format, args, "Error");
+    processError(Parser::loc, format, args, "Error");
     va_end(args);
 }
 
 void Report::error(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    processError(Parser::parserLoc, format, args, "Error");
+    processError(Parser::loc, format, args, "Error");
     va_end(args);
 }
 
@@ -18,7 +18,7 @@ void Report::warning(const char *format, ...) {
     // if (PbrtOptions.quiet) return;
     va_list args;
     va_start(args, format);
-    processError(Parser::parserLoc, format, args, "Warning");
+    processError(Parser::loc, format, args, "Warning");
     va_end(args);
 }
 
@@ -26,7 +26,7 @@ void Report::info(const char *format, ...) {
     // if (PbrtOptions.quiet) return;
     va_list args;
     va_start(args, format);
-    processError(Parser::parserLoc, format, args, "Info");
+    processError(Parser::loc, format, args, "Info");
     va_end(args);
 }
 

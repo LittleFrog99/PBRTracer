@@ -8,13 +8,13 @@ class Parser {
 public:
     struct Location {
         Location() = default;
-        Location(const std::string &filename) : filename(filename) {}
+        Location(const string &filename) : filename(filename) {}
 
         string filename;
         int line = 1, column = 0;
     };
 
-    static Location *parserLoc;
+    static Location *loc;
 };
 
 #endif // PARSER_H

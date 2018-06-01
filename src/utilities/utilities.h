@@ -19,6 +19,7 @@ typedef double Float;
 #endif
 
 #define SQ(x) (x) * (x)
+#define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
 
 /* Global Constants */
 static const Float PI = 3.14159265358979323846;
@@ -68,7 +69,7 @@ namespace Math {
     }
 
     template <typename T>
-    inline bool isPowerOf2(T v) {
+    inline constexpr bool isPowerOf2(T v) {
         return v && !(v & (v - 1));
     }
 
