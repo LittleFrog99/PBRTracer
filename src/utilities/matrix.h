@@ -56,7 +56,7 @@ public:
         return false;
     }
 
-    friend ostream & operator << (std::ostream &os, const Matrix4x4 &m) {
+    friend ostream & operator << (ostream &os, const Matrix4x4 &m) {
         os << StringPrint::printf("[ [ %f, %f, %f, %f ] "
                                   "[ %f, %f, %f, %f ] "
                                   "[ %f, %f, %f, %f ] "

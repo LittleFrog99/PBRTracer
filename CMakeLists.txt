@@ -9,7 +9,8 @@ PROJECT(pbr-tracer)
 
 SET(SOURCES_CORE src/main.cpp)
 SET(SOURCES_UTILITIES src/utilities/random.cpp src/utilities/math.cpp src/utilities/error.cpp
-    src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/parser.cpp)
+    src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/parser.cpp
+    src/utilities/parallel.cpp)
 SET(SOURCES ${SOURCES_CORE} ${SOURCES_UTILITIES})
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES})

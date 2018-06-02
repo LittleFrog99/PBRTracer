@@ -34,7 +34,9 @@ private:
 class alignas(L1_CACHE_LINE_SIZE) MemoryArena {
   public:
     // MemoryArena Public Methods
-    inline MemoryArena(size_t blockSize = 262144) : blockSize(blockSize) {}
+    static constexpr size_t DEFAULT_BLOCK_SIZE = 262144; // 256 KB
+
+    inline MemoryArena(size_t blockSize = DEFAULT_BLOCK_SIZE) : blockSize(blockSize) {}
 
     inline ~MemoryArena() {
         Memory::freeAligned(currentBlock);
@@ -71,7 +73,7 @@ private:
     list<pair<size_t, uint8_t *>> usedBlocks, availableBlocks;
 
     MemoryArena(const MemoryArena &) = delete;
-    MemoryArena &operator=(const MemoryArena &) = delete;
+    MemoryArena & operator = (const MemoryArena &) = delete;
 };
 
 template <typename T, int logblockSize>
@@ -92,7 +94,7 @@ public:
     inline int uSize() const { return uRes; }
     inline int vSize() const { return vRes; }
     inline int block(int a) const { return a >> logblockSize; }
-    inline int offset(int a) const { return (a & (blockSize() - 1)); }
+    inline int offset(int a) const { return a & (blockSize() - 1); }
 
     inline T & operator () (int u, int v) {
         int bu = block(u), bv = block(v);
@@ -117,7 +119,7 @@ public:
 
     inline ~BlockedArray() {
         for (int i = 0; i < uRes * vRes; ++i) data[i].~T();
-        FreeAligned(data);
+        Memory::freeAligned(data);
     }
 
 private:

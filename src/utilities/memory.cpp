@@ -2,14 +2,13 @@
 
 void * MemoryArena::alloc(size_t nBytes) {
     // Round up _nBytes_ to minimum machine alignment
-    const int align = alignof(max_align_t);
+    const unsigned align = alignof(max_align_t);
     static_assert(Math::isPowerOf2(align), "Minimum alignment not a power of two");
     nBytes = (nBytes + align - 1) & ~(align - 1);
     if (currentBlockPos + nBytes > currentAllocSize) {
         // Add current block to _usedBlocks_ list
         if (currentBlock) {
-            usedBlocks.push_back(
-                make_pair(currentAllocSize, currentBlock));
+            usedBlocks.push_back(make_pair(currentAllocSize, currentBlock));
             currentBlock = nullptr;
             currentAllocSize = 0;
         }

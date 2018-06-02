@@ -5,7 +5,7 @@
 
 class Random { // implements PCG pseudo-number generator
 public:
-#ifndef FLOAT_AS_DOUBLE
+#ifndef DOUBLE_AS_FLOAT
     static constexpr Float ONE_MINUS_EPSILON = 0x1.fffffep-1;
 #else
     static constexpr Float ONE_MINUS_EPSILON = 0x1.fffffffffffffp-1;

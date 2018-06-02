@@ -12,7 +12,7 @@
 #include <vector>
 
 /* Macros */
-#ifndef FLOAT_AS_DOUBLE
+#ifndef DOUBLE_AS_FLOAT
 typedef float Float;
 #else
 typedef double Float;
@@ -20,6 +20,11 @@ typedef double Float;
 
 #define SQ(x) (x) * (x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
+
+using namespace std;
+
+
+namespace Math {
 
 /* Global Constants */
 static const Float PI = 3.14159265358979323846;
@@ -31,90 +36,110 @@ static const Float PI_OVER_FOUR = 0.78539816339744830961;
 static const Float SQRT_TWO = 1.41421356237309504880;
 
 /* Utility Funtions and Classes */
-using namespace std;
-
-namespace Math {
-    template <class T, class U, class V>
-    inline T clamp(T value, U low, V high) {
-        if (value < low) return low;
-        else if (value > high) return high;
-        else return value;
-    }
-
-    template <class T>
-    inline T mod(T a, T b) {
-        T result = a - (a/b) * b;
-        return T(result < 0 ? (result + b) : result);
-    }
-
-    inline Float mod(Float a, Float b) {
-        return fmod(a, b);
-    }
-
-    inline Float radians(Float degrees) {
-        return (PI / 180) * degrees;
-    }
-
-    inline Float degrees(Float radians) {
-        return (180 / PI) * radians;
-    }
-
-    inline Float log2(Float x) {
-        static const Float invLog2 = 1.442695040888963387004650940071;
-        return std::log(x) * invLog2;
-    }
-
-    inline int log2Int(uint32_t v) {
-        return 31 - __builtin_clz(v);
-    }
-
-    template <typename T>
-    inline constexpr bool isPowerOf2(T v) {
-        return v && !(v & (v - 1));
-    }
-
-    inline int32_t roundUpPow2(int32_t v) {
-        v--;
-        v |= v >> 1; v |= v >> 2;
-        v |= v >> 4; v |= v >> 8;
-        v |= v >> 16;
-        return v + 1;
-    }
-
-    inline int64_t roundUpPow2(int64_t v) {
-        v--;
-        v |= v >> 1; v |= v >> 2;
-        v |= v >> 4; v |= v >> 8;
-        v |= v >> 16; v |= v >> 32;
-        return v + 1;
-    }
-
-    inline int countTrailingZeros(uint32_t v) {
-        return __builtin_ctz(v);
-    }
-
-    inline int findInterval(int size, function<bool(int)> compare) {
-        int first = 0, length = size;
-        while (length > 0) {
-            int half = length >> 1, middle = first + half;
-            if (compare(middle)) {
-                first = middle + 1;
-                length -= half + 1;
-            } else
-                length = half;
-        }
-        return clamp(first - 1, 0, size - 2);
-    }
-
-    inline Float lerp(Float t, Float v1, Float v2) {
-        return (1 - t) * v1 + t * v2;
-    }
-
-    bool solveQuadratic(Float a, Float b, Float c, Float *t0, Float *t1);
-
-    bool solveLinear2x2(const Float A[2][2], const Float B[2], Float *x0, Float *x1);
+template <class T, class U, class V>
+inline T clamp(T value, U low, V high) {
+    if (value < low) return low;
+    else if (value > high) return high;
+    else return value;
 }
 
-using namespace Math;
+template <class T>
+inline T mod(T a, T b) {
+    T result = a - (a/b) * b;
+    return T(result < 0 ? (result + b) : result);
+}
+
+inline Float mod(Float a, Float b) {
+    return fmod(a, b);
+}
+
+inline Float radians(Float degrees) {
+    return (PI / 180) * degrees;
+}
+
+inline Float degrees(Float radians) {
+    return (180 / PI) * radians;
+}
+
+inline uint32_t floatToBits(float f) {
+    uint32_t ui;
+    memcpy(&ui, &f, sizeof(float));
+    return ui;
+}
+
+inline float bitsToFloat(uint32_t ui) {
+    float f;
+    memcpy(&f, &ui, sizeof(uint32_t));
+    return f;
+}
+
+inline uint64_t floatToBits(double f) {
+    uint64_t ui;
+    memcpy(&ui, &f, sizeof(double));
+    return ui;
+}
+
+inline double bitsToFloat(uint64_t ui) {
+    double f;
+    memcpy(&f, &ui, sizeof(uint64_t));
+    return f;
+}
+
+inline Float log2(Float x) {
+    static const Float invLog2 = 1.442695040888963387004650940071;
+    return std::log(x) * invLog2;
+}
+
+inline int log2Int(uint32_t v) {
+    return 31 - __builtin_clz(v);
+}
+
+template <typename T>
+inline constexpr bool isPowerOf2(T v) {
+    return v && !(v & (v - 1));
+}
+
+inline int32_t roundUpPow2(int32_t v) {
+    v--;
+    v |= v >> 1; v |= v >> 2;
+    v |= v >> 4; v |= v >> 8;
+    v |= v >> 16;
+    return v + 1;
+}
+
+inline int64_t roundUpPow2(int64_t v) {
+    v--;
+    v |= v >> 1; v |= v >> 2;
+    v |= v >> 4; v |= v >> 8;
+    v |= v >> 16; v |= v >> 32;
+    return v + 1;
+}
+
+inline int countTrailingZeros(uint32_t v) {
+    return __builtin_ctz(v);
+}
+
+inline int findInterval(int size, function<bool(int)> compare) {
+    int first = 0, length = size;
+    while (length > 0) {
+        int half = length >> 1, middle = first + half;
+        if (compare(middle)) {
+            first = middle + 1;
+            length -= half + 1;
+        } else
+            length = half;
+    }
+    return clamp(first - 1, 0, size - 2);
+}
+
+inline Float lerp(Float t, Float v1, Float v2) {
+    return (1 - t) * v1 + t * v2;
+}
+
+bool solveQuadratic(Float a, Float b, Float c, Float *t0, Float *t1);
+
+bool solveLinear2x2(const Float A[2][2], const Float B[2], Float *x0, Float *x1);
+
+}
 
 #endif // COMMON_UTILITIES
