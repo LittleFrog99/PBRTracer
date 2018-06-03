@@ -62,9 +62,24 @@ private:
     static thread_local int threadIndex;
 
     static void workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier);
-    static int maxThreadIndex();
-    static int numSystemCores();
+
+    inline static int maxThreadIndex() {
+        return numSystemCores(); // to be completed
+    }
+
+    inline static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
 };
+
+vector<thread> Parallel::threads;
+bool Parallel::shutdownThreads(false);
+Parallel::ForLoop *Parallel::workList = nullptr;
+mutex Parallel::workListMutex;
+condition_variable Parallel::workListCondition;
+atomic<bool> Parallel::reportWorkerStats(false);
+atomic<int> Parallel::reporterCount;
+condition_variable Parallel::reportDoneCondition;
+mutex Parallel::reportDoneMutex;
+thread_local int Parallel::threadIndex;
 
 class AtomicFloat {
 public:
@@ -88,9 +103,9 @@ public:
 
 private:
 #ifdef DOUBLE_AS_FLOAT
-    std::atomic<uint64_t> bits;
+    atomic<uint64_t> bits;
 #else
-    std::atomic<uint32_t> bits;
+    atomic<uint32_t> bits;
 #endif
 };
 

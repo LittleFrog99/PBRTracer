@@ -3,52 +3,21 @@
 
 #include "utilities.h"
 #include <map>
+#include <array>
 
 class StatsAccumulator;
 
-class Stats {
+class StatsRegisterer {
 public:
-    static void print(FILE *dest);
-    static void clear();
-    static void reportThread();
-
-private:
-
-};
-
-class Profiler {
-public:
-    enum class Stage;
-    static const char *stageNames[];
-
-    static void init();
-    static void suspend();
-    static void resume();
-    static void workerThreadInit();
-    static void reportResults(FILE *dest);
-    static void clear();
-    static void cleanup();
-
-    inline static uint64_t profToBits(Stage p) {
-        return 1ull << int(p);
-    }
-
-    thread_local static uint64_t state;
-
-private:
-
-};
-
-thread_local uint64_t Profiler::state = uint64_t();
-
-class StatRegisterer {
-public:
-    StatRegisterer(function<void(StatsAccumulator &)> func) {
+    inline StatsRegisterer(function<void(StatsAccumulator &)> func) {
         if (!funcs)
             funcs = new std::vector<function<void(StatsAccumulator &)>>;
         funcs->push_back(func);
     }
-    static void callCallbacks(StatsAccumulator &accum);
+
+    inline static void callCallbacks(StatsAccumulator &accum) {
+        for (auto func : *funcs) func(accum);
+    }
 
 private:
     static vector<function<void(StatsAccumulator &)>> *funcs;
@@ -66,30 +35,30 @@ public:
 
     inline void reportIntDistrib(const string &name, int64_t sum, int64_t count,
                                  int64_t min, int64_t max) {
-        intmapSums[name] += sum;
-        intmapCounts[name] += count;
-        if (intmapMins.find(name) == intmapMins.end())
-            intmapMins[name] = min;
+        intDistribSums[name] += sum;
+        intDistribCounts[name] += count;
+        if (intDistribMins.find(name) == intDistribMins.end())
+            intDistribMins[name] = min;
         else
-            intmapMins[name] = std::min(intmapMins[name], min);
-        if (intmapMaxs.find(name) == intmapMaxs.end())
-            intmapMaxs[name] = max;
+            intDistribMins[name] = std::min(intDistribMins[name], min);
+        if (intDistribMaxs.find(name) == intDistribMaxs.end())
+            intDistribMaxs[name] = max;
         else
-            intmapMaxs[name] = std::max(intmapMaxs[name], max);
+            intDistribMaxs[name] = std::max(intDistribMaxs[name], max);
     }
 
     inline void reportFloatDistrib(const string &name, double sum, int64_t count,
                                    double min, double max) {
-        floatmapSums[name] += sum;
-        floatmapCounts[name] += count;
-        if (floatmapMins.find(name) == floatmapMins.end())
-            floatmapMins[name] = min;
+        floatDistribSums[name] += sum;
+        floatDistribCounts[name] += count;
+        if (floatDistribMins.find(name) == floatDistribMins.end())
+            floatDistribMins[name] = min;
         else
-            floatmapMins[name] = std::min(floatmapMins[name], min);
-        if (floatmapMaxs.find(name) == floatmapMaxs.end())
-            floatmapMaxs[name] = max;
+            floatDistribMins[name] = std::min(floatDistribMins[name], min);
+        if (floatDistribMaxs.find(name) == floatDistribMaxs.end())
+            floatDistribMaxs[name] = max;
         else
-            floatmapMaxs[name] = std::max(floatmapMaxs[name], max);
+            floatDistribMaxs[name] = std::max(floatDistribMaxs[name], max);
     }
 
     inline void reportPercentage(const string &name, int64_t num, int64_t denom) {
@@ -108,16 +77,64 @@ public:
 private:
     map<string, int64_t> counters;
     map<string, int64_t> memoryCounters;
-    map<string, int64_t> intmapSums;
-    map<string, int64_t> intmapCounts;
-    map<string, int64_t> intmapMins;
-    map<string, int64_t> intmapMaxs;
-    map<string, double> floatmapSums;
-    map<string, int64_t> floatmapCounts;
-    map<string, double> floatmapMins;
-    map<string, double> floatmapMaxs;
+    map<string, int64_t> intDistribSums;
+    map<string, int64_t> intDistribCounts;
+    map<string, int64_t> intDistribMins;
+    map<string, int64_t> intDistribMaxs;
+    map<string, double> floatDistribSums;
+    map<string, int64_t> floatDistribCounts;
+    map<string, double> floatDistribMins;
+    map<string, double> floatDistribMaxs;
     map<string, std::pair<int64_t, int64_t>> percentages;
     map<string, std::pair<int64_t, int64_t>> ratios;
+
+    static void getCategoryAndTitle(const string &str, string *category, string *title);
+};
+
+class Stats {
+public:
+    inline static void print(FILE *dest) { statsAccum.print(dest); }
+    inline static void clear() { statsAccum.clear(); }
+    static void reportThread();
+
+private:
+    static StatsAccumulator statsAccum;
+};
+
+class Profiler {
+public:
+    enum class Stage;
+    static const char *stageNames[];
+
+    static void init();
+    static void workerThreadInit();
+    static void reportResults(FILE *dest);
+    static void clear();
+    static void cleanup();
+
+    inline static void suspend() { suspendCount++; }
+    inline static void resume() { suspendCount--; }
+    inline static uint64_t profToBits(Stage p) {
+        return 1ull << int(p);
+    }
+
+    thread_local static uint64_t state;
+    static atomic<bool> isRunning;
+
+private:
+    struct ProfileSample {
+        atomic<uint64_t> profilerState{0};
+        atomic<uint64_t> count{0};
+    };
+
+    static constexpr int PROFILE_HASH_SIZE = 256;
+    static chrono::system_clock::time_point startTime;
+    static array<ProfileSample, PROFILE_HASH_SIZE> profileSamples;
+    static atomic<int> suspendCount;
+
+    static void reportProfileSample(int, siginfo_t *, void *);
+    static string timeString(float pct, chrono::system_clock::time_point now);
+
 };
 
 class ProfilePhase {
@@ -264,60 +281,5 @@ enum class Profiler::Stage {
     TexFiltPtex,
     NumProfCategories
 };
-
-const char * Profiler::stageNames[] = {
-    "Scene parsing and creation",
-    "Acceleration structure creation",
-    "Texture loading",
-    "MIP map generation",
-    "Integrator::Render()",
-    "SamplerIntegrator::Li()",
-    "SPPM camera pass",
-    "SPPM grid construction",
-    "SPPM photon pass",
-    "SPPM photon statistics update",
-    "BDPT subpath generation",
-    "BDPT subpath connections",
-    "SpatialLightmap lookup",
-    "SpatialLightmap spin wait",
-    "SpatialLightmap creation",
-    "Direct lighting",
-    "BSDF::f()",
-    "BSDF::Sample_f()",
-    "BSDF::PDF()",
-    "BSSRDF::f()",
-    "BSSRDF::Sample_f()",
-    "PhaseFunction::p()",
-    "PhaseFunction::Sample_p()",
-    "Accelerator::Intersect()",
-    "Accelerator::IntersectP()",
-    "Light::Sample_*()",
-    "Light::Pdf()",
-    "Medium::Sample()",
-    "Medium::Tr()",
-    "Triangle::Intersect()",
-    "Triangle::IntersectP()",
-    "Curve::Intersect()",
-    "Curve::IntersectP()",
-    "Other Shape::Intersect()",
-    "Other Shape::IntersectP()",
-    "Material::ComputeScatteringFunctions()",
-    "Camera::GenerateRay[Differential]()",
-    "Film::MergeTile()",
-    "Film::AddSplat()",
-    "Film::AddSample()",
-    "Sampler::StartPixelSample()",
-    "Sampler::GetSample[12]D()",
-    "MIPMap::Lookup() (trilinear)",
-    "MIPMap::Lookup() (EWA)",
-    "Ptex lookup",
-};
-
-static_assert(int(Profiler::Stage::NumProfCategories) <= 64,
-              "No more than 64 profiling categories may be defined.");
-
-static_assert(int(Profiler::Stage::NumProfCategories) ==
-              sizeof(Profiler::stageNames) / sizeof(Profiler::stageNames[0]),
-              "ProfNames[] array and Prof enumerant have different numbers of entries!");
 
 #endif // STATS_H

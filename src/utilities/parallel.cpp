@@ -1,26 +1,6 @@
 #include "parallel.h"
 #include "stats.h"
 
-vector<thread> Parallel::threads = vector<thread>();
-
-bool Parallel::shutdownThreads = false;
-
-Parallel::ForLoop *Parallel::workList = nullptr;
-
-mutex Parallel::workListMutex = mutex();
-
-condition_variable Parallel::workListCondition = condition_variable();
-
-atomic<bool> Parallel::reportWorkerStats = false;
-
-atomic<int> Parallel::reporterCount = atomic<int>();
-
-condition_variable Parallel::reportDoneCondition = condition_variable();
-
-mutex Parallel::reportDoneMutex = mutex();
-
-thread_local int Parallel::threadIndex = int();
-
 void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSize)
 {
     // Run iterations if not using threads or if count is small
@@ -175,12 +155,4 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier) {
             if (loop.isFinished()) workListCondition.notify_all();
         }
     }
-}
-
-int Parallel::maxThreadIndex() {
-    return numSystemCores(); // to be completed after building stats
-}
-
-int Parallel::numSystemCores() {
-    return max(1u, thread::hardware_concurrency());
 }

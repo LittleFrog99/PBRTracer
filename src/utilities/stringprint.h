@@ -38,7 +38,7 @@ private:
             *s += formatOne("%.17g", v);
         else
             *s += formatOne(nextFmt.c_str(), v);
-        stringPrintfRecursive(s, fmt, args...);
+        printfRecursive(s, fmt, args...);
     }
 
     template <typename T, typename... Args>
