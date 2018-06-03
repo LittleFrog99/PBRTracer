@@ -3,7 +3,6 @@
 
 #include "utilities.h"
 #include <map>
-#include <chrono>
 
 class StatsAccumulator;
 
@@ -123,13 +122,13 @@ private:
 
 class ProfilePhase {
 public:
-    ProfilePhase(Profiler::Stage p) {
+    inline ProfilePhase(Profiler::Stage p) {
         categoryBit = Profiler::profToBits(p);
         reset = (Profiler::state & categoryBit) == 0;
         Profiler::state |= categoryBit;
     }
 
-    ~ProfilePhase() {
+    inline ~ProfilePhase() {
         if (reset) Profiler::state &= ~categoryBit;
     }
 
@@ -145,14 +144,14 @@ private:
 #define STAT_COUNTER(title, var)                           \
     static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
-        accum.ReportCounter(title, var);                   \
+        accum.reportCounter(title, var);                   \
         var = 0;                                           \
     }                                                      \
     static StatRegisterer STATS_REG##var(STATS_FUNC##var)
 #define STAT_MEMORY_COUNTER(title, var)                    \
     static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
-        accum.ReportMemoryCounter(title, var);             \
+        accum.reportMemoryCounter(title, var);             \
         var = 0;                                           \
     }                                                      \
     static StatRegisterer STATS_REG##var(STATS_FUNC##var)
@@ -169,7 +168,7 @@ private:
     static thread_local int64_t var##min = (STATS_INT64_T_MIN);       \
     static thread_local int64_t var##max = (STATS_INT64_T_MAX);       \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                 \
-        accum.ReportIntmap(title, var##sum, var##count, var##min, \
+        accum.reportIntmap(title, var##sum, var##count, var##min, \
                                     var##max);                             \
         var##sum = 0;                                                      \
         var##count = 0;                                                    \
@@ -184,7 +183,7 @@ private:
     static thread_local double var##min = (STATS_DBL_T_MIN);            \
     static thread_local double var##max = (STATS_DBL_T_MAX);            \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                   \
-        accum.ReportFloatmap(title, var##sum, var##count, var##min, \
+        accum.reportFloatmap(title, var##sum, var##count, var##min, \
                                       var##max);                             \
         var##sum = 0;                                                        \
         var##count = 0;                                                      \
@@ -204,7 +203,7 @@ private:
 #define STAT_PERCENT(title, numVar, denomVar)                 \
     static thread_local int64_t numVar, denomVar;        \
     static void STATS_FUNC##numVar(StatsAccumulator &accum) { \
-        accum.ReportPercentage(title, numVar, denomVar);      \
+        accum.reportPercentage(title, numVar, denomVar);      \
         numVar = denomVar = 0;                                \
     }                                                         \
     static StatRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
@@ -212,7 +211,7 @@ private:
 #define STAT_RATIO(title, numVar, denomVar)                   \
     static thread_local int64_t numVar, denomVar;        \
     static void STATS_FUNC##numVar(StatsAccumulator &accum) { \
-        accum.ReportRatio(title, numVar, denomVar);           \
+        accum.reportRatio(title, numVar, denomVar);           \
         numVar = denomVar = 0;                                \
     }                                                         \
     static StatRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
