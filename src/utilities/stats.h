@@ -85,8 +85,8 @@ private:
     map<string, int64_t> floatDistribCounts;
     map<string, double> floatDistribMins;
     map<string, double> floatDistribMaxs;
-    map<string, std::pair<int64_t, int64_t>> percentages;
-    map<string, std::pair<int64_t, int64_t>> ratios;
+    map<string, pair<int64_t, int64_t>> percentages;
+    map<string, pair<int64_t, int64_t>> ratios;
 
     static void getCategoryAndTitle(const string &str, string *category, string *title);
 };
@@ -114,9 +114,8 @@ public:
 
     inline static void suspend() { suspendCount++; }
     inline static void resume() { suspendCount--; }
-    inline static uint64_t profToBits(Stage p) {
-        return 1ull << int(p);
-    }
+
+    inline static uint64_t profToBits(Stage p) { return 1ull << int(p); }
 
     thread_local static uint64_t state;
     static atomic<bool> isRunning;
@@ -179,7 +178,7 @@ private:
 #define STATS_DBL_T_MIN std::numeric_limits<double>::max()
 #define STATS_DBL_T_MAX std::numeric_limits<double>::lowest()
 
-#define STAT_INT_map(title, var)                                  \
+#define STAT_INT_DISTRIB(title, var)                                  \
     static thread_local int64_t var##sum;                             \
     static thread_local int64_t var##count;                           \
     static thread_local int64_t var##min = (STATS_INT64_T_MIN);       \
@@ -194,7 +193,7 @@ private:
     }                                                                      \
     static StatRegisterer STATS_REG##var(STATS_FUNC##var)
 
-#define STAT_FLOAT_map(title, var)                                  \
+#define STAT_FLOAT_DISTRIB(title, var)                                  \
     static thread_local double var##sum;                                \
     static thread_local int64_t var##count;                             \
     static thread_local double var##min = (STATS_DBL_T_MIN);            \

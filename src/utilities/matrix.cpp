@@ -1,5 +1,5 @@
 #include "matrix.h"
-#include "error.h"
+#include "report.h"
 
 Matrix4x4 Matrix4x4::inverse() {
     int indxc[4], indxr[4];

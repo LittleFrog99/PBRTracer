@@ -4,51 +4,51 @@
 #include <sys/time.h>
 
 const char * Profiler::stageNames[] = {
-    "Scene parsing and creation",
-    "Acceleration structure creation",
-    "Texture loading",
-    "MIP map generation",
-    "Integrator::Render()",
-    "SamplerIntegrator::Li()",
-    "SPPM camera pass",
-    "SPPM grid construction",
-    "SPPM photon pass",
-    "SPPM photon statistics update",
-    "BDPT subpath generation",
-    "BDPT subpath connections",
-    "SpatialLightmap lookup",
-    "SpatialLightmap spin wait",
-    "SpatialLightmap creation",
+    "Scene Parsing and Creation",
+    "Acceleration Structure Creation",
+    "Texture Loading",
+    "Mipmap Generation",
+    "Integrator::render()",
+    "SamplerIntegrator::computeLi()",
+    "SPPM Camera Pass",
+    "SPPM Grid Construction",
+    "SPPM Photon Pass",
+    "SPPM Photon Statistics Update",
+    "BDPT Subpath Generation",
+    "BDPT Subpath Connections",
+    "SpatialLightmap Lookup",
+    "SpatialLightmap Spin wait",
+    "SpatialLightmap Creation",
     "Direct lighting",
-    "BSDF::f()",
-    "BSDF::Sample_f()",
-    "BSDF::PDF()",
-    "BSSRDF::f()",
-    "BSSRDF::Sample_f()",
-    "PhaseFunction::p()",
-    "PhaseFunction::Sample_p()",
-    "Accelerator::Intersect()",
-    "Accelerator::IntersectP()",
-    "Light::Sample_*()",
-    "Light::Pdf()",
-    "Medium::Sample()",
-    "Medium::Tr()",
-    "Triangle::Intersect()",
-    "Triangle::IntersectP()",
-    "Curve::Intersect()",
-    "Curve::IntersectP()",
-    "Other Shape::Intersect()",
-    "Other Shape::IntersectP()",
-    "Material::ComputeScatteringFunctions()",
-    "Camera::GenerateRay[Differential]()",
-    "Film::MergeTile()",
-    "Film::AddSplat()",
-    "Film::AddSample()",
-    "Sampler::StartPixelSample()",
-    "Sampler::GetSample[12]D()",
-    "MIPMap::Lookup() (trilinear)",
-    "MIPMap::Lookup() (EWA)",
-    "Ptex lookup",
+    "BSDF::computeF()",
+    "BSDF::sampleF()",
+    "BSDF::pdf()",
+    "BSSRDF::computeS()",
+    "BSSRDF::sampleS()",
+    "PhaseFunction::computeP()",
+    "PhaseFunction::sampleP()",
+    "Accelerator::intersect()",
+    "Accelerator::intersectP()",
+    "Light::sample()",
+    "Light::pdf()",
+    "Medium::sample()",
+    "Medium::computeTr()",
+    "Triangle::intersect()",
+    "Triangle::intersectP()",
+    "Curve::intersect()",
+    "Curve::intersectP()",
+    "Other Shape::intersect()",
+    "Other Shape::intersectP()",
+    "Material::computeScatteringFuncs()",
+    "Camera::genRay()",
+    "Film::mergeTile()",
+    "Film::addSplat()",
+    "Film::addSample()",
+    "Sampler::startPixelSample()",
+    "Sampler::getSample[12]D()",
+    "MIPMap::lookup() (trilinear)",
+    "MIPMap::lookup() (EWA)",
+    "Ptex Lookup",
 };
 
 static_assert(int(Profiler::Stage::NumProfCategories) <= 64,
@@ -175,7 +175,7 @@ void StatsAccumulator::getCategoryAndTitle(const string &str, string *category, 
 void Stats::reportThread() {
     static mutex mut;
     lock_guard<mutex> lock(mut);
-    StatsRegisterer::callCallbacks(Stats::statsAccum);
+    StatsRegisterer::callCallbacks(statsAccum);
 }
 
 thread_local uint64_t Profiler::state;
@@ -232,8 +232,7 @@ void Profiler::reportProfileSample(int, siginfo_t *, void *) {
 
     uint64_t h = std::hash<uint64_t>{}(state) % (PROFILE_HASH_SIZE - 1);
     int count = 0;
-    while (count < PROFILE_HASH_SIZE &&
-           profileSamples[h].profilerState != state &&
+    while (count < PROFILE_HASH_SIZE && profileSamples[h].profilerState != state &&
            profileSamples[h].profilerState != 0) {
         // Wrap around to the start if we hit the end.
         if (++h == PROFILE_HASH_SIZE) h = 0;
@@ -261,7 +260,7 @@ string Profiler::timeString(float pct, chrono::system_clock::time_point now)
 }
 
 void Profiler::reportResults(FILE *dest) {
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    auto now = chrono::system_clock::now();
 
     constexpr int NumProfCategories = int(Stage::NumProfCategories);
     uint64_t overallCount = 0;

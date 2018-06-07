@@ -45,7 +45,7 @@ public:
     static void mergeWorkerThreadStats();
 
     static void forLoop(function<void(int64_t)> func, int64_t count, int chunkSize = 1);
-    static void forLoop2D(function<void(Point2i)> func, const Point2i & count);
+    static void forLoop2D(function<void(Point2i)> func, const Point2i &count);
 
 private:
     static vector<thread> threads;
@@ -69,17 +69,6 @@ private:
 
     inline static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
 };
-
-vector<thread> Parallel::threads;
-bool Parallel::shutdownThreads(false);
-Parallel::ForLoop *Parallel::workList = nullptr;
-mutex Parallel::workListMutex;
-condition_variable Parallel::workListCondition;
-atomic<bool> Parallel::reportWorkerStats(false);
-atomic<int> Parallel::reporterCount;
-condition_variable Parallel::reportDoneCondition;
-mutex Parallel::reportDoneMutex;
-thread_local int Parallel::threadIndex;
 
 class AtomicFloat {
 public:

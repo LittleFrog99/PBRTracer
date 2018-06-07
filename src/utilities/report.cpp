@@ -1,4 +1,4 @@
-#include "error.h"
+#include "report.h"
 
 void Report::severe(const char *format, ...) {
     va_list args;
