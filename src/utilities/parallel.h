@@ -27,7 +27,7 @@ public:
             : func2D(func), maxIndex(count.x * count.y), chunkSize(1),
               profilerState(profState) { nX = count.x; }
 
-        inline bool isFinished() const { return nextIndex >= maxIndex && activeWorkers == 0; }
+        bool isFinished() const { return nextIndex >= maxIndex && activeWorkers == 0; }
 
         function<void(int64_t)> func1D;
         function<void(Point2i)> func2D;
@@ -63,24 +63,24 @@ private:
 
     static void workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier);
 
-    inline static int maxThreadIndex() {
+    static int maxThreadIndex() {
         return numSystemCores(); // to be completed
     }
 
-    inline static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
+    static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
 };
 
 class AtomicFloat {
 public:
-    inline explicit AtomicFloat(Float v = 0) { bits = Math::floatToBits(v); }
-    inline operator Float() const { return Math::bitsToFloat(bits); }
+    explicit AtomicFloat(Float v = 0) { bits = Math::floatToBits(v); }
+    operator Float() const { return Math::bitsToFloat(bits); }
 
-    inline Float operator = (Float v) {
+    Float operator = (Float v) {
         bits = Math::floatToBits(v);
         return v;
     }
 
-    inline void add(Float v) {
+    void add(Float v) {
 #ifdef DOUBLE_AS_FLOAT
         uint64_t oldBits = bits, newBits;
 #else

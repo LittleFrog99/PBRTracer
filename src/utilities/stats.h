@@ -9,13 +9,13 @@ class StatsAccumulator;
 
 class StatsRegisterer {
 public:
-    inline StatsRegisterer(function<void(StatsAccumulator &)> func) {
+    StatsRegisterer(function<void(StatsAccumulator &)> func) {
         if (!funcs)
             funcs = new std::vector<function<void(StatsAccumulator &)>>;
         funcs->push_back(func);
     }
 
-    inline static void callCallbacks(StatsAccumulator &accum) {
+    static void callCallbacks(StatsAccumulator &accum) {
         for (auto func : *funcs) func(accum);
     }
 
@@ -25,15 +25,15 @@ private:
 
 class StatsAccumulator {
 public:
-    inline void reportCounter(const string &name, int64_t val) {
+    void reportCounter(const string &name, int64_t val) {
         counters[name] += val;
     }
 
-    inline void reportMemoryCounter(const string &name, int64_t val) {
+    void reportMemoryCounter(const string &name, int64_t val) {
         memoryCounters[name] += val;
     }
 
-    inline void reportIntDistrib(const string &name, int64_t sum, int64_t count,
+    void reportIntDistrib(const string &name, int64_t sum, int64_t count,
                                  int64_t min, int64_t max) {
         intDistribSums[name] += sum;
         intDistribCounts[name] += count;
@@ -47,7 +47,7 @@ public:
             intDistribMaxs[name] = std::max(intDistribMaxs[name], max);
     }
 
-    inline void reportFloatDistrib(const string &name, double sum, int64_t count,
+    void reportFloatDistrib(const string &name, double sum, int64_t count,
                                    double min, double max) {
         floatDistribSums[name] += sum;
         floatDistribCounts[name] += count;
@@ -61,12 +61,12 @@ public:
             floatDistribMaxs[name] = std::max(floatDistribMaxs[name], max);
     }
 
-    inline void reportPercentage(const string &name, int64_t num, int64_t denom) {
+    void reportPercentage(const string &name, int64_t num, int64_t denom) {
         percentages[name].first += num;
         percentages[name].second += denom;
     }
 
-    inline void reportRatio(const string &name, int64_t num, int64_t denom) {
+    void reportRatio(const string &name, int64_t num, int64_t denom) {
         ratios[name].first += num;
         ratios[name].second += denom;
     }
@@ -93,8 +93,8 @@ private:
 
 class Stats {
 public:
-    inline static void print(FILE *dest) { statsAccum.print(dest); }
-    inline static void clear() { statsAccum.clear(); }
+    static void print(FILE *dest) { statsAccum.print(dest); }
+    static void clear() { statsAccum.clear(); }
     static void reportThread();
 
 private:
@@ -112,10 +112,10 @@ public:
     static void clear();
     static void cleanup();
 
-    inline static void suspend() { suspendCount++; }
-    inline static void resume() { suspendCount--; }
+    static void suspend() { suspendCount++; }
+    static void resume() { suspendCount--; }
 
-    inline static uint64_t profToBits(Stage p) { return 1ull << int(p); }
+    static uint64_t profToBits(Stage p) { return 1ull << int(p); }
 
     thread_local static uint64_t state;
     static atomic<bool> isRunning;
@@ -138,13 +138,13 @@ private:
 
 class ProfilePhase {
 public:
-    inline ProfilePhase(Profiler::Stage p) {
+    ProfilePhase(Profiler::Stage p) {
         categoryBit = Profiler::profToBits(p);
         reset = (Profiler::state & categoryBit) == 0;
         Profiler::state |= categoryBit;
     }
 
-    inline ~ProfilePhase() {
+    ~ProfilePhase() {
         if (reset) Profiler::state &= ~categoryBit;
     }
 

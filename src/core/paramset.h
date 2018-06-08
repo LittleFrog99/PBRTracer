@@ -155,7 +155,7 @@ private:
     vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
     vector<shared_ptr<ParamSetItem<Vector3f>>> vector3fs;
     vector<shared_ptr<ParamSetItem<Normal3f>>> normals;
-    vector<shared_ptr<ParamSetItem<Spectrum>>> spectra;
+    vector<shared_ptr<ParamSetItem<RGBSpectrum>>> spectra;
     vector<shared_ptr<ParamSetItem<string>>> strings;
     vector<shared_ptr<ParamSetItem<string>>> textures;
     static map<string, Spectrum> cachedSpectra;

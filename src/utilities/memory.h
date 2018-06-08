@@ -13,17 +13,17 @@
 class Memory {
 public:
     template <typename T>
-    inline static T * allocAligned(size_t count) {
+    static T * allocAligned(size_t count) {
         return (T *)allocAligned(count * sizeof(T));
     }
 
-    inline static void freeAligned(void *ptr) {
+    static void freeAligned(void *ptr) {
         if (!ptr) return;
         free(ptr);
     }
 
 private:
-    inline static void * allocAligned(size_t size) {
+    static void * allocAligned(size_t size) {
         void *ptr;
         if (posix_memalign(&ptr, L1_CACHE_LINE_SIZE, size) != 0) ptr = nullptr;
         return ptr;
@@ -36,9 +36,9 @@ class alignas(L1_CACHE_LINE_SIZE) MemoryArena {
     // MemoryArena Public Methods
     static constexpr size_t DEFAULT_BLOCK_SIZE = 262144; // 256 KB
 
-    inline MemoryArena(size_t blockSize = DEFAULT_BLOCK_SIZE) : blockSize(blockSize) {}
+    MemoryArena(size_t blockSize = DEFAULT_BLOCK_SIZE) : blockSize(blockSize) {}
 
-    inline ~MemoryArena() {
+    ~MemoryArena() {
         Memory::freeAligned(currentBlock);
         for (auto &block : usedBlocks) Memory::freeAligned(block.second);
         for (auto &block : availableBlocks) Memory::freeAligned(block.second);
@@ -47,14 +47,14 @@ class alignas(L1_CACHE_LINE_SIZE) MemoryArena {
     void * alloc(size_t nBytes);
 
     template <typename T>
-    inline T * alloc(size_t n = 1, bool runConstructor = true) {
+    T * alloc(size_t n = 1, bool runConstructor = true) {
         T *ret = (T *)alloc(n * sizeof(T));
         if (runConstructor)
             for (size_t i = 0; i < n; ++i) new (&ret[i]) T();
         return ret;
     }
 
-    inline void reset() {
+    void reset() {
         currentBlockPos = 0;
         availableBlocks.splice(availableBlocks.begin(), usedBlocks);
     }
@@ -89,14 +89,14 @@ public:
                 for (int u = 0; u < uRes; ++u) (*this)(u, v) = d[v * uRes + u];
     }
 
-    inline constexpr int blockSize() const { return 1 << logblockSize; }
-    inline int roundUp(int x) const { return (x + blockSize() - 1) & ~(blockSize() - 1); }
-    inline int uSize() const { return uRes; }
-    inline int vSize() const { return vRes; }
-    inline int block(int a) const { return a >> logblockSize; }
-    inline int offset(int a) const { return a & (blockSize() - 1); }
+    constexpr int blockSize() const { return 1 << logblockSize; }
+    int roundUp(int x) const { return (x + blockSize() - 1) & ~(blockSize() - 1); }
+    int uSize() const { return uRes; }
+    int vSize() const { return vRes; }
+    int block(int a) const { return a >> logblockSize; }
+    int offset(int a) const { return a & (blockSize() - 1); }
 
-    inline T & operator () (int u, int v) {
+    T & operator () (int u, int v) {
         int bu = block(u), bv = block(v);
         int ou = offset(u), ov = offset(v);
         int offset = blockSize() * blockSize() * (uBlocks * bv + bu);
@@ -104,7 +104,7 @@ public:
         return data[offset];
     }
 
-    inline const T & operator () (int u, int v) const {
+    const T & operator () (int u, int v) const {
         int bu = block(u), bv = block(v);
         int ou = offset(u), ov = offset(v);
         int offset = blockSize() * blockSize() * (uBlocks * bv + bu);
@@ -112,12 +112,12 @@ public:
         return data[offset];
     }
 
-    inline void getLinearArray(T *a) const {
+    void getLinearArray(T *a) const {
         for (int v = 0; v < vRes; ++v)
             for (int u = 0; u < uRes; ++u) *a++ = (*this)(u, v);
     }
 
-    inline ~BlockedArray() {
+    ~BlockedArray() {
         for (int i = 0; i < uRes * vRes; ++i) data[i].~T();
         Memory::freeAligned(data);
     }

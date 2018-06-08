@@ -13,14 +13,14 @@
 class StringPrint {
 public:
     template <typename... Args>
-    inline static string printf(const char *fmt, Args... args) {
+    static string printf(const char *fmt, Args... args) {
         string ret;
         printfRecursive(&ret, fmt, args...);
         return ret;
     }
 
 private:
-    inline static void printfRecursive(string *s, const char *fmt) {
+    static void printfRecursive(string *s, const char *fmt) {
         const char *c = fmt;
         while (*c) {
             if (*c == '%') {
@@ -32,7 +32,7 @@ private:
     }
 
     template <typename... Args>
-    inline static void printfRecursive(string *s, const char *fmt, double v, Args... args) {
+    static void printfRecursive(string *s, const char *fmt, double v, Args... args) {
         string nextFmt = copyToFormatString(&fmt, s);
         if (nextFmt == "%f")
             *s += formatOne("%.17g", v);
@@ -42,14 +42,14 @@ private:
     }
 
     template <typename T, typename... Args>
-    inline static void printfRecursive(string *s, const char *fmt, T v, Args... args) {
+    static void printfRecursive(string *s, const char *fmt, T v, Args... args) {
         string nextFmt = copyToFormatString(&fmt, s);
         *s += formatOne(nextFmt.c_str(), v);
         printfRecursive(s, fmt, args...);
     }
 
     template <typename... Args>
-    inline static void printfRecursive(string *s, const char *fmt, float v, Args... args) {
+    static void printfRecursive(string *s, const char *fmt, float v, Args... args) {
         string nextFmt = copyToFormatString(&fmt, s);
         if (nextFmt == "%f")
             *s += formatOne("%.9g", v);
@@ -59,7 +59,7 @@ private:
         printfRecursive(s, fmt, args...);
     }
 
-    inline static string copyToFormatString(const char **fmt_ptr, string *s) {
+    static string copyToFormatString(const char **fmt_ptr, string *s) {
         const char *&fmt = *fmt_ptr;
         while (*fmt) {
             if (*fmt != '%') {
@@ -88,7 +88,7 @@ private:
     }
 
     template <typename T>
-    inline static string formatOne(const char *fmt, T v) {
+    static string formatOne(const char *fmt, T v) {
 
         size_t size = snprintf(nullptr, 0, fmt, v) + 1;
         string str;

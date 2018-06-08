@@ -68,10 +68,10 @@ void ParamSet::addRGBSpectrum(const string &name,
                               unique_ptr<Float[]> values, int nValues) {
     eraseSpectrum(name);
     nValues /= 3;
-    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
+    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
     for (int i = 0; i < nValues; ++i) s[i] = RGBSpectrum::fromRGB(&values[3 * i]);
-    shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
+        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -79,27 +79,26 @@ void ParamSet::addXYZSpectrum(const string &name,
                               unique_ptr<Float[]> values, int nValues) {
     eraseSpectrum(name);
     nValues /= 3;
-    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
+    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
     for (int i = 0; i < nValues; ++i) s[i] = RGBSpectrum::fromXYZ(&values[3 * i]);
-    shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
+        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 
-void ParamSet::addBlackbodySpectrum(const string &name,
-                                    unique_ptr<Float[]> values,
+void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> values,
                                     int nValues) {
     eraseSpectrum(name);
     nValues /= 2;
-    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
-    unique_ptr<Float[]> v(new Float[nCIESamples]);
+    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
+    unique_ptr<Float[]> v(new Float[Spectrum::NUM_CIE_SAMPLES]);
     for (int i = 0; i < nValues; ++i) {
-        BlackbodyNormalized(CIE_lambda, nCIESamples, values[2 * i], v.get());
+        BlackbodyNormalized(Spectrum::CIE_LAMBDA, Spectrum::NUM_CIE_SAMPLES, values[2 * i], v.get());
         s[i] = values[2 * i + 1] *
-               Spectrum::FromSampled(CIE_lambda, v.get(), nCIESamples);
+               RGBSpectrum::fromSampled(Spectrum::CIE_LAMBDA, v.get(), Spectrum::NUM_CIE_SAMPLES);
     }
-    shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
+        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 

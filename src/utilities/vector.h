@@ -20,58 +20,58 @@ template <class T>
 class Vector2 {
 public:
     // Vector2 Public Methods
-    inline Vector2() { x = y = 0; }
-    inline Vector2(T xx, T yy) : x(xx), y(yy) { }
+    Vector2() { x = y = 0; }
+    Vector2(T xx, T yy) : x(xx), y(yy) { }
     explicit Vector2(const Point2<T> &p);
-    inline bool hasNaNs() const { return isNaN(x) || isNaN(y); }
+    bool hasNaNs() const { return isNaN(x) || isNaN(y); }
 
-    inline Vector2(const Vector2<T> &v) { x = v.x; y = v.y; }
-    inline Vector2<T> & operator = (const Vector2<T> &v) { x = v.x; y = v.y; return *this; }
-    inline Vector2<T> operator + (const Vector2<T> &v) const { return Vector2(x + v.x, y + v.y); }
-    inline Vector2<T> & operator += (const Vector2<T> &v) { x += v.x; y += v.y; return *this; }
-    inline Vector2<T> operator - (const Vector2<T> &v) const { return Vector2(x - v.x, y - v.y); }
+    Vector2(const Vector2<T> &v) { x = v.x; y = v.y; }
+    Vector2<T> & operator = (const Vector2<T> &v) { x = v.x; y = v.y; return *this; }
+    Vector2<T> operator + (const Vector2<T> &v) const { return Vector2(x + v.x, y + v.y); }
+    Vector2<T> & operator += (const Vector2<T> &v) { x += v.x; y += v.y; return *this; }
+    Vector2<T> operator - (const Vector2<T> &v) const { return Vector2(x - v.x, y - v.y); }
 
-    inline Vector2<T> & operator -= (const Vector2<T> &v) { x -= v.x; y -= v.y; return *this; }
-    inline bool operator == (const Vector2<T> &v) const { return x == v.x && y == v.y; }
-    inline bool operator != (const Vector2<T> &v) const { return x != v.x || y != v.y; }
-
-    template <class U>
-    inline Vector2<T> operator * (U f) const { return Vector2<T>(f * x, f * y); }
+    Vector2<T> & operator -= (const Vector2<T> &v) { x -= v.x; y -= v.y; return *this; }
+    bool operator == (const Vector2<T> &v) const { return x == v.x && y == v.y; }
+    bool operator != (const Vector2<T> &v) const { return x != v.x || y != v.y; }
 
     template <class U>
-    inline Vector2<T> &operator*=(U f) { x *= f; y *= f; return *this; }
+    Vector2<T> operator * (U f) const { return Vector2<T>(f * x, f * y); }
 
     template <class U>
-    inline Vector2<T> operator / (U f) const {
+    Vector2<T> &operator*=(U f) { x *= f; y *= f; return *this; }
+
+    template <class U>
+    Vector2<T> operator / (U f) const {
         Float inv = 1.0 / f;
         return Vector2<T>(x * inv, y * inv);
     }
 
     template <class U>
-    inline Vector2<T> & operator /= (U f) { Float inv = 1.0 / f; x *= inv; y *= inv; return *this; }
+    Vector2<T> & operator /= (U f) { Float inv = 1.0 / f; x *= inv; y *= inv; return *this; }
 
-    inline Vector2<T> operator - () const { return Vector2<T>(-x, -y); }
-    inline T operator [] (int i) const { if (i == 0) return x; return y; }
-    inline T & operator [] (int i) { if (i == 0) return x; return y; }
-    inline Float lengthSq() const { return x * x + y * y; }
-    inline Float length() const { return std::sqrt(lengthSq()); }
+    Vector2<T> operator - () const { return Vector2<T>(-x, -y); }
+    T operator [] (int i) const { if (i == 0) return x; return y; }
+    T & operator [] (int i) { if (i == 0) return x; return y; }
+    Float lengthSq() const { return x * x + y * y; }
+    Float length() const { return std::sqrt(lengthSq()); }
 
     // Vector2 Public Data
     T x, y;
 };
 
 template <typename T, typename U>
-inline Vector2<T> operator * (U f, const Vector2<T> &v) {
+Vector2<T> operator * (U f, const Vector2<T> &v) {
     return v * f;
 }
 
 template <class T>
-inline ostream & operator << (ostream &os, const Vector2<T> &v) {
+ostream & operator << (ostream &os, const Vector2<T> &v) {
     os << "[ " << v.x << ", " << v.y << " ]";
     return os;
 }
 
-inline ostream & operator << (ostream &os, const Vector2<Float> &v) {
+ostream & operator << (ostream &os, const Vector2<Float> &v) {
     os << StringPrint::printf("[ %f, %f ]", v.x, v.y);
     return os;
 }
@@ -80,30 +80,30 @@ template <class T>
 class Vector3 {
 public:
     // Vector3 Public Methods
-    inline Vector3() { x = y = z = 0; }
-    inline Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
-    inline Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; }
+    Vector3() { x = y = z = 0; }
+    Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
+    Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; }
     explicit Vector3(const Point3<T> &p);
     explicit Vector3(const Normal3<T> &n);
-    inline bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
+    bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
 
-    inline Vector3<T> & operator = (const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; return *this; }
-    inline Vector3<T> operator + (const Vector3<T> &v) const { return Vector3(x + v.x, y + v.y, z + v.z); }
-    inline Vector3<T> & operator += (const Vector3<T> &v) { x += v.x; y += v.y; z += v.z; return *this; }
-    inline Vector3<T> operator - (const Vector3<T> &v) const { return Vector3(x - v.x, y - v.y, z - v.z); }
-    inline Vector3<T> & operator -= (const Vector3<T> &v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
-    inline Vector3<T> operator - () const { return Vector3<T>(-x, -y, -z); }
-    inline bool operator == (const Vector3<T> &v) const { return x == v.x && y == v.y && z == v.z; }
-    inline bool operator != (const Vector3<T> &v) const { return x != v.x || y != v.y || z != v.z; }
-
-    template <class U>
-    inline Vector3<T> operator * (U s) const { return Vector3<T>(s * x, s * y, s * z); }
+    Vector3<T> & operator = (const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; return *this; }
+    Vector3<T> operator + (const Vector3<T> &v) const { return Vector3(x + v.x, y + v.y, z + v.z); }
+    Vector3<T> & operator += (const Vector3<T> &v) { x += v.x; y += v.y; z += v.z; return *this; }
+    Vector3<T> operator - (const Vector3<T> &v) const { return Vector3(x - v.x, y - v.y, z - v.z); }
+    Vector3<T> & operator -= (const Vector3<T> &v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
+    Vector3<T> operator - () const { return Vector3<T>(-x, -y, -z); }
+    bool operator == (const Vector3<T> &v) const { return x == v.x && y == v.y && z == v.z; }
+    bool operator != (const Vector3<T> &v) const { return x != v.x || y != v.y || z != v.z; }
 
     template <class U>
-    inline Vector3<T> & operator *= (U s) { x *= s; y *= s; z *= s; return *this; }
+    Vector3<T> operator * (U s) const { return Vector3<T>(s * x, s * y, s * z); }
 
     template <class U>
-    inline Vector3<T> operator / (U f) const {
+    Vector3<T> & operator *= (U s) { x *= s; y *= s; z *= s; return *this; }
+
+    template <class U>
+    Vector3<T> operator / (U f) const {
         Float inv = 1.0 / f;
         return Vector3<T>(x * inv, y * inv, z * inv);
     }
@@ -115,22 +115,22 @@ public:
         return *this;
     }
 
-    inline T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
-    inline T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
-    inline Float lengthSq() const { return x * x + y * y + z * z; }
-    inline Float length() const { return std::sqrt(lengthSq()); }
+    T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
+    T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
+    Float lengthSq() const { return x * x + y * y + z * z; }
+    Float length() const { return std::sqrt(lengthSq()); }
 
     // Vector3 Public Data
     T x, y, z;
 };
 
 template <class T>
-inline ostream & operator << (ostream &os, const Vector3<T> &v) {
+ostream & operator << (ostream &os, const Vector3<T> &v) {
     os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
     return os;
 }
 
-inline ostream & operator << (ostream &os, const Vector3<Float> &v) {
+ostream & operator << (ostream &os, const Vector3<Float> &v) {
     os << StringPrint::printf("[ %f, %f, %f ]", v.x, v.y, v.z);
     return os;
 }
@@ -144,67 +144,67 @@ typedef Vector3<int> Vector3i;
 template <class T>
 class Point2 {
 public:
-    inline Point2() { x = y = 0; }
-    inline Point2(T xx, T yy) : x(xx), y(yy) { }
-    inline Point2(const Point2<T> &p) { x = p.x; y = p.y; }
-    inline explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) { }
-    inline bool hasNaNs() const { return isNaN(x) || isNaN(y); }
+    Point2() { x = y = 0; }
+    Point2(T xx, T yy) : x(xx), y(yy) { }
+    Point2(const Point2<T> &p) { x = p.x; y = p.y; }
+    explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) { }
+    bool hasNaNs() const { return isNaN(x) || isNaN(y); }
 
     template <class U>
-    inline explicit Point2(const Point2<U> &p) { x = T(p.x); y = T(p.y); }
+    explicit Point2(const Point2<U> &p) { x = T(p.x); y = T(p.y); }
 
     template <class U>
-    inline explicit Point2(const Vector2<U> &p) { x = T(p.x); y = T(p.y); }
+    explicit Point2(const Vector2<U> &p) { x = T(p.x); y = T(p.y); }
 
     template <class U>
-    inline explicit operator Vector2<U>() const { return Vector2<U>(x, y); }
+    explicit operator Vector2<U>() const { return Vector2<U>(x, y); }
 
-    inline Point2<T> & operator = (const Point2<T> &p) { x = p.x; y = p.y; return *this; }
-    inline Point2<T> operator + (const Vector2<T> &v) const { return Point2<T>(x + v.x, y + v.y); }
-    inline Point2<T> & operator += (const Vector2<T> &v) { x += v.x; y += v.y; return *this; }
-    inline Vector2<T> operator - (const Point2<T> &p) const { return Vector2<T>(x - p.x, y - p.y); }
-    inline Point2<T> operator - (const Vector2<T> &v) const { return Point2<T>(x - v.x, y - v.y); }
-    inline Point2<T> operator - () const { return Point2<T>(-x, -y); }
-    inline Point2<T> & operator -= (const Vector2<T> &v) {x -= v.x; y -= v.y; return *this; }
-    inline Point2<T> & operator += (const Point2<T> &p) { x += p.x; y += p.y; return *this; }
-    inline Point2<T> operator + (const Point2<T> &p) const { return Point2<T>(x + p.x, y + p.y); }
-
-    template <class U>
-    inline Point2<T> operator * (U f) const { return Point2<T>(f * x, f * y); }
+    Point2<T> & operator = (const Point2<T> &p) { x = p.x; y = p.y; return *this; }
+    Point2<T> operator + (const Vector2<T> &v) const { return Point2<T>(x + v.x, y + v.y); }
+    Point2<T> & operator += (const Vector2<T> &v) { x += v.x; y += v.y; return *this; }
+    Vector2<T> operator - (const Point2<T> &p) const { return Vector2<T>(x - p.x, y - p.y); }
+    Point2<T> operator - (const Vector2<T> &v) const { return Point2<T>(x - v.x, y - v.y); }
+    Point2<T> operator - () const { return Point2<T>(-x, -y); }
+    Point2<T> & operator -= (const Vector2<T> &v) {x -= v.x; y -= v.y; return *this; }
+    Point2<T> & operator += (const Point2<T> &p) { x += p.x; y += p.y; return *this; }
+    Point2<T> operator + (const Point2<T> &p) const { return Point2<T>(x + p.x, y + p.y); }
 
     template <class U>
-    inline Point2<T> & operator *= (U f) { x *= f; y *= f; return *this; }
+    Point2<T> operator * (U f) const { return Point2<T>(f * x, f * y); }
 
     template <class U>
-    inline Point2<T> operator / (U f) const { Float inv = 1.0 / f; return Point2<T>(inv * x, inv * y); }
+    Point2<T> & operator *= (U f) { x *= f; y *= f; return *this; }
 
     template <class U>
-    inline Point2<T> & operator /= (U f) {
+    Point2<T> operator / (U f) const { Float inv = 1.0 / f; return Point2<T>(inv * x, inv * y); }
+
+    template <class U>
+    Point2<T> & operator /= (U f) {
         Float inv = 1.0 / f;
         x *= inv; y *= inv;
         return *this;
     }
 
-    inline T operator [] (int i) const { if (i == 0) return x; return y; }
-    inline T & operator [] (int i) { if (i == 0) return x; return y; }
-    inline bool operator == (const Point2<T> &p) const { return x == p.x && y == p.y; }
-    inline bool operator != (const Point2<T> &p) const { return x != p.x || y != p.y; }
+    T operator [] (int i) const { if (i == 0) return x; return y; }
+    T & operator [] (int i) { if (i == 0) return x; return y; }
+    bool operator == (const Point2<T> &p) const { return x == p.x && y == p.y; }
+    bool operator != (const Point2<T> &p) const { return x != p.x || y != p.y; }
 
     T x, y;
 };
 
 template <typename T, typename U>
-inline Point2<T> operator*(U f, const Point2<T> &p) {
+Point2<T> operator*(U f, const Point2<T> &p) {
     return p * f;
 }
 
 template <class T>
-inline ostream & operator << (ostream &os, const Point2<T> &v) {
+ostream & operator << (ostream &os, const Point2<T> &v) {
     os << "[ " << v.x << ", " << v.y << " ]";
     return os;
 }
 
-inline ostream & operator << (ostream &os, const Point2<Float> &v) {
+ostream & operator << (ostream &os, const Point2<Float> &v) {
     os << StringPrint::printf("[ %f, %f ]", v.x, v.y);
     return os;
 }
@@ -212,63 +212,63 @@ inline ostream & operator << (ostream &os, const Point2<Float> &v) {
 template <class T>
 class Point3 {
 public:
-    inline Point3() { x = y = z = 0; }
-    inline Point3(T x, T y, T z) : x(x), y(y), z(z) { }
-    inline Point3(const Point3<T> &p) { x = p.x; y = p.y; z = p.z; }
-    inline bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
+    Point3() { x = y = z = 0; }
+    Point3(T x, T y, T z) : x(x), y(y), z(z) { }
+    Point3(const Point3<T> &p) { x = p.x; y = p.y; z = p.z; }
+    bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
 
     template <class U>
-    inline explicit Point3(const Point3<U> &p) : x(p.x), y(p.y), z(p.z) {}
+    explicit Point3(const Point3<U> &p) : x(p.x), y(p.y), z(p.z) {}
 
     template <class U>
-    inline explicit operator Vector3<U>() const { return Vector3<U>(x, y, z); }
+    explicit operator Vector3<U>() const { return Vector3<U>(x, y, z); }
 
-    inline Point3<T> & operator = (const Point3<T> &p) { x = p.x; y = p.y; z = p.z; return *this; }
-    inline Point3<T> operator + (const Vector3<T> &v) const { return Point3<T>(x + v.x, y + v.y, z + v.z); }
-    inline Point3<T> & operator += (const Vector3<T> &v) { x += v.x; y += v.y; z += v.z; return *this; }
-    inline Point3<T> operator - () const { return Point3<T>(-x, -y, -z); }
-    inline Vector3<T> operator - (const Point3<T> &p) const { return Vector3<T>(x - p.x, y - p.y, z - p.z); }
-    inline Point3<T> operator - (const Vector3<T> &v) const { return Point3<T>(x - v.x, y - v.y, z - v.z); }
-    inline Point3<T> & operator -= (const Vector3<T> &v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
-    inline Point3<T> & operator += (const Point3<T> &p) { x += p.x; y += p.y; z += p.z; return *this; }
-    inline Point3<T> operator + (const Point3<T> &p) const { return Point3<T>(x + p.x, y + p.y, z + p.z); }
-
-    template <class U>
-    inline Point3<T> operator * (U f) const { return Point3<T>(f * x, f * y, f * z); }
+    Point3<T> & operator = (const Point3<T> &p) { x = p.x; y = p.y; z = p.z; return *this; }
+    Point3<T> operator + (const Vector3<T> &v) const { return Point3<T>(x + v.x, y + v.y, z + v.z); }
+    Point3<T> & operator += (const Vector3<T> &v) { x += v.x; y += v.y; z += v.z; return *this; }
+    Point3<T> operator - () const { return Point3<T>(-x, -y, -z); }
+    Vector3<T> operator - (const Point3<T> &p) const { return Vector3<T>(x - p.x, y - p.y, z - p.z); }
+    Point3<T> operator - (const Vector3<T> &v) const { return Point3<T>(x - v.x, y - v.y, z - v.z); }
+    Point3<T> & operator -= (const Vector3<T> &v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
+    Point3<T> & operator += (const Point3<T> &p) { x += p.x; y += p.y; z += p.z; return *this; }
+    Point3<T> operator + (const Point3<T> &p) const { return Point3<T>(x + p.x, y + p.y, z + p.z); }
 
     template <class U>
-    inline Point3<T> & operator *= (U f) { x *= f; y *= f; z *= f; return *this; }
+    Point3<T> operator * (U f) const { return Point3<T>(f * x, f * y, f * z); }
 
     template <class U>
-    inline Point3<T> operator / (U f) const { Float inv = 1.0 / f; return Point3<T>(inv * x, inv * y, inv * z); }
+    Point3<T> & operator *= (U f) { x *= f; y *= f; z *= f; return *this; }
 
     template <class U>
-    inline Point3<T> & operator /= (U f) {
+    Point3<T> operator / (U f) const { Float inv = 1.0 / f; return Point3<T>(inv * x, inv * y, inv * z); }
+
+    template <class U>
+    Point3<T> & operator /= (U f) {
         Float inv = 1.0 / f;
         x *= inv; y *= inv; z *= inv;
         return *this;
     }
 
-    inline T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
-    inline T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
-    inline bool operator == (const Point3<T> &p) const { return x == p.x && y == p.y && z == p.z; }
-    inline bool operator != (const Point3<T> &p) const { return x != p.x || y != p.y || z != p.z; }
+    T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
+    T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
+    bool operator == (const Point3<T> &p) const { return x == p.x && y == p.y && z == p.z; }
+    bool operator != (const Point3<T> &p) const { return x != p.x || y != p.y || z != p.z; }
 
     T x, y, z;
 };
 
 template <typename T, typename U>
-inline Point3<T> operator * (U f, const Point3<T> &p) {
+Point3<T> operator * (U f, const Point3<T> &p) {
     return p * f;
 }
 
 template <class T>
-inline ostream & operator << (ostream &os, const Point3<T> &v) {
+ostream & operator << (ostream &os, const Point3<T> &v) {
     os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
     return os;
 }
 
-inline ostream & operator << (ostream &os, const Point3<Float> &v) {
+ostream & operator << (ostream &os, const Point3<Float> &v) {
     os << StringPrint::printf("[ %f, %f, %f ]", v.x, v.y, v.z);
     return os;
 }
@@ -282,45 +282,45 @@ typedef Point3<int> Point3i;
 template <class T>
 class Normal3 {
 public:
-    inline Normal3() { x = y = z = 0; }
-    inline Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { }
-    inline Normal3<T>(const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; }
-    inline explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {}
-    inline bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
+    Normal3() { x = y = z = 0; }
+    Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { }
+    Normal3<T>(const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; }
+    explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {}
+    bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
 
-    inline Normal3<T> & operator = (const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; return *this; }
-    inline Normal3<T> operator - () const { return Normal3(-x, -y, -z); }
-    inline Normal3<T> operator + (const Normal3<T> &n) const { return Normal3<T>(x + n.x, y + n.y, z + n.z); }
-    inline Normal3<T> & operator += (const Normal3<T> &n) { x += n.x; y += n.y; z += n.z; return *this; }
-    inline Normal3<T> operator - (const Normal3<T> &n) const { return Normal3<T>(x - n.x, y - n.y, z - n.z); }
-    inline Normal3<T> & operator -= (const Normal3<T> &n) { x -= n.x; y -= n.y; z -= n.z; return *this; }
-
-    template <class U>
-    inline Normal3<T> operator * (U f) const { return Normal3<T>(f * x, f * y, f * z); }
+    Normal3<T> & operator = (const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; return *this; }
+    Normal3<T> operator - () const { return Normal3(-x, -y, -z); }
+    Normal3<T> operator + (const Normal3<T> &n) const { return Normal3<T>(x + n.x, y + n.y, z + n.z); }
+    Normal3<T> & operator += (const Normal3<T> &n) { x += n.x; y += n.y; z += n.z; return *this; }
+    Normal3<T> operator - (const Normal3<T> &n) const { return Normal3<T>(x - n.x, y - n.y, z - n.z); }
+    Normal3<T> & operator -= (const Normal3<T> &n) { x -= n.x; y -= n.y; z -= n.z; return *this; }
 
     template <class U>
-    inline Normal3<T> & operator *= (U f) { x *= f; y *= f; z *= f; return *this; }
+    Normal3<T> operator * (U f) const { return Normal3<T>(f * x, f * y, f * z); }
 
     template <class U>
-    inline Normal3<T> operator / (U f) const {
+    Normal3<T> & operator *= (U f) { x *= f; y *= f; z *= f; return *this; }
+
+    template <class U>
+    Normal3<T> operator / (U f) const {
         Float inv = 1.0 / f;
         return Normal3<T>(x * inv, y * inv, z * inv);
     }
 
     template <class U>
-    inline Normal3<T> & operator /= (U f) {
+    Normal3<T> & operator /= (U f) {
         Float inv = 1.0 / f;
         x *= inv; y *= inv; z *= inv;
         return *this;
     }
 
-    inline Float lengthSq() const { return x * x + y * y + z * z; }
-    inline Float length() const { return std::sqrt(lengthSq()); }
+    Float lengthSq() const { return x * x + y * y + z * z; }
+    Float length() const { return std::sqrt(lengthSq()); }
 
-    inline bool operator == (const Normal3<T> &n) const { return x == n.x && y == n.y && z == n.z; }
-    inline bool operator != (const Normal3<T> &n) const { return x != n.x || y != n.y || z != n.z; }
-    inline T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
-    inline T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
+    bool operator == (const Normal3<T> &n) const { return x == n.x && y == n.y && z == n.z; }
+    bool operator != (const Normal3<T> &n) const { return x != n.x || y != n.y || z != n.z; }
+    T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
+    T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
 
     T x, y, z;
 };

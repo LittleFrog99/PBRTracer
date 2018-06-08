@@ -14,20 +14,20 @@ public:
     static constexpr uint64_t PCG32_DEFAULT_STREAM = 0xda3e39cb94b95bdbULL;
     static constexpr uint64_t PCG32_MULT = 0x5851f42d4c957f2dULL;
 
-    inline Random() : state(PCG32_DEFAULT_STATE), inc(PCG32_DEFAULT_STREAM) {}
-    inline Random(uint32_t sequence) { setSequence(sequence); }
+    Random() : state(PCG32_DEFAULT_STATE), inc(PCG32_DEFAULT_STREAM) {}
+    Random(uint32_t sequence) { setSequence(sequence); }
 
     void setSequence(uint32_t index);
     uint32_t uniformUInt32();
     uint32_t uniformUInt32(uint32_t b);
     void advance(int64_t idelta);
 
-    inline Float uniformFloat() {
+    Float uniformFloat() {
         return min(ONE_MINUS_EPSILON, Float(uniformUInt32() * 0x1p-32f));
     }
 
     template <class Iterator>
-    inline void shuffle(Iterator begin, Iterator end) {
+    void shuffle(Iterator begin, Iterator end) {
         for (Iterator it = end - 1; it > begin; --it)
             iter_swap(it, begin + uniformUInt32(uint32_t(it - begin + 1)));
     }
