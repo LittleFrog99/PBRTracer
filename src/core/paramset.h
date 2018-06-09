@@ -3,15 +3,16 @@
 
 
 #include "vector.h"
+#include "report.h"
+#include "spectrum.h"
 #include "core/texture.h"
-#include "core/spectrum.h"
 #include <map>
 
 
 template <typename T>
 struct ParamSetItem {
-    ParamSetItem(const std::string &name, std::unique_ptr<T[]> val, int nValues = 1)
-        : name(name), values(std::move(val)), nValues(nValues) {}
+    ParamSetItem(const string &name, unique_ptr<T[]> val, int nValues = 1)
+        : name(name), values(move(val)), nValues(nValues) {}
 
     const string name;
     const unique_ptr<T[]> values;
@@ -59,20 +60,20 @@ public:
     Point3f findOnePoint3f(const string &, const Point3f &d) const;
     Vector3f findOneVector3f(const string &, const Vector3f &d) const;
     Normal3f findOneNormal3f(const string &, const Normal3f &d) const;
-    Spectrum findOneSpectrum(const string &, const Spectrum &d) const;
+    RGBSpectrum findOneSpectrum(const string &, const RGBSpectrum &d) const;
     string findOneString(const string &, const string &d) const;
     string findOneFilename(const string &, const string &d) const;
     string findTexture(const string &) const;
-    const Float *findFloat(const string &, int *n) const;
-    const int *findInt(const string &, int *nValues) const;
-    const bool *findBool(const string &, int *nValues) const;
-    const Point2f *findPoint2f(const string &, int *nValues) const;
-    const Vector2f *findVector2f(const string &, int *nValues) const;
-    const Point3f *findPoint3f(const string &, int *nValues) const;
-    const Vector3f *findVector3f(const string &, int *nValues) const;
-    const Normal3f *findNormal3f(const string &, int *nValues) const;
-    const Spectrum *findSpectrum(const string &, int *nValues) const;
-    const string *findString(const string &, int *nValues) const;
+    const Float * findFloat(const string &, int *n) const;
+    const int * findInt(const string &, int *nValues) const;
+    const bool * findBool(const string &, int *nValues) const;
+    const Point2f * findPoint2f(const string &, int *nValues) const;
+    const Vector2f * findVector2f(const string &, int *nValues) const;
+    const Point3f * findPoint3f(const string &, int *nValues) const;
+    const Vector3f * findVector3f(const string &, int *nValues) const;
+    const Normal3f * findNormal3f(const string &, int *nValues) const;
+    const RGBSpectrum * findSpectrum(const string &, int *nValues) const;
+    const string * findString(const string &, int *nValues) const;
 
     void reportUnused() const;
     void clear();
@@ -80,6 +81,19 @@ public:
     void printSet(int indent) const;
 
 private:
+    vector<shared_ptr<ParamSetItem<bool>>> bools;
+    vector<shared_ptr<ParamSetItem<int>>> ints;
+    vector<shared_ptr<ParamSetItem<Float>>> floats;
+    vector<shared_ptr<ParamSetItem<Point2f>>> point2fs;
+    vector<shared_ptr<ParamSetItem<Vector2f>>> vector2fs;
+    vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
+    vector<shared_ptr<ParamSetItem<Vector3f>>> vector3fs;
+    vector<shared_ptr<ParamSetItem<Normal3f>>> normals;
+    vector<shared_ptr<ParamSetItem<RGBSpectrum>>> spectra;
+    vector<shared_ptr<ParamSetItem<string>>> strings;
+    vector<shared_ptr<ParamSetItem<string>>> textures;
+    static map<string, RGBSpectrum> cachedSpectra;
+
     friend class TextureParams;
     friend bool shapeMaySetMaterialParameters(const ParamSet &ps);
 
@@ -99,66 +113,53 @@ private:
         }
     }
 
-    inline static int print(int i) { return printf("%d ", i); }
-    inline static int print(bool v) { return v ? printf("\"true\" ") : printf("\"false\" ");}
+    static int print(int i) { return printf("%d ", i); }
+    static int print(bool v) { return v ? printf("\"true\" ") : printf("\"false\" ");}
 
-    inline static int print(Float f) {
+    static int print(Float f) {
         if (int(f) == f)
             return printf("%d ", (int)f);
         else
             return printf("%.9g ", f);
     }
 
-    inline static int print(const Point2f &p) {
+    static int print(const Point2f &p) {
         int np = print(p.x);
         return np + print(p.y);
     }
 
-    inline static int print(const Vector2f &v) {
+    static int print(const Vector2f &v) {
         int np = print(v.x);
         return np + print(v.y);
     }
 
-    inline static int print(const Point3f &p) {
+    static int print(const Point3f &p) {
         int np = print(p.x);
         np += print(p.y);
         return np + print(p.z);
     }
 
-    inline static int print(const Vector3f &v) {
+    static int print(const Vector3f &v) {
         int np = print(v.x);
         np += print(v.y);
         return np + print(v.z);
     }
 
-    inline static int print(const Normal3f &n) {
+    static int print(const Normal3f &n) {
         int np = print(n.x);
         np += print(n.y);
         return np + print(n.z);
     }
 
-    inline static int print(const string &s) { return printf("\"%s\" ", s.c_str()); }
+    static int print(const string &s) { return printf("\"%s\" ", s.c_str()); }
 
-    inline static int print(const Spectrum &s) {
+    static int print(const RGBSpectrum &s) {
         Float rgb[3];
         s.toRGB(rgb);
         int np = print(rgb[0]);
         np += print(rgb[1]);
         return np + print(rgb[2]);
     }
-
-    vector<shared_ptr<ParamSetItem<bool>>> bools;
-    vector<shared_ptr<ParamSetItem<int>>> ints;
-    vector<shared_ptr<ParamSetItem<Float>>> floats;
-    vector<shared_ptr<ParamSetItem<Point2f>>> point2fs;
-    vector<shared_ptr<ParamSetItem<Vector2f>>> vector2fs;
-    vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
-    vector<shared_ptr<ParamSetItem<Vector3f>>> vector3fs;
-    vector<shared_ptr<ParamSetItem<Normal3f>>> normals;
-    vector<shared_ptr<ParamSetItem<RGBSpectrum>>> spectra;
-    vector<shared_ptr<ParamSetItem<string>>> strings;
-    vector<shared_ptr<ParamSetItem<string>>> textures;
-    static map<string, Spectrum> cachedSpectra;
 };
 
 
@@ -176,51 +177,69 @@ public:
     shared_ptr<Texture<Float>> getFloatTexture(const string &name, Float def) const;
     shared_ptr<Texture<Float>> getFloatTextureOrNull(const string &name) const;
 
-    inline Float findFloat(const string &n, Float d) const {
+    Float findFloat(const string &n, Float d) const {
         return geomParams.findOneFloat(n, materialParams.findOneFloat(n, d));
     }
 
-    inline string findString(const string &n, const string &d = "") const {
+    string findString(const string &n, const string &d = "") const {
         return geomParams.findOneString(n, materialParams.findOneString(n, d));
     }
 
-    inline string findFilename(const string &n, const string &d = "") const {
+    string findFilename(const string &n, const string &d = "") const {
         return geomParams.findOneFilename(n, materialParams.findOneFilename(n, d));
     }
 
-    inline int findInt(const string &n, int d) const {
+    int findInt(const string &n, int d) const {
         return geomParams.findOneInt(n, materialParams.findOneInt(n, d));
     }
 
-    inline bool findBool(const string &n, bool d) const {
+    bool findBool(const string &n, bool d) const {
         return geomParams.findOneBool(n, materialParams.findOneBool(n, d));
     }
 
-    inline Point3f findPoint3f(const string &n, const Point3f &d) const {
+    Point3f findPoint3f(const string &n, const Point3f &d) const {
         return geomParams.findOnePoint3f(n, materialParams.findOnePoint3f(n, d));
     }
 
-    inline Vector3f findVector3f(const string &n, const Vector3f &d) const {
+    Vector3f findVector3f(const string &n, const Vector3f &d) const {
         return geomParams.findOneVector3f(n, materialParams.findOneVector3f(n, d));
     }
 
-    inline Normal3f findNormal3f(const string &n, const Normal3f &d) const {
+    Normal3f findNormal3f(const string &n, const Normal3f &d) const {
         return geomParams.findOneNormal3f(n, materialParams.findOneNormal3f(n, d));
     }
 
-    inline Spectrum findSpectrum(const string &n, const Spectrum &d) const {
+    RGBSpectrum findSpectrum(const string &n, const RGBSpectrum &d) const {
         return geomParams.findOneSpectrum(n, materialParams.findOneSpectrum(n, d));
     }
 
-    void ReportUnused() const;
+    void reportUnused() const;
 
-    inline const ParamSet & getGeomParams() const { return geomParams; }
-    inline const ParamSet & getMaterialParams() const { return materialParams; }
+    const ParamSet & getGeomParams() const { return geomParams; }
+    const ParamSet & getMaterialParams() const { return materialParams; }
 
 private:
     map<string, shared_ptr<Texture<Float>>> &floatTextures;
     map<string, shared_ptr<Texture<Spectrum>>> &spectrumTextures;
     const ParamSet &geomParams, &materialParams;
+
+    template <typename T>
+    static void reportUnusedMaterialParams(
+        const vector<shared_ptr<ParamSetItem<T>>> &mtl,
+        const vector<shared_ptr<ParamSetItem<T>>> &geom) {
+        for (const auto &param : mtl) {
+            if (param->lookedUp)
+                continue;
+
+            // Don't complain about any unused material parameters if their
+            // values were provided by a shape parameter.
+            if (find_if(geom.begin(), geom.end(),
+                             [&param](const shared_ptr<ParamSetItem<T>> &gp) {
+                                 return gp->name == param->name;
+                             }) == geom.end())
+                Report::warning("Parameter \"%s\" not used", param->name.c_str());
+        }
+    }
 };
 
 #endif // PARAMSET_H

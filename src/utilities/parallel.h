@@ -23,7 +23,7 @@ public:
             : func1D(move(func1D)), maxIndex(maxIndex), chunkSize(chunkSize),
               profilerState(profState) {}
 
-        ForLoop(const function<void(Point2i)> &func, const Point2i &count,uint64_t profState)
+        ForLoop(const function<void(Point2i)> &func, const Point2i &count, uint64_t profState)
             : func2D(func), maxIndex(count.x * count.y), chunkSize(1),
               profilerState(profState) { nX = count.x; }
 

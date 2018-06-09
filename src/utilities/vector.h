@@ -71,15 +71,9 @@ ostream & operator << (ostream &os, const Vector2<T> &v) {
     return os;
 }
 
-ostream & operator << (ostream &os, const Vector2<Float> &v) {
-    os << StringPrint::printf("[ %f, %f ]", v.x, v.y);
-    return os;
-}
-
 template <class T>
 class Vector3 {
 public:
-    // Vector3 Public Methods
     Vector3() { x = y = z = 0; }
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
     Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; }
@@ -127,11 +121,6 @@ public:
 template <class T>
 ostream & operator << (ostream &os, const Vector3<T> &v) {
     os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
-    return os;
-}
-
-ostream & operator << (ostream &os, const Vector3<Float> &v) {
-    os << StringPrint::printf("[ %f, %f, %f ]", v.x, v.y, v.z);
     return os;
 }
 
@@ -204,11 +193,6 @@ ostream & operator << (ostream &os, const Point2<T> &v) {
     return os;
 }
 
-ostream & operator << (ostream &os, const Point2<Float> &v) {
-    os << StringPrint::printf("[ %f, %f ]", v.x, v.y);
-    return os;
-}
-
 template <class T>
 class Point3 {
 public:
@@ -265,11 +249,6 @@ Point3<T> operator * (U f, const Point3<T> &p) {
 template <class T>
 ostream & operator << (ostream &os, const Point3<T> &v) {
     os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
-    return os;
-}
-
-ostream & operator << (ostream &os, const Point3<Float> &v) {
-    os << StringPrint::printf("[ %f, %f, %f ]", v.x, v.y, v.z);
     return os;
 }
 
@@ -333,11 +312,6 @@ inline Normal3<T> operator * (U f, const Normal3<T> &n) {
 template <class T>
 inline ostream & operator << (ostream &os, const Normal3<T> &v) {
     os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
-    return os;
-}
-
-inline ostream & operator << (ostream &os, const Normal3<Float> &v) {
-    os << StringPrint::printf("[ %f, %f, %f ]", v.x, v.y, v.z);
     return os;
 }
 
