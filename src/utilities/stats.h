@@ -170,7 +170,7 @@ private:
         accum.reportMemoryCounter(title, var);             \
         var = 0;                                           \
     }                                                      \
-    static StatRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
 
 
 #define STATS_INT64_T_MIN std::numeric_limits<int64_t>::max()
