@@ -14,6 +14,7 @@ thread_local int Parallel::threadIndex;
 
 void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSize)
 {
+    CHECK(threads.size() > 0 || maxThreadIndex() == 1);
     // Run iterations if not using threads or if count is small
     if (threads.empty() || count < chunkSize) {
         for (int i = 0; i < count; i++) func(i);
@@ -51,8 +52,10 @@ void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSiz
             Profiler::state = loop.profilerState;
             if (loop.func1D)
                 loop.func1D(index);
-            else
+            else {
+                CHECK(loop.func2D);
                 loop.func2D(Point2i(index % loop.nX, index / loop.nX));
+            }
 
             Profiler::state = oldState;
         }
@@ -65,6 +68,7 @@ void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSiz
 
 void Parallel::forLoop2D(function<void(Point2i)> func, const Point2i &count)
 {
+    CHECK(threads.size() > 0 || maxThreadIndex() == 1);
     if (threads.empty() || count.x * count.y <= 1) {
         for (int y = 0; y < count.y; ++y)
             for (int x = 0; x < count.x; ++x) func(Point2i(x, y));
@@ -95,8 +99,10 @@ void Parallel::forLoop2D(function<void(Point2i)> func, const Point2i &count)
             Profiler::state = loop.profilerState;
             if (loop.func1D)
                 loop.func1D(index);
-            else
+            else {
+                CHECK(loop.func2D);
                 loop.func2D(Point2i(index % loop.nX, index / loop.nX));
+            }
             Profiler::state = oldState;
         }
         lock.lock();
@@ -107,6 +113,7 @@ void Parallel::forLoop2D(function<void(Point2i)> func, const Point2i &count)
 
 void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
 {
+    LOG(INFO) << "Started execution in worker thread " << tIndex;
     threadIndex = tIndex;
     Profiler::workerThreadInit();
 
@@ -149,8 +156,10 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
                 Profiler::state = loop.profilerState;
                 if (loop.func1D)
                     loop.func1D(index);
-                else
+                else {
+                    CHECK(loop.func2D);
                     loop.func2D(Point2i(index % loop.nX, index / loop.nX));
+                }
 
                 Profiler::state = oldState;
             }
@@ -161,10 +170,12 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
             if (loop.isFinished()) workListCondition.notify_all();
         }
     }
+    LOG(INFO) << "Exiting worker thread " << tIndex;
 }
 
 void Barrier::wait() {
     unique_lock<mutex> lock(mut);
+    CHECK_GT(count, 0);
     if (--count == 0)
         cv.notify_all();
     else

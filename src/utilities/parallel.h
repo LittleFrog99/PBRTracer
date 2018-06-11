@@ -2,6 +2,7 @@
 #define PARALLEL_H
 
 #include "vector.h"
+#include "core/renderer.h"
 #include <thread>
 
 class Barrier {
@@ -47,6 +48,8 @@ public:
     static void forLoop(function<void(int64_t)> func, int64_t count, int chunkSize = 1);
     static void forLoop2D(function<void(Point2i)> func, const Point2i &count);
 
+    static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
+
 private:
     static vector<thread> threads;
     static bool shutdownThreads;
@@ -64,10 +67,8 @@ private:
     static void workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier);
 
     static int maxThreadIndex() {
-        return numSystemCores(); // to be completed
+        return Renderer::options.nThreads == 0 ? numSystemCores() : Renderer::options.nThreads;
     }
-
-    static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
 };
 
 class AtomicFloat {

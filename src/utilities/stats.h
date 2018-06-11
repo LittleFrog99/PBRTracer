@@ -2,7 +2,6 @@
 #define STATS_H
 
 #include "utilities.h"
-#include <map>
 #include <array>
 
 class StatsAccumulator;

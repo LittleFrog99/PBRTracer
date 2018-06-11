@@ -20,7 +20,7 @@ Matrix4x4 Matrix4x4::inverse() {
                             icol = k;
                         }
                     } else if (ipiv[k] > 1)
-                        Report::error("Singular matrix in MatrixInvert");
+                        ERROR("Singular matrix in MatrixInvert");
                 }
             }
         }
@@ -31,7 +31,7 @@ Matrix4x4 Matrix4x4::inverse() {
         }
         indxr[i] = irow;
         indxc[i] = icol;
-        if (minv[icol][icol] == 0.f) Report::error("Singular matrix in MatrixInvert");
+        if (minv[icol][icol] == 0.f) ERROR("Singular matrix in MatrixInvert");
 
         // Set m[icol][icol] to one by scaling row icol appropriately
         Float pivinv = 1.0 / minv[icol][icol];

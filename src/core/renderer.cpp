@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "paramset.h"
 
 Options Renderer::options;
 APIState Renderer::currentApiState = APIState::Uninitialized;

@@ -185,6 +185,7 @@ atomic<bool> Profiler::isRunning{false};
 atomic<int> Profiler::suspendCount;
 
 void Profiler::init() {
+    CHECK(!Profiler::isRunning);
     state = profToBits(Stage::SceneConstruction);
     clear();
 
@@ -203,10 +204,12 @@ void Profiler::init() {
     timer.it_value = timer.it_interval;
 
     isRunning = true;
-    setitimer(ITIMER_PROF, &timer, nullptr);
+    CHECK_EQ(setitimer(ITIMER_PROF, &timer, nullptr), 0)
+            << "Timer could not be initialized: " << strerror(errno);
 }
 
 void Profiler::workerThreadInit() {
+    CHECK(!Profiler::isRunning || Profiler::suspendCount > 0);
     state = profToBits(Stage::SceneConstruction);
 }
 
@@ -218,12 +221,14 @@ void Profiler::clear() {
 }
 
 void Profiler::cleanup() {
+    CHECK(Profiler::isRunning);
     static struct itimerval timer;
     timer.it_interval.tv_sec = 0;
     timer.it_interval.tv_usec = 0;
     timer.it_value = timer.it_interval;
 
-    setitimer(ITIMER_PROF, &timer, nullptr);
+    CHECK_EQ(setitimer(ITIMER_PROF, &timer, nullptr), 0)
+            << "Timer could not be disabled: " << strerror(errno);
 }
 
 void Profiler::reportProfileSample(int, siginfo_t *, void *) {
@@ -238,6 +243,7 @@ void Profiler::reportProfileSample(int, siginfo_t *, void *) {
         if (++h == PROFILE_HASH_SIZE) h = 0;
         ++count;
     }
+    CHECK_NE(count, PROFILE_HASH_SIZE) << "Profiler hash table filled up!";
     profileSamples[h].profilerState = state;
     ++profileSamples[h].count;
 }
@@ -272,6 +278,9 @@ void Profiler::reportResults(FILE *dest) {
         }
     }
 
+    LOG(INFO) << "Used " << used << " / " << PROFILE_HASH_SIZE
+              << " entries in profiler hash table";
+
     map<string, uint64_t> flatResults;
     map<string, uint64_t> hierarchicalResults;
     for (const ProfileSample &ps : profileSamples) {
@@ -291,6 +300,7 @@ void Profiler::reportResults(FILE *dest) {
         hierarchicalResults[s] += ps.count;
 
         int nameIndex = Math::log2Int(ps.profilerState);
+        CHECK_LT(nameIndex, NumProfCategories);
         flatResults[stageNames[nameIndex]] += ps.count;
     }
 

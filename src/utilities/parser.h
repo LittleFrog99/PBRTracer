@@ -64,7 +64,8 @@ private:
     static void addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spectrumType);
 
     template <typename Next, typename Unget>
-    static ParamSet parseParams(Next nextToken, Unget ungetToken, MemoryArena &arena, SpectrumType spectrumType);
+    static ParamSet parseParams(Next nextToken, Unget ungetToken, MemoryArena &arena,
+                                SpectrumType spectrumType);
 
     static string_view dequoteString(string_view str);
     static bool isQuotedString(string_view str) {
@@ -76,8 +77,10 @@ private:
 
 class Tokenizer {
 public:
-    static unique_ptr<Tokenizer> createFromFile(const string &filename, function<void(const char *)> errorCallback);
-    static unique_ptr<Tokenizer> createFromString(string str, function<void(const char *)> errorCallback);
+    static unique_ptr<Tokenizer> createFromFile(const string &filename,
+                                                function<void(const char *)> errorCallback);
+    static unique_ptr<Tokenizer> createFromString(string str,
+                                                  function<void(const char *)> errorCallback);
     ~Tokenizer();
     string_view next();
 

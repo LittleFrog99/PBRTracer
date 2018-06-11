@@ -7,9 +7,11 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
+#include <glog/logging.h>
 
 /* Macros */
 #ifndef DOUBLE_AS_FLOAT
@@ -49,6 +51,7 @@ static const Float INV_FOUR_PI = 0.07957747154594766788;
 static const Float PI_OVER_TWO = 1.57079632679489661923;
 static const Float PI_OVER_FOUR = 0.78539816339744830961;
 static const Float SQRT_TWO = 1.41421356237309504880;
+static constexpr Float MACHINE_EPSILON = numeric_limits<Float>::epsilon() * 0.5;
 
 /* Utility Funtions and Classes */
 template <class T, class U, class V>
@@ -98,6 +101,44 @@ inline double bitsToFloat(uint64_t ui) {
     double f;
     memcpy(&f, &ui, sizeof(uint64_t));
     return f;
+}
+
+inline float nextFloatDown(float v) {
+    // Handle infinity and positive zero for _NextFloatDown()_
+    if (std::isinf(v) && v < 0.) return v;
+    if (v == 0.f) v = -0.f;
+    uint32_t ui = floatToBits(v);
+    if (v > 0)
+        --ui;
+    else
+        ++ui;
+    return bitsToFloat(ui);
+}
+
+inline double nextFloatUp(double v, int delta = 1) {
+    if (std::isinf(v) && v > 0.) return v;
+    if (v == -0.f) v = 0.f;
+    uint64_t ui = floatToBits(v);
+    if (v >= 0.)
+        ui += delta;
+    else
+        ui -= delta;
+    return bitsToFloat(ui);
+}
+
+inline double nextFloatDown(double v, int delta = 1) {
+    if (std::isinf(v) && v < 0.) return v;
+    if (v == 0.f) v = -0.f;
+    uint64_t ui = floatToBits(v);
+    if (v > 0.)
+        ui -= delta;
+    else
+        ui += delta;
+    return bitsToFloat(ui);
+}
+
+inline Float gamma(int n) {
+    return (n * MACHINE_EPSILON) / (1 - n * MACHINE_EPSILON);
 }
 
 inline Float log2(Float x) {

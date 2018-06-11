@@ -37,7 +37,7 @@ string File::directoryContaining(const string &filename) {
 bool File::readFloatFile(const char *filename, std::vector<Float> *values) {
     FILE *f = fopen(filename, "r");
     if (!f) {
-        Report::error("Unable to open file \"%s\"", filename);
+        ERROR("Unable to open file \"%s\"", filename);
         return false;
     }
 
@@ -49,6 +49,7 @@ bool File::readFloatFile(const char *filename, std::vector<Float> *values) {
     while ((c = getc(f)) != EOF) {
         if (c == '\n') ++lineNumber;
         if (inNumber) {
+            CHECK_LT(curNumberPos, sizeof(curNumber));
             if (isdigit(c) || c == '.' || c == 'e' || c == '-' || c == '+')
                 curNumber[curNumberPos++] = c;
             else {
@@ -66,7 +67,7 @@ bool File::readFloatFile(const char *filename, std::vector<Float> *values) {
                     ;
                 ++lineNumber;
             } else if (!isspace(c))
-                Report::warning("Unexpected text found at line %d of float file \"%s\"",
+                WARNING("Unexpected text found at line %d of float file \"%s\"",
                         lineNumber, filename);
         }
     }

@@ -6,7 +6,6 @@
 #include "report.h"
 #include "spectrum.h"
 #include "core/texture.h"
-#include <map>
 
 
 template <typename T>

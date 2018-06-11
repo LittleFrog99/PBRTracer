@@ -1,9 +1,9 @@
 #ifndef API_H
 #define API_H
 
-#include "paramset.h"
 #include "utilities.h"
 
+class ParamSet;
 
 class API {
 public:

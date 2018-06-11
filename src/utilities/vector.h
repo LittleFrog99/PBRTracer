@@ -21,16 +21,15 @@ class Vector2 {
 public:
     // Vector2 Public Methods
     Vector2() { x = y = 0; }
-    Vector2(T xx, T yy) : x(xx), y(yy) { }
-    explicit Vector2(const Point2<T> &p);
     bool hasNaNs() const { return isNaN(x) || isNaN(y); }
+    Vector2(T xx, T yy) : x(xx), y(yy) {}
+    explicit Vector2(const Point2<T> &p);
 
     Vector2(const Vector2<T> &v) { x = v.x; y = v.y; }
     Vector2<T> & operator = (const Vector2<T> &v) { x = v.x; y = v.y; return *this; }
     Vector2<T> operator + (const Vector2<T> &v) const { return Vector2(x + v.x, y + v.y); }
     Vector2<T> & operator += (const Vector2<T> &v) { x += v.x; y += v.y; return *this; }
     Vector2<T> operator - (const Vector2<T> &v) const { return Vector2(x - v.x, y - v.y); }
-
     Vector2<T> & operator -= (const Vector2<T> &v) { x -= v.x; y -= v.y; return *this; }
     bool operator == (const Vector2<T> &v) const { return x == v.x && y == v.y; }
     bool operator != (const Vector2<T> &v) const { return x != v.x || y != v.y; }
@@ -39,7 +38,7 @@ public:
     Vector2<T> operator * (U f) const { return Vector2<T>(f * x, f * y); }
 
     template <class U>
-    Vector2<T> &operator*=(U f) { x *= f; y *= f; return *this; }
+    Vector2<T> &operator *= (U f) { x *= f; y *= f; return *this; }
 
     template <class U>
     Vector2<T> operator / (U f) const {
@@ -54,9 +53,8 @@ public:
     T operator [] (int i) const { if (i == 0) return x; return y; }
     T & operator [] (int i) { if (i == 0) return x; return y; }
     Float lengthSq() const { return x * x + y * y; }
-    Float length() const { return std::sqrt(lengthSq()); }
+    Float length() const { return sqrt(lengthSq()); }
 
-    // Vector2 Public Data
     T x, y;
 };
 
@@ -75,11 +73,11 @@ template <class T>
 class Vector3 {
 public:
     Vector3() { x = y = z = 0; }
+    bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
     Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; }
     explicit Vector3(const Point3<T> &p);
     explicit Vector3(const Normal3<T> &n);
-    bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
 
     Vector3<T> & operator = (const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; return *this; }
     Vector3<T> operator + (const Vector3<T> &v) const { return Vector3(x + v.x, y + v.y, z + v.z); }
@@ -92,6 +90,9 @@ public:
 
     template <class U>
     Vector3<T> operator * (U s) const { return Vector3<T>(s * x, s * y, s * z); }
+
+    template <class U>
+    friend Vector3<T> operator * (U s, const Vector3<T> &v) { return Vector3<T>(s * v.x, s * v.y, s * v.z); }
 
     template <class U>
     Vector3<T> & operator *= (U s) { x *= s; y *= s; z *= s; return *this; }
@@ -114,7 +115,6 @@ public:
     Float lengthSq() const { return x * x + y * y + z * z; }
     Float length() const { return std::sqrt(lengthSq()); }
 
-    // Vector3 Public Data
     T x, y, z;
 };
 
@@ -199,7 +199,7 @@ public:
     Point3() { x = y = z = 0; }
     Point3(T x, T y, T z) : x(x), y(y), z(z) { }
     Point3(const Point3<T> &p) { x = p.x; y = p.y; z = p.z; }
-    bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
+    bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
 
     template <class U>
     explicit Point3(const Point3<U> &p) : x(p.x), y(p.y), z(p.z) {}
@@ -417,12 +417,12 @@ inline Vector2<T> abs(const Vector2<T> &v) {
 }
 
 template <typename T>
-inline Float dist(const Point3<T> &p1, const Point3<T> &p2) {
+inline Float distance(const Point3<T> &p1, const Point3<T> &p2) {
     return (p1 - p2).length();
 }
 
 template <typename T>
-inline Float distSq(const Point3<T> &p1, const Point3<T> &p2) {
+inline Float distanceSq(const Point3<T> &p1, const Point3<T> &p2) {
     return (p1 - p2).lengthSq();
 }
 
@@ -459,12 +459,12 @@ inline Point3<T> abs(const Point3<T> &p) {
 }
 
 template <typename T>
-inline Float dist(const Point2<T> &p1, const Point2<T> &p2) {
+inline Float distance(const Point2<T> &p1, const Point2<T> &p2) {
     return (p1 - p2).length();
 }
 
 template <typename T>
-inline Float distSq(const Point2<T> &p1, const Point2<T> &p2) {
+inline Float distanceSq(const Point2<T> &p1, const Point2<T> &p2) {
     return (p1 - p2).lengthSq();
 }
 
@@ -555,7 +555,47 @@ inline Vector3<T> faceforward(const Vector3<T> &v, const Normal3<T> &n2) {
 
 template <typename T>
 inline Normal3<T> abs(const Normal3<T> &v) {
-    return Normal3<T>(abs(v.x), abs(v.y), abs(v.z));
+    return Normal3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
+}
+
+inline Point3f offsetRayOrigin(const Point3f &p, const Vector3f &pError,
+                               const Normal3f &n, const Vector3f &w) {
+    Float d = dot(abs(n), pError);
+#ifdef PBRT_FLOAT_AS_DOUBLE
+    // We have tons of precision; for now bump up the offset a bunch just
+    // to be extra sure that we start on the right side of the surface
+    // (In case of any bugs in the epsilons code...)
+    d *= 1024.;
+#endif
+    Vector3f offset = d * Vector3f(n);
+    if (dot(w, n) < 0) offset = -offset;
+    Point3f po = p + offset;
+    // Round offset point _po_ away from _p_
+    for (int i = 0; i < 3; ++i) {
+        if (offset[i] > 0)
+            po[i] = nextFloatUp(po[i]);
+        else if (offset[i] < 0)
+            po[i] = nextFloatDown(po[i]);
+    }
+    return po;
+}
+
+inline Vector3f sphericalDirection(Float sinTheta, Float cosTheta, Float phi) {
+    return Vector3f(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+}
+
+inline Vector3f sphericalDirection(Float sinTheta, Float cosTheta, Float phi,
+                                   const Vector3f &x, const Vector3f &y, const Vector3f &z) {
+    return sinTheta * cos(phi) * x + sinTheta * sin(phi) * y + cosTheta * z;
+}
+
+inline Float sphericalTheta(const Vector3f &v) {
+    return acos(clamp(v.z, -1, 1));
+}
+
+inline Float sphericalPhi(const Vector3f &v) {
+    Float p = atan2(v.y, v.x);
+    return (p < 0) ? (p + 2 * PI) : p;
 }
 
 }

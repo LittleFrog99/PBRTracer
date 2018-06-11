@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "core/api.h"
 #include "core/renderer.h"
+#include "core/paramset.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -17,7 +18,7 @@ STAT_MEMORY_COUNTER("Memory/Tokenizer buffers", tokenizerMemory);
 char Parser::decodeEscaped(int ch) {
     switch (ch) {
     case EOF:
-        Report::error("premature EOF after character escape '\\'");
+        ERROR("premature EOF after character escape '\\'");
         exit(1);
     case 'b':
         return '\b';
@@ -36,7 +37,7 @@ char Parser::decodeEscaped(int ch) {
     case '\"':
         return '\"';
     default:
-        Report::error("unexpected escaped character \"%c\"", ch);
+        ERROR("unexpected escaped character \"%c\"", ch);
         exit(1);
     }
     return 0;  // NOTREACHED
@@ -137,6 +138,7 @@ string_view Tokenizer::next() {
                         sEscaped.push_back(*p);
                     else {
                         ++p;
+                        CHECK_LT(p, pos);
                         sEscaped.push_back(Parser::decodeEscaped(*p));
                     }
                 }
@@ -177,7 +179,7 @@ Tokenizer::~Tokenizer() {
 
 string_view Parser::dequoteString(string_view str) {
     if (!isQuotedString(str)) {
-        Report::error("\"%s\": expected quoted string", to_string(str).c_str());
+        ERROR("\"%s\": expected quoted string", to_string(str).c_str());
         exit(1);
     }
     str.remove_prefix(1);
@@ -189,7 +191,7 @@ double Parser::parseNumber(string_view str) {
     // Fast path for a single digit
     if (str.size() == 1) {
         if (!(str[0] >= '0' && str[0] <= '9')) {
-            Report::error("\"%c\": expected a number", str[0]);
+            ERROR("\"%c\": expected a number", str[0]);
             exit(1);
         }
         return str[0] - '0';
@@ -226,7 +228,7 @@ double Parser::parseNumber(string_view str) {
         val = strtod(bufp, &endptr);
 
     if (val == 0 && endptr == bufp) {
-        Report::error("%s: expected a number", to_string(str).c_str());
+        ERROR("%s: expected a number", to_string(str).c_str());
         exit(1);
     }
 
@@ -248,7 +250,7 @@ bool Parser::lookupType(const string &decl, int *type, string &sname) {
 
     auto typeBegin = skipSpace(decl.begin());
     if (typeBegin == decl.end()) {
-        Report::error("Parameter \"%s\" doesn't have a type declaration?!", decl.c_str());
+        ERROR("Parameter \"%s\" doesn't have a type declaration?!", decl.c_str());
         return false;
     }
 
@@ -291,13 +293,13 @@ bool Parser::lookupType(const string &decl, int *type, string &sname) {
     else if (typeStr == "spectrum")
         *type = PARAM_TYPE_SPECTRUM;
     else {
-        Report::error("Unable to decode type from \"%s\"", decl.c_str());
+        ERROR("Unable to decode type from \"%s\"", decl.c_str());
         return false;
     }
 
     auto nameBegin = skipSpace(typeEnd);
     if (nameBegin == decl.end()) {
-        Report::error("Unable to find parameter name from \"%s\"", decl.c_str());
+        ERROR("Unable to find parameter name from \"%s\"", decl.c_str());
         return false;
     }
     auto nameEnd = skipToSpace(nameBegin);
@@ -338,6 +340,7 @@ const char * Parser::paramTypeToName(int type) {
     case PARAM_TYPE_TEXTURE:
         return "texture";
     default:
+        LOG(FATAL) << "Error in paramTypeToName";
         return nullptr;
     }
 }
@@ -349,7 +352,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
         if (type == PARAM_TYPE_TEXTURE || type == PARAM_TYPE_STRING ||
             type == PARAM_TYPE_BOOL) {
             if (!item.stringValues) {
-                Report::error(
+                ERROR(
                     "Expected string parameter value for parameter "
                     "\"%s\" with type \"%s\". Ignoring.",
                     name.c_str(), paramTypeToName(type));
@@ -358,7 +361,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
         } else if (type !=
                    PARAM_TYPE_SPECTRUM) { /* spectrum can be either... */
             if (item.stringValues) {
-                Report::error(
+                ERROR(
                     "Expected numeric parameter value for parameter "
                     "\"%s\" with type \"%s\".  Ignoring.",
                     name.c_str(), paramTypeToName(type));
@@ -520,7 +523,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                 string val(*item.stringValues);
                 ps.addTexture(name, val);
             } else
-                Report::error(
+                ERROR(
                     "Only one string allowed for \"texture\" parameter "
                     "\"%s\"",
                     name.c_str());
@@ -548,7 +551,7 @@ ParamSet Parser::parseParams(Next nextToken, Unget ungetToken, MemoryArena &aren
         auto addVal = [&](string_view val) {
             if (isQuotedString(val)) {
                 if (item.doubleValues) {
-                    Report::error("mixed string and numeric parameters");
+                    ERROR("mixed string and numeric parameters");
                     exit(1);
                 }
                 if (item.size == nAlloc) {
@@ -566,7 +569,7 @@ ParamSet Parser::parseParams(Next nextToken, Unget ungetToken, MemoryArena &aren
                 item.stringValues[item.size++] = buf;
             } else {
                 if (item.stringValues) {
-                    Report::error("mixed string and numeric parameters");
+                    ERROR("mixed string and numeric parameters");
                     exit(1);
                 }
 
@@ -619,7 +622,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
 
         if (fileStack.empty()) {
             if (flags & TOKEN_REQUIRED) {
-                Report::error("premature EOF");
+                ERROR("premature EOF");
                 exit(1);
             }
             loc = nullptr;
@@ -638,7 +641,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
             string filename =
                 to_string(dequoteString(nextToken(TOKEN_REQUIRED)));
             filename = File::absolutePath(File::resolveFilename(filename));
-            auto tokError = [](const char *msg) { Report::error("%s", msg); };
+            auto tokError = [](const char *msg) { ERROR("%s", msg); };
             unique_ptr<Tokenizer> tinc =
                 Tokenizer::createFromFile(filename, tokError);
             if (tinc) {
@@ -658,6 +661,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
     };
 
     auto ungetToken = [&](string_view s) {
+        CHECK(!ungetTokenSet);
         ungetTokenValue = string(s.data(), s.size());
         ungetTokenSet = true;
     };
@@ -678,7 +682,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
     };
 
     auto syntaxError = [&](string_view tok) {
-        Report::error("Unexpected token: %s", to_string(tok).c_str());
+        ERROR("Unexpected token: %s", to_string(tok).c_str());
         exit(1);
     };
 

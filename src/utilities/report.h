@@ -3,6 +3,39 @@
 
 #include "stringprint.h"
 #include "parser.h"
+#include "core/renderer.h"
+#include <thread>
+
+class ProgressReporter {
+public:
+    ProgressReporter(int64_t totalWork, const string &title);
+    ~ProgressReporter();
+
+    void update(int64_t num = 1) {
+        if (num == 0 || Renderer::options.quiet) return;
+        workDone += num;
+    }
+
+    Float elapsedMS() const {
+        chrono::system_clock::time_point now = chrono::system_clock::now();
+        int64_t elapsedMS = chrono::duration_cast<chrono::milliseconds>(now - startTime).count();
+        return Float(elapsedMS);
+    }
+
+    void done();
+
+  private:
+    void printBar();
+    int terminalWidth();
+
+    const int64_t totalWork;
+    const string title;
+    const chrono::system_clock::time_point startTime;
+    atomic<int64_t> workDone;
+    atomic<bool> exitThread;
+    thread updateThread;
+};
+
 
 #ifdef __GNUG__
 #define PRINTF_FUNC __attribute__((__format__(__printf__, 1, 2)))
@@ -33,6 +66,11 @@ private:
     static void processError(Parser::Location *loc, const char *format, va_list args,
                              const char *errorType);
 };
+
+#define INFO(args...) Report::info(args)
+#define WARNING(args...) Report::warning(args)
+#define ERROR(args...) Report::error(args)
+#define SEVERE(args...) Report::severe(args)
 
 #ifdef NDEBUG
 #define ASSERT(expr) ((void)0)

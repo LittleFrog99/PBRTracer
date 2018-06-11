@@ -65,6 +65,7 @@ void ParamSet::addNormal3f(const string &name, unique_ptr<Normal3f[]> values, in
 
 void ParamSet::addRGBSpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
     eraseSpectrum(name);
+    CHECK_EQ(nValues % 3, 0);
     nValues /= 3;
     unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
     for (int i = 0; i < nValues; ++i) s[i] = RGBSpectrum::fromRGB(&values[3 * i]);
@@ -75,6 +76,7 @@ void ParamSet::addRGBSpectrum(const string &name, unique_ptr<Float[]> values, in
 
 void ParamSet::addXYZSpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
     eraseSpectrum(name);
+    CHECK_EQ(nValues % 3, 0);
     nValues /= 3;
     unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
     for (int i = 0; i < nValues; ++i) s[i] = RGBSpectrum::fromXYZ(&values[3 * i]);
@@ -85,6 +87,7 @@ void ParamSet::addXYZSpectrum(const string &name, unique_ptr<Float[]> values, in
 
 void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
     eraseSpectrum(name);
+    CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
     unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
     unique_ptr<Float[]> v(new Float[Spectrum::NUM_CIE_SAMPLES]);
@@ -100,6 +103,7 @@ void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> valu
 
 void ParamSet::addSampledSpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
     eraseSpectrum(name);
+    CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
     unique_ptr<Float[]> wl(new Float[nValues]);
     unique_ptr<Float[]> v(new Float[nValues]);
@@ -374,7 +378,7 @@ string ParamSet::findTexture(const string &name) const {
 #define CHECK_UNUSED(v)                                                 \
     for (size_t i = 0; i < (v).size(); ++i)                             \
         if (!(v)[i]->lookedUp)                                          \
-            Report::Report::warning("Parameter \"%s\" not used", (v)[i]->name.c_str())
+            Report::warning("Parameter \"%s\" not used", (v)[i]->name.c_str())
 
 void ParamSet::reportUnused() const {
     CHECK_UNUSED(ints);
@@ -590,7 +594,6 @@ void ParamSet::printSet(int indent) const {
     printItems("rgb", indent, spectra);
 }
 
-// TextureParams Method Definitions
 shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTexture(
     const string &n, const Spectrum &def) const {
     shared_ptr<Texture<Spectrum>> tex = getSpectrumTextureOrNull(n);
@@ -635,7 +638,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
     if (spectrumTextures.find(name) != spectrumTextures.end())
         return spectrumTextures[name];
     else {
-        Report::error("Couldn't find spectrum texture named \"%s\" for parameter \"%s\"",
+        ERROR("Couldn't find spectrum texture named \"%s\" for parameter \"%s\"",
               name.c_str(), n.c_str());
         return nullptr;
     }
@@ -683,7 +686,7 @@ shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(
     if (floatTextures.find(name) != floatTextures.end())
         return floatTextures[name];
     else {
-        Report::error("Couldn't find float texture named \"%s\" for parameter \"%s\"",
+        ERROR("Couldn't find float texture named \"%s\" for parameter \"%s\"",
                       name.c_str(), n.c_str());
         return nullptr;
     }
