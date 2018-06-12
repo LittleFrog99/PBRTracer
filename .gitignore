@@ -70,6 +70,7 @@ Thumbs.db
 
 # Binaries
 # --------
+lib
 *.dll
 *.exe
 *.o

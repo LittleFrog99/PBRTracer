@@ -58,7 +58,7 @@ public:
     T x, y;
 };
 
-template <typename T, typename U>
+template <class T, class U>
 Vector2<T> operator * (U f, const Vector2<T> &v) {
     return v * f;
 }
@@ -182,7 +182,7 @@ public:
     T x, y;
 };
 
-template <typename T, typename U>
+template <class T, class U>
 Point2<T> operator*(U f, const Point2<T> &p) {
     return p * f;
 }
@@ -241,7 +241,7 @@ public:
     T x, y, z;
 };
 
-template <typename T, typename U>
+template <class T, class U>
 Point3<T> operator * (U f, const Point3<T> &p) {
     return p * f;
 }
@@ -304,7 +304,7 @@ public:
     T x, y, z;
 };
 
-template <typename T, typename U>
+template <class T, class U>
 inline Normal3<T> operator * (U f, const Normal3<T> &n) {
     return Normal3<T>(f * n.x, f * n.y, f * n.z);
 }
@@ -327,7 +327,7 @@ template<class T>
 inline Vector3<T>::Vector3(const Normal3<T> &n) : x(n.x), y(n.y), z(n.z) {}
 
 namespace Math {
-template <typename T>
+template <class T>
 inline Vector3<T> cross(const Vector3<T> &v1, const Vector3<T> &v2) {
     double v1x = v1.x, v1y = v1.y, v1z = v1.z;
     double v2x = v2.x, v2y = v2.y, v2z = v2.z;
@@ -335,7 +335,7 @@ inline Vector3<T> cross(const Vector3<T> &v1, const Vector3<T> &v2) {
                       (v1x * v2y) - (v1y * v2x));
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> cross(const Vector3<T> &v1, const Normal3<T> &v2) {
     double v1x = v1.x, v1y = v1.y, v1z = v1.z;
     double v2x = v2.x, v2y = v2.y, v2z = v2.z;
@@ -343,7 +343,7 @@ inline Vector3<T> cross(const Vector3<T> &v1, const Normal3<T> &v2) {
                       (v1x * v2y) - (v1y * v2x));
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> cross(const Normal3<T> &v1, const Vector3<T> &v2) {
     double v1x = v1.x, v1y = v1.y, v1z = v1.z;
     double v2x = v2.x, v2y = v2.y, v2z = v2.z;
@@ -351,42 +351,47 @@ inline Vector3<T> cross(const Normal3<T> &v1, const Vector3<T> &v2) {
                       (v1x * v2y) - (v1y * v2x));
 }
 
-template <typename T>
+template <class T>
+inline Vector3<T> abs(const Vector3<T> &v) {
+    return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
+}
+
+template <class T>
 inline Vector3<T> normalize(const Vector3<T> &v) {
     return v / v.length();
 }
 
-template <typename T>
+template <class T>
 inline T minComp(const Vector3<T> &v) {
     return min(v.x, min(v.y, v.z));
 }
 
-template <typename T>
+template <class T>
 inline T maxComp(const Vector3<T> &v) {
     return max(v.x, max(v.y, v.z));
 }
 
-template <typename T>
+template <class T>
 inline int maxDim(const Vector3<T> &v) {
     return (v.x > v.y) ? ((v.x > v.z) ? 0 : 2) : ((v.y > v.z) ? 1 : 2);
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> min(const Vector3<T> &p1, const Vector3<T> &p2) {
     return Vector3<T>(min(p1.x, p2.x), min(p1.y, p2.y), min(p1.z, p2.z));
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> max(const Vector3<T> &p1, const Vector3<T> &p2) {
     return Vector3<T>(max(p1.x, p2.x), max(p1.y, p2.y), max(p1.z, p2.z));
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> permute(const Vector3<T> &v, int x, int y, int z) {
     return Vector3<T>(v[x], v[y], v[z]);
 }
 
-template <typename T>
+template <class T>
 inline void coordSystem(const Vector3<T> &v1, Vector3<T> *v2,
                              Vector3<T> *v3) {
     if (abs(v1.x) > abs(v1.y))
@@ -396,164 +401,169 @@ inline void coordSystem(const Vector3<T> &v1, Vector3<T> *v2,
     *v3 = cross(v1, *v2);
 }
 
-template <typename T>
+template <class T>
 inline Float dot(const Vector2<T> &v1, const Vector2<T> &v2) {
     return v1.x * v2.x + v1.y * v2.y;
 }
 
-template <typename T>
+template <class T>
 inline Float absDot(const Vector2<T> &v1, const Vector2<T> &v2) {
     return abs(dot(v1, v2));
 }
 
-template <typename T>
+template <class T>
 inline Vector2<T> normalize(const Vector2<T> &v) {
     return v / v.length();
 }
 
-template <typename T>
+template <class T>
 inline Vector2<T> abs(const Vector2<T> &v) {
     return Vector2<T>(abs(v.x), abs(v.y));
 }
 
-template <typename T>
+template <class T>
 inline Float distance(const Point3<T> &p1, const Point3<T> &p2) {
     return (p1 - p2).length();
 }
 
-template <typename T>
+template <class T>
 inline Float distanceSq(const Point3<T> &p1, const Point3<T> &p2) {
     return (p1 - p2).lengthSq();
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> lerp(Float t, const Point3<T> &p0, const Point3<T> &p1) {
     return (1 - t) * p0 + t * p1;
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> min(const Point3<T> &p1, const Point3<T> &p2) {
     return Point3<T>(min(p1.x, p2.x), min(p1.y, p2.y),
                      min(p1.z, p2.z));
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> max(const Point3<T> &p1, const Point3<T> &p2) {
     return Point3<T>(max(p1.x, p2.x), max(p1.y, p2.y),
                      max(p1.z, p2.z));
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> floor(const Point3<T> &p) {
     return Point3<T>(floor(p.x), floor(p.y), floor(p.z));
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> ceil(const Point3<T> &p) {
     return Point3<T>(ceil(p.x), ceil(p.y), ceil(p.z));
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> abs(const Point3<T> &p) {
     return Point3<T>(abs(p.x), abs(p.y), abs(p.z));
 }
 
-template <typename T>
+template <class T>
 inline Float distance(const Point2<T> &p1, const Point2<T> &p2) {
     return (p1 - p2).length();
 }
 
-template <typename T>
+template <class T>
 inline Float distanceSq(const Point2<T> &p1, const Point2<T> &p2) {
     return (p1 - p2).lengthSq();
 }
 
-template <typename T>
+template <class T>
 inline Point2<T> floor(const Point2<T> &p) {
     return Point2<T>(floor(p.x), floor(p.y));
 }
 
-template <typename T>
+template <class T>
 inline Point2<T> ceil(const Point2<T> &p) {
     return Point2<T>(ceil(p.x), ceil(p.y));
 }
 
-template <typename T>
+template <class T>
 inline Point2<T> lerp(Float t, const Point2<T> &v0, const Point2<T> &v1) {
     return (1 - t) * v0 + t * v1;
 }
 
-template <typename T>
+template <class T>
 inline Point2<T> min(const Point2<T> &pa, const Point2<T> &pb) {
     return Point2<T>(min(pa.x, pb.x), min(pa.y, pb.y));
 }
 
-template <typename T>
+template <class T>
 inline Point2<T> max(const Point2<T> &pa, const Point2<T> &pb) {
     return Point2<T>(max(pa.x, pb.x), max(pa.y, pb.y));
 }
 
-template <typename T>
+template <class T>
 inline Point3<T> permute(const Point3<T> &p, int x, int y, int z) {
     return Point3<T>(p[x], p[y], p[z]);
 }
 
-template <typename T>
+template <class T>
 inline Normal3<T> normalize(const Normal3<T> &n) {
     return n / n.length();
 }
 
-template <typename T>
+template <class T>
 inline T dot(const Normal3<T> &n1, const Vector3<T> &v2) {
     return n1.x * v2.x + n1.y * v2.y + n1.z * v2.z;
 }
 
-template <typename T>
+template <class T>
 inline T dot(const Vector3<T> &v1, const Normal3<T> &n2) {
     return v1.x * n2.x + v1.y * n2.y + v1.z * n2.z;
 }
 
-template <typename T>
+template <class T>
 inline T dot(const Normal3<T> &n1, const Normal3<T> &n2) {
     return n1.x * n2.x + n1.y * n2.y + n1.z * n2.z;
 }
 
-template <typename T>
+template <class T>
+inline T dot(const Vector3<T> &v1, const Vector3<T> &v2) {
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+template <class T>
 inline T absDot(const Normal3<T> &n1, const Vector3<T> &v2) {
     return abs(n1.x * v2.x + n1.y * v2.y + n1.z * v2.z);
 }
 
-template <typename T>
+template <class T>
 inline T absDot(const Vector3<T> &v1, const Normal3<T> &n2) {
     return abs(v1.x * n2.x + v1.y * n2.y + v1.z * n2.z);
 }
 
-template <typename T>
+template <class T>
 inline T absDot(const Normal3<T> &n1, const Normal3<T> &n2) {
     return abs(n1.x * n2.x + n1.y * n2.y + n1.z * n2.z);
 }
 
-template <typename T>
+template <class T>
 inline Normal3<T> faceforward(const Normal3<T> &n, const Vector3<T> &v) {
     return (dot(n, v) < 0.f) ? -n : n;
 }
 
-template <typename T>
+template <class T>
 inline Normal3<T> faceforward(const Normal3<T> &n, const Normal3<T> &n2) {
     return (dot(n, n2) < 0.f) ? -n : n;
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> faceforward(const Vector3<T> &v, const Vector3<T> &v2) {
     return (dot(v, v2) < 0.f) ? -v : v;
 }
 
-template <typename T>
+template <class T>
 inline Vector3<T> faceforward(const Vector3<T> &v, const Normal3<T> &n2) {
     return (dot(v, n2) < 0.f) ? -v : v;
 }
 
-template <typename T>
+template <class T>
 inline Normal3<T> abs(const Normal3<T> &v) {
     return Normal3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
 }

@@ -4,7 +4,7 @@
 
 string File::searchDirectory;
 
-bool File::isAbosolutePath(const string &filename) {
+bool File::isAbsolutePath(const string &filename) {
     return (filename.size() > 0) && filename[0] == '/';
 }
 
@@ -19,7 +19,7 @@ string File::absolutePath(const string &filename) {
 string File::resolveFilename(const string &filename) {
     if (searchDirectory.empty() || filename.empty())
         return filename;
-    else if (File::isAbosolutePath(filename))
+    else if (File::isAbsolutePath(filename))
         return filename;
     else if (searchDirectory[searchDirectory.size() - 1] == '/')
         return searchDirectory + filename;

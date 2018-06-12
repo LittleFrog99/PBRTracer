@@ -5,7 +5,7 @@
 
 class File {
 public:
-    static bool isAbosolutePath(const string &filename);
+    static bool isAbsolutePath(const string &filename);
     static string absolutePath(const string &filename);
     static string resolveFilename(const string &filename);
     static string directoryContaining(const string &filename);

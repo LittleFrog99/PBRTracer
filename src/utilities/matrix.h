@@ -26,14 +26,14 @@ public:
         m[3][0] = t30; m[3][1] = t31; m[3][2] = t32; m[3][3] = t33;
     }
 
-    Matrix4x4 transpose() {
+    Matrix4x4 transpose() const {
         return Matrix4x4(m[0][0], m[1][0], m[2][0], m[3][0],
                 m[0][1], m[1][1], m[2][1], m[3][1],
                 m[0][2], m[1][2], m[2][2], m[3][2],
                 m[0][3], m[1][3], m[2][3], m[3][3]);
     }
 
-    Matrix4x4 operator * (const Matrix4x4 &mat) {
+    Matrix4x4 operator * (const Matrix4x4 &mat) const {
         Matrix4x4 r;
         for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
@@ -42,14 +42,14 @@ public:
         return r;
     }
 
-    bool operator == (const Matrix4x4 &mat) {
+    bool operator == (const Matrix4x4 &mat) const {
         for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
                 if (m[i][j] != mat.m[i][j]) return false;
         return true;
     }
 
-    bool operator != (const Matrix4x4 &mat) {
+    bool operator != (const Matrix4x4 &mat) const {
         for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
                 if (m[i][j] != mat.m[i][j]) return true;
@@ -68,7 +68,7 @@ public:
         return os;
     }
 
-    Matrix4x4 inverse();
+    Matrix4x4 inverse() const;
 
     Float m[4][4];
 };

@@ -4,9 +4,9 @@
 
 static void usage(const char *msg = nullptr) {
     if (msg)
-        fprintf(stderr, "pbrt: %s\n\n", msg);
+        fprintf(stderr, "pbr-tracer: %s\n\n", msg);
 
-    fprintf(stderr, R"(usage: pbrt [<options>] <filename.pbrt...>
+    fprintf(stderr, R"(usage: pbr-tacer [<options>] <filename.pbrt...>
 Rendering options:
   --help               Print this help text.
   --nthreads <num>     Use specified number of threads for rendering.

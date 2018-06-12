@@ -52,6 +52,7 @@ static const Float PI_OVER_TWO = 1.57079632679489661923;
 static const Float PI_OVER_FOUR = 0.78539816339744830961;
 static const Float SQRT_TWO = 1.41421356237309504880;
 static constexpr Float MACHINE_EPSILON = numeric_limits<Float>::epsilon() * 0.5;
+static constexpr Float SHADOW_EPSILON = 0.0001f;
 
 /* Utility Funtions and Classes */
 template <class T, class U, class V>
@@ -197,5 +198,7 @@ bool solveQuadratic(Float a, Float b, Float c, Float *t0, Float *t1);
 bool solveLinear2x2(const Float A[2][2], const Float B[2], Float *x0, Float *x1);
 
 }
+
+using namespace Math;
 
 #endif // COMMON_UTILITIES

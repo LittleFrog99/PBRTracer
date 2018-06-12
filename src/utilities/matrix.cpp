@@ -1,7 +1,7 @@
 #include "matrix.h"
 #include "report.h"
 
-Matrix4x4 Matrix4x4::inverse() {
+Matrix4x4 Matrix4x4::inverse() const {
     int indxc[4], indxr[4];
     int ipiv[4] = {0, 0, 0, 0};
     Float minv[4][4];

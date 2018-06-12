@@ -15,4 +15,5 @@ SET(SOURCES_UTILITIES src/utilities/random.cpp src/utilities/math.cpp src/utilit
 SET(SOURCES src/main.cpp ${SOURCES_CORE} ${SOURCES_UTILITIES})
 
 LINK_LIBRARIES(glog)
+
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES})
