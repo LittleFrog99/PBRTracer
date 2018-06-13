@@ -2,7 +2,7 @@
 #define PARALLEL_H
 
 #include "vector.h"
-#include "core/renderer.h"
+// #include "core/renderer.h"
 #include <thread>
 
 class Barrier {
@@ -65,10 +65,7 @@ private:
     static thread_local int threadIndex;
 
     static void workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier);
-
-    static int maxThreadIndex() {
-        return Renderer::options.nThreads == 0 ? numSystemCores() : Renderer::options.nThreads;
-    }
+    static int maxThreadIndex();
 };
 
 class AtomicFloat {

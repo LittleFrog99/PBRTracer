@@ -27,6 +27,11 @@ ProgressReporter::ProgressReporter(int64_t totalWork, const string &title)
     }
 }
 
+void ProgressReporter::update(int64_t num) {
+    if (num == 0 || Renderer::options.quiet) return;
+    workDone += num;
+}
+
 ProgressReporter::~ProgressReporter() {
     if (!Renderer::options.quiet) {
         workDone = totalWork;

@@ -1,11 +1,9 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
-#include "ray.h"
 #include "spectrum.h"
 #include "transform.h"
 #include "interaction.h"
-#include "medium.h"
 
 class Scene;
 class VisibilityTester;

@@ -1,5 +1,6 @@
 #include "parallel.h"
 #include "stats.h"
+#include "core/renderer.h"
 
 vector<thread> Parallel::threads;
 bool Parallel::shutdownThreads(false);
@@ -217,4 +218,8 @@ void Parallel::mergeWorkerThreadStats() {
     workListCondition.notify_all();
     reportDoneCondition.wait(lock, []() { return reporterCount == 0; });
     reportWorkerStats = false;
+}
+
+int Parallel::maxThreadIndex() {
+    return Renderer::options.nThreads == 0 ? numSystemCores() : Renderer::options.nThreads;
 }

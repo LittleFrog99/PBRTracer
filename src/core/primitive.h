@@ -35,32 +35,30 @@ private:
     MediumInterface mediumInterface;
 };
 
-// TransformedPrimitive Declarations
-/* class TransformedPrimitive : public Primitive {
-  public:
-    // TransformedPrimitive Public Methods
+class TransformedPrimitive : public Primitive {
+public:
     TransformedPrimitive(shared_ptr<Primitive> &primitive,
                          const AnimatedTransform &PrimitiveToWorld);
-    bool Intersect(const Ray &r, SurfaceInteraction *in) const;
-    bool IntersectP(const Ray &r) const;
-    const AreaLight *GetAreaLight() const { return nullptr; }
-    const Material *GetMaterial() const { return nullptr; }
-    void ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                    MemoryArena &arena, TransportMode mode,
-                                    bool allowMultipleLobes) const {
+    bool intersect(const Ray &r, SurfaceInteraction *in) const;
+    bool intersectP(const Ray &r) const;
+    const AreaLight * getAreaLight() const { return nullptr; }
+    const Material * getMaterial() const { return nullptr; }
+
+    void computeScatteringFuncs(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
+                                bool allowMultipleLobes) const {
         LOG(FATAL) <<
             "TransformedPrimitive::ComputeScatteringFunctions() shouldn't be "
             "called";
     }
-    Bounds3f WorldBound() const {
-        return PrimitiveToWorld.MotionBounds(primitive->WorldBound());
+
+    Bounds3f worldBound() const {
+        return primitiveToWorld.motionBounds(primitive->worldBound());
     }
 
-  private:
-    // TransformedPrimitive Private Data
+private:
     shared_ptr<Primitive> primitive;
-    const AnimatedTransform PrimitiveToWorld;
-};*/
+    const AnimatedTransform primitiveToWorld;
+};
 
 class Aggregate : public Primitive {
 public:
@@ -70,3 +68,4 @@ public:
                                 bool allowMultipleLobes) const;
 };
 #endif // PRIMITIVE_H
+

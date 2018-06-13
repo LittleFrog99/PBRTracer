@@ -3,7 +3,6 @@
 
 #include "stringprint.h"
 #include "parser.h"
-#include "core/renderer.h"
 #include <thread>
 
 class ProgressReporter {
@@ -11,10 +10,7 @@ public:
     ProgressReporter(int64_t totalWork, const string &title);
     ~ProgressReporter();
 
-    void update(int64_t num = 1) {
-        if (num == 0 || Renderer::options.quiet) return;
-        workDone += num;
-    }
+    void update(int64_t num = 1);
 
     Float elapsedMS() const {
         chrono::system_clock::time_point now = chrono::system_clock::now();

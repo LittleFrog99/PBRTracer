@@ -1,7 +1,6 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "light.h"
 #include "primitive.h"
 
 class Scene {

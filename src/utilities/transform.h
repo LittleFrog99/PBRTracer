@@ -4,6 +4,7 @@
 
 #include "bounds.h"
 #include "matrix.h"
+#include "quaternion.h"
 
 struct SurfaceInteraction;
 
@@ -33,8 +34,8 @@ public:
 
     void print(FILE *f) const;
 
-    Transform inverse(const Transform &t) { return Transform(t.mInv, t.m); }
-    Transform transpose(const Transform &t) { return Transform(t.m.transpose(), t.mInv.transpose()); }
+    Transform inverse() { return Transform(mInv, m); }
+    Transform transpose() { return Transform(m.transpose(), mInv.transpose()); }
 
     bool operator == (const Transform &t) const { return t.m == m && t.mInv == mInv; }
     bool operator != (const Transform &t) const { return t.m != m || t.mInv != mInv; }
@@ -289,4 +290,46 @@ inline Ray Transform::operator()(const Ray &r, const Vector3f &oErrorIn, const V
     }
     return Ray(o, d, tMax, r.time, r.medium);
 }
+
+class AnimatedTransform {
+public:
+    AnimatedTransform(const Transform *startTransform, Float startTime,
+                      const Transform *endTransform, Float endTime);
+
+    void interpolate(Float time, Transform *t) const;
+    Bounds3f motionBounds(const Bounds3f &b) const;
+    Bounds3f boundPointMotion(const Point3f &p) const;
+
+    Ray operator()(const Ray &r) const;
+    RayDifferential operator()(const RayDifferential &r) const;
+    Point3f operator()(Float time, const Point3f &p) const;
+    Vector3f operator()(Float time, const Vector3f &v) const;
+
+    bool hasScale() const {
+        return startTransform->hasScale() || endTransform->hasScale();
+    }
+
+    static void decompose(const Matrix4x4 &m, Vector3f *T, Quaternion *R, Matrix4x4 *S);
+
+private:
+    struct DerivativeTerm {
+        DerivativeTerm() {}
+        DerivativeTerm(Float c, Float x, Float y, Float z)
+            : kc(c), kx(x), ky(y), kz(z) {}
+        Float kc, kx, ky, kz;
+        Float evaluate(const Point3f &p) const {
+            return kc + kx * p.x + ky * p.y + kz * p.z;
+        }
+    };
+
+    const Transform *startTransform, *endTransform;
+    const Float startTime, endTime;
+    const bool actuallyAnimated;
+    Vector3f T[2];
+    Quaternion R[2];
+    Matrix4x4 S[2];
+    bool hasRotation;
+    DerivativeTerm c1[3], c2[3], c3[3], c4[3], c5[3];
+};
+
 #endif // TRANSFORM_H
