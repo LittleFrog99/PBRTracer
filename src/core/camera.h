@@ -5,8 +5,6 @@
 #include "light.h"
 #include "film.h"
 
-class Film;
-
 struct CameraSample {
     Point2f pFilm;
     Point2f pLens;
@@ -19,11 +17,10 @@ public:
            Float shutterClose, Film *film, const Medium *medium);
     virtual ~Camera();
     virtual Float genRay(const CameraSample &sample, Ray *ray) const = 0;
-    virtual Float genRayDifferential(const CameraSample &sample,
-                                          RayDifferential *rd) const;
-    virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
+    virtual Float genRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
+    virtual RGBSpectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
     virtual void Pdf_We(const Ray &ray, Float *pdfPos, Float *pdfDir) const;
-    virtual Spectrum Sample_Wi(const Interaction &ref, const Point2f &u,
+    virtual RGBSpectrum Sample_Wi(const Interaction &ref, const Point2f &u,
                                Vector3f *wi, Float *pdf, Point2f *pRaster,
                                VisibilityTester *vis) const;
 
@@ -34,7 +31,7 @@ public:
     const Medium *medium;
 };
 
-inline ostream &operator<<(ostream &os, const CameraSample &cs) {
+inline ostream & operator << (ostream &os, const CameraSample &cs) {
     os << "[ pFilm: " << cs.pFilm << " , pLens: " << cs.pLens <<
         StringPrint::printf(", time %f ]", cs.time);
     return os;

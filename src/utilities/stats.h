@@ -162,7 +162,8 @@ private:
         accum.reportCounter(title, var);                   \
         var = 0;                                           \
     }                                                      \
-    static StatRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
+
 #define STAT_MEMORY_COUNTER(title, var)                    \
     static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
@@ -170,7 +171,6 @@ private:
         var = 0;                                           \
     }                                                      \
     static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
-
 
 #define STATS_INT64_T_MIN std::numeric_limits<int64_t>::max()
 #define STATS_INT64_T_MAX std::numeric_limits<int64_t>::lowest()

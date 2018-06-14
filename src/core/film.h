@@ -18,11 +18,9 @@ public:
     FilmTile(const Bounds2i &pixelBounds, const Vector2f &filterRadius,
              const Float *filterTable, int filterTableSize,
              Float maxSampleLuminance)
-        : pixelBounds(pixelBounds),
-          filterRadius(filterRadius),
+        : pixelBounds(pixelBounds), filterRadius(filterRadius),
           invFilterRadius(1 / filterRadius.x, 1 / filterRadius.y),
-          filterTable(filterTable),
-          filterTableSize(filterTableSize),
+          filterTable(filterTable), filterTableSize(filterTableSize),
           maxSampleLuminance(maxSampleLuminance) {
         pixels = vector<FilmTilePixel>(max(0, pixelBounds.area()));
     }
@@ -60,10 +58,8 @@ private:
 
 class Film {
 public:
-    Film(const Point2i &resolution, const Bounds2f &cropWindow,
-         unique_ptr<Filter> filter, Float diagonal,
-         const string &filename, Float scale,
-         Float maxSampleLuminance = INFINITY);
+    Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
+         Float diagonal, const string &filename, Float scale, Float maxSampleLuminance = INFINITY);
     Bounds2i getSampleBounds() const;
     Bounds2f getPhysicalExtent() const;
     unique_ptr<FilmTile> getFilmTile(const Bounds2i &sampleBounds);

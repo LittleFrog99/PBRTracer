@@ -2,8 +2,8 @@
 
 void FilmTile::addSample(const Point2f &pFilm, RGBSpectrum L, Float sampleWeight) {
     ProfilePhase _(Profiler::Stage::AddFilmSample);
-    if (L.y() > maxSampleLuminance)
-        L *= maxSampleLuminance / L.y();
+    if (L.luminance() > maxSampleLuminance)
+        L *= maxSampleLuminance / L.luminance();
     // Compute sample's raster bounds
     Point2f pFilmDiscrete = pFilm - Vector2f(0.5f, 0.5f);
     Point2i p0 = Point2i(ceil(pFilmDiscrete - filterRadius));

@@ -199,9 +199,11 @@ void Parallel::init() {
 void Parallel::cleanup() {
     if (threads.empty()) return;
 
-    std::lock_guard<std::mutex> lock(workListMutex);
-    shutdownThreads = true;
-    workListCondition.notify_all();
+    {
+        std::lock_guard<std::mutex> lock(workListMutex);
+        shutdownThreads = true;
+        workListCondition.notify_all();
+    }
 
     for (thread &thread : threads) thread.join();
     threads.erase(threads.begin(), threads.end());

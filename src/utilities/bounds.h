@@ -296,22 +296,6 @@ inline Float distance(const Point3<T> &p, const Bounds3<U> &b) {
     return sqrt(distanceSq(p, b));
 }
 
-inline Bounds2iIterator begin(const Bounds2i &b) {
-    return Bounds2iIterator(b, b.pMin);
-}
-
-inline Bounds2iIterator end(const Bounds2i &b) {
-    // Normally, the ending point is at the minimum x value and one past
-    // the last valid y value.
-    Point2i pEnd(b.pMin.x, b.pMax.y);
-    // However, if the bounds are degenerate, override the end point to
-    // equal the start point so that any attempt to iterate over the bounds
-    // exits out immediately.
-    if (b.pMin.x >= b.pMax.x || b.pMin.y >= b.pMax.y)
-        pEnd = b.pMin;
-    return Bounds2iIterator(b, pEnd);
-}
-
 template <typename T>
 inline Bounds2<T> unionOf(const Bounds2<T> &b, const Point2<T> &p) {
     Bounds2<T> ret;
@@ -376,5 +360,20 @@ inline void Bounds3<T>::boundingSphere(Point3<T> *center, Float *radius) const {
     *radius = Math::inside(*center, *this) ? Math::distance(*center, pMax) : 0;
 }
 
+inline Bounds2iIterator begin(const Bounds2i &b) {
+    return Bounds2iIterator(b, b.pMin);
+}
+
+inline Bounds2iIterator end(const Bounds2i &b) {
+    // Normally, the ending point is at the minimum x value and one past
+    // the last valid y value.
+    Point2i pEnd(b.pMin.x, b.pMax.y);
+    // However, if the bounds are degenerate, override the end point to
+    // equal the start point so that any attempt to iterate over the bounds
+    // exits out immediately.
+    if (b.pMin.x >= b.pMax.x || b.pMin.y >= b.pMax.y)
+        pEnd = b.pMin;
+    return Bounds2iIterator(b, pEnd);
+}
 
 #endif // BOUNDS_H

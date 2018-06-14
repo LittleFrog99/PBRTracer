@@ -6,7 +6,7 @@
 #include "matrix.h"
 #include "quaternion.h"
 
-struct SurfaceInteraction;
+class SurfaceInteraction;
 
 class Transform {
 public:

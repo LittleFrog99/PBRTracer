@@ -1,7 +1,9 @@
 #ifndef QUATERNION_H
 #define QUATERNION_H
 
-#include "transform.h"
+#include "vector.h"
+
+class Transform;
 
 struct Quaternion {
     Quaternion() : v(0, 0, 0), w(1) {}

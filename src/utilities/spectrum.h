@@ -248,7 +248,7 @@ public:
     const RGBSpectrum & toRGBSpectrum() const { return *this; }
     void toXYZ(Float xyz[3]) const { RGBToXYZ(channels, xyz); }
 
-    Float y() const {
+    Float luminance() const {
         static const Float YWeight[3] = { 0.212671f, 0.715160f, 0.072169f };
         return YWeight[0] * channels[0] + YWeight[1] * channels[1] + YWeight[2] * channels[2];
     }

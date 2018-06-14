@@ -27,8 +27,7 @@ class Medium {
 public:
     virtual ~Medium() {}
     virtual Spectrum Tr(const Ray &ray, Sampler &sampler) const = 0;
-    virtual Spectrum Sample(const Ray &ray, Sampler &sampler,
-                            MemoryArena &arena,
+    virtual Spectrum Sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
                             MediumInteraction *mi) const = 0;
 
     static bool getMediumScatteringProperties(const string &name, Spectrum *sigma_a, Spectrum *sigma_s);
@@ -49,7 +48,7 @@ public:
         return StringPrint::printf("[ HenyeyGreenstein g: %f ]", g);
     }
 
-  private:
+private:
     const Float g;
 };
 
@@ -59,6 +58,7 @@ struct MediumInterface {
     MediumInterface(const Medium *inside, const Medium *outside)
         : inside(inside), outside(outside) {}
     bool isMediumTransition() const { return inside != outside; }
+
     const Medium *inside, *outside;
 };
 

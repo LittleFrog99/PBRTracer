@@ -40,6 +40,7 @@ struct Interaction {
         Vector3f d = p2 - p;
         return Ray(origin, d, 1 - SHADOW_EPSILON, time, getMedium(d));
     }
+
     Ray spawnRayTo(const Interaction &it) const {
         Point3f origin = offsetRayOrigin(p, pError, n, it.p - p);
         Point3f target = offsetRayOrigin(it.p, it.pError, it.n, origin - it.p);
@@ -93,7 +94,7 @@ public:
                                 bool allowMultipleLobes = false,
                                 TransportMode mode = TransportMode::Radiance);
     void computeDifferentials(const RayDifferential &r) const;
-    Spectrum Le(const Vector3f &w) const;
+    RGBSpectrum compute_Le(const Vector3f &w) const; // is calculated when intersecting an emissive surface
 
     Point2f uv;
     Vector3f dpdu, dpdv;

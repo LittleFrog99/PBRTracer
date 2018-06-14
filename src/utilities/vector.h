@@ -353,7 +353,7 @@ inline Vector3<T> cross(const Normal3<T> &v1, const Vector3<T> &v2) {
 
 template <class T>
 inline Vector3<T> abs(const Vector3<T> &v) {
-    return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
+    return Vector3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
 }
 
 template <class T>
