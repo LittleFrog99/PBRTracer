@@ -67,10 +67,10 @@ void ParamSet::addRGBSpectrum(const string &name, unique_ptr<Float[]> values, in
     eraseSpectrum(name);
     CHECK_EQ(nValues % 3, 0);
     nValues /= 3;
-    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
-    for (int i = 0; i < nValues; ++i) s[i] = RGBSpectrum::fromRGB(&values[3 * i]);
-    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
-        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
+    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
+    for (int i = 0; i < nValues; ++i) s[i] = Spectrum::fromRGB(&values[3 * i]);
+    shared_ptr<ParamSetItem<Spectrum>> psi(
+        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -78,10 +78,10 @@ void ParamSet::addXYZSpectrum(const string &name, unique_ptr<Float[]> values, in
     eraseSpectrum(name);
     CHECK_EQ(nValues % 3, 0);
     nValues /= 3;
-    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
-    for (int i = 0; i < nValues; ++i) s[i] = RGBSpectrum::fromXYZ(&values[3 * i]);
-    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
-        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
+    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
+    for (int i = 0; i < nValues; ++i) s[i] = Spectrum::fromXYZ(&values[3 * i]);
+    shared_ptr<ParamSetItem<Spectrum>> psi(
+        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -89,15 +89,16 @@ void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> valu
     eraseSpectrum(name);
     CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
-    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
-    unique_ptr<Float[]> v(new Float[Spectrum::NUM_CIE_SAMPLES]);
+    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
+    unique_ptr<Float[]> v(new Float[SpectrumUtil::NUM_CIE_SAMPLES]);
     for (int i = 0; i < nValues; ++i) {
-        Spectrum::blackbodyNormalized(Spectrum::CIE_LAMBDA, Spectrum::NUM_CIE_SAMPLES, values[2 * i], v.get());
+        SpectrumUtil::blackbodyNormalized(SpectrumUtil::CIE_LAMBDA, SpectrumUtil::NUM_CIE_SAMPLES,
+                                          values[2 * i], v.get());
         s[i] = values[2 * i + 1] *
-               RGBSpectrum::fromSampled(Spectrum::CIE_LAMBDA, v.get(), Spectrum::NUM_CIE_SAMPLES);
+               Spectrum::fromSampled(SpectrumUtil::CIE_LAMBDA, v.get(), SpectrumUtil::NUM_CIE_SAMPLES);
     }
-    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
-        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
+    shared_ptr<ParamSetItem<Spectrum>> psi(
+        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -111,16 +112,16 @@ void ParamSet::addSampledSpectrum(const string &name, unique_ptr<Float[]> values
         wl[i] = values[2 * i];
         v[i] = values[2 * i + 1];
     }
-    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[1]);
-    s[0] = RGBSpectrum::fromSampled(wl.get(), v.get(), nValues);
-    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
-        new ParamSetItem<RGBSpectrum>(name, std::move(s), 1));
+    unique_ptr<Spectrum[]> s(new Spectrum[1]);
+    s[0] = Spectrum::fromSampled(wl.get(), v.get(), nValues);
+    shared_ptr<ParamSetItem<Spectrum>> psi(
+        new ParamSetItem<Spectrum>(name, std::move(s), 1));
     spectra.push_back(psi);
 }
 
 void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, int nValues) {
     eraseSpectrum(name);
-    unique_ptr<RGBSpectrum[]> s(new RGBSpectrum[nValues]);
+    unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
     for (int i = 0; i < nValues; ++i) {
         string fn = File::absolutePath(File::resolveFilename(names[i]));
         if (cachedSpectra.find(fn) != cachedSpectra.end()) {
@@ -133,7 +134,7 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
             Report::warning(
                 "Unable to read SPD file \"%s\".  Using black distribution.",
                 fn.c_str());
-            s[i] = RGBSpectrum(0.);
+            s[i] = Spectrum(0.);
         } else {
             if (vals.size() % 2) {
                 Report::warning(
@@ -146,17 +147,17 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
                 wls.push_back(vals[2 * j]);
                 v.push_back(vals[2 * j + 1]);
             }
-            s[i] = RGBSpectrum::fromSampled(&wls[0], &v[0], wls.size());
+            s[i] = Spectrum::fromSampled(&wls[0], &v[0], wls.size());
         }
         cachedSpectra[fn] = s[i];
     }
 
-    shared_ptr<ParamSetItem<RGBSpectrum>> psi(
-        new ParamSetItem<RGBSpectrum>(name, std::move(s), nValues));
+    shared_ptr<ParamSetItem<Spectrum>> psi(
+        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
     spectra.push_back(psi);
 }
 
-map<string, RGBSpectrum> ParamSet::cachedSpectra;
+map<string, Spectrum> ParamSet::cachedSpectra;
 
 void ParamSet::addString(const string &name,
                          unique_ptr<string[]> values, int nValues) {
@@ -347,11 +348,11 @@ Normal3f ParamSet::findOneNormal3f(const string &name, const Normal3f &d) const 
     LOOKUP_ONE(normals);
 }
 
-const RGBSpectrum *ParamSet::findSpectrum(const string &name, int *nValues) const {
+const Spectrum *ParamSet::findSpectrum(const string &name, int *nValues) const {
     LOOKUP_PTR(spectra);
 }
 
-RGBSpectrum ParamSet::findOneSpectrum(const string &name, const RGBSpectrum &d) const {
+Spectrum ParamSet::findOneSpectrum(const string &name, const Spectrum &d) const {
     LOOKUP_ONE(spectra);
 }
 
@@ -561,7 +562,7 @@ string ParamSet::toString() const {
         ret += string("] ");
     }
     for (i = 0; i < spectra.size(); ++i) {
-        const shared_ptr<ParamSetItem<RGBSpectrum>> &item = spectra[i];
+        const shared_ptr<ParamSetItem<Spectrum>> &item = spectra[i];
         typeString = "color ";
         // Print _ParamSetItem_ declaration, determine how many to print
         int nPrint = item->nValues;
@@ -609,7 +610,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
     string name = geomParams.findTexture(n);
     if (name.empty()) {
         int count;
-        const RGBSpectrum *s = geomParams.findSpectrum(n, &count);
+        const Spectrum *s = geomParams.findSpectrum(n, &count);
         if (s) {
             if (count > 1)
                 Report::warning("Ignoring excess values provided with parameter \"%s\"",
@@ -620,7 +621,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
         name = materialParams.findTexture(n);
         if (name.empty()) {
             int count;
-            const RGBSpectrum *s = materialParams.findSpectrum(n, &count);
+            const Spectrum *s = materialParams.findSpectrum(n, &count);
             if (s) {
                 if (count > 1)
                     Report::warning("Ignoring excess values provided with parameter \"%s\"",

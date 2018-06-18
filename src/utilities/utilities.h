@@ -20,6 +20,9 @@ typedef float Float;
 typedef double Float;
 #endif
 
+class RGBSpectrum;
+typedef RGBSpectrum Spectrum;
+
 #define SQ(x) (x) * (x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
 

@@ -19,25 +19,25 @@ public:
         : camera(camera), sampler(sampler), pixelBounds(pixelBounds) {}
     virtual void preprocess(const Scene &scene, Sampler &sampler) {}
     void render(const Scene &scene);
-    virtual RGBSpectrum compute_Li(const RayDifferential &ray, const Scene &scene,
+    virtual Spectrum compute_Li(const RayDifferential &ray, const Scene &scene,
                                    Sampler &sampler, MemoryArena &arena, int depth = 0) const = 0;
 
-    RGBSpectrum specularReflect(const RayDifferential &ray, const SurfaceInteraction &isect,
+    Spectrum specularReflect(const RayDifferential &ray, const SurfaceInteraction &isect,
                                        const Scene &scene, Sampler &sampler, MemoryArena &arena,
                                        int depth) const;
-    RGBSpectrum specularTransmit(const RayDifferential &ray, const SurfaceInteraction &isect,
+    Spectrum specularTransmit(const RayDifferential &ray, const SurfaceInteraction &isect,
                                         const Scene &scene, Sampler &sampler, MemoryArena &arena,
                                         int depth) const;
 
-    static RGBSpectrum uniformSampleAllLights(const Interaction &it, const Scene &scene,
+    static Spectrum uniformSampleAllLights(const Interaction &it, const Scene &scene,
                                               MemoryArena &arena, Sampler &sampler,
                                               const vector<int> &nLightSamples,
                                               bool handleMedia = false);
-    static RGBSpectrum uniformSampleOneLight(const Interaction &it, const Scene &scene,
+    static Spectrum uniformSampleOneLight(const Interaction &it, const Scene &scene,
                                              MemoryArena &arena, Sampler &sampler,
                                              bool handleMedia = false,
                                              const Distribution1D *lightDistrib = nullptr);
-    static RGBSpectrum estimateDirect(const Interaction &it, const Point2f &uShading,
+    static Spectrum estimateDirect(const Interaction &it, const Point2f &uShading,
                                       const Light &light, const Point2f &uLight,
                                       const Scene &scene, Sampler &sampler,
                                       MemoryArena &arena, bool handleMedia = false,

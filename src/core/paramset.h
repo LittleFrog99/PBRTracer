@@ -59,7 +59,7 @@ public:
     Point3f findOnePoint3f(const string &, const Point3f &d) const;
     Vector3f findOneVector3f(const string &, const Vector3f &d) const;
     Normal3f findOneNormal3f(const string &, const Normal3f &d) const;
-    RGBSpectrum findOneSpectrum(const string &, const RGBSpectrum &d) const;
+    Spectrum findOneSpectrum(const string &, const Spectrum &d) const;
     string findOneString(const string &, const string &d) const;
     string findOneFilename(const string &, const string &d) const;
     string findTexture(const string &) const;
@@ -71,7 +71,7 @@ public:
     const Point3f * findPoint3f(const string &, int *nValues) const;
     const Vector3f * findVector3f(const string &, int *nValues) const;
     const Normal3f * findNormal3f(const string &, int *nValues) const;
-    const RGBSpectrum * findSpectrum(const string &, int *nValues) const;
+    const Spectrum * findSpectrum(const string &, int *nValues) const;
     const string * findString(const string &, int *nValues) const;
 
     void reportUnused() const;
@@ -88,10 +88,10 @@ private:
     vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
     vector<shared_ptr<ParamSetItem<Vector3f>>> vector3fs;
     vector<shared_ptr<ParamSetItem<Normal3f>>> normals;
-    vector<shared_ptr<ParamSetItem<RGBSpectrum>>> spectra;
+    vector<shared_ptr<ParamSetItem<Spectrum>>> spectra;
     vector<shared_ptr<ParamSetItem<string>>> strings;
     vector<shared_ptr<ParamSetItem<string>>> textures;
-    static map<string, RGBSpectrum> cachedSpectra;
+    static map<string, Spectrum> cachedSpectra;
 
     friend class TextureParams;
     friend bool shapeMaySetMaterialParameters(const ParamSet &ps);
@@ -152,7 +152,7 @@ private:
 
     static int print(const string &s) { return printf("\"%s\" ", s.c_str()); }
 
-    static int print(const RGBSpectrum &s) {
+    static int print(const Spectrum &s) {
         Float rgb[3];
         s.toRGB(rgb);
         int np = print(rgb[0]);
@@ -208,7 +208,7 @@ public:
         return geomParams.findOneNormal3f(n, materialParams.findOneNormal3f(n, d));
     }
 
-    RGBSpectrum findSpectrum(const string &n, const RGBSpectrum &d) const {
+    Spectrum findSpectrum(const string &n, const Spectrum &d) const {
         return geomParams.findOneSpectrum(n, materialParams.findOneSpectrum(n, d));
     }
 

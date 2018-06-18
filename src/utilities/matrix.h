@@ -16,9 +16,9 @@ public:
     }
 
     Matrix4x4(Float t00, Float t01, Float t02, Float t03,
-                     Float t10, Float t11, Float t12, Float t13,
-                     Float t20, Float t21, Float t22, Float t23,
-                     Float t30, Float t31, Float t32, Float t33)
+              Float t10, Float t11, Float t12, Float t13,
+              Float t20, Float t21, Float t22, Float t23,
+              Float t30, Float t31, Float t32, Float t33)
     {
         m[0][0] = t00; m[0][1] = t01; m[0][2] = t02; m[0][3] = t03;
         m[1][0] = t10; m[1][1] = t11; m[1][2] = t12; m[1][3] = t13;
@@ -66,6 +66,19 @@ public:
                 m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
                 m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3]);
         return os;
+    }
+
+    void print(FILE *f) const {
+        fprintf(f, "[ ");
+        for (int i = 0; i < 4; ++i) {
+            fprintf(f, "  [ ");
+            for (int j = 0; j < 4; ++j) {
+                fprintf(f, "%f", m[i][j]);
+                if (j != 3) fprintf(f, ", ");
+            }
+            fprintf(f, " ]\n");
+        }
+        fprintf(f, " ] ");
     }
 
     Matrix4x4 inverse() const;

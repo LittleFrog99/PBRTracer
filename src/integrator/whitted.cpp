@@ -2,10 +2,10 @@
 #include "core/scene.h"
 #include "core/bsdf.h"
 
-RGBSpectrum Whitted::compute_Li(const RayDifferential &ray, const Scene &scene, Sampler &sampler,
+Spectrum Whitted::compute_Li(const RayDifferential &ray, const Scene &scene, Sampler &sampler,
                                 MemoryArena &arena, int depth) const
 {
-    RGBSpectrum L;
+    Spectrum L;
     SurfaceInteraction isect;
     if (!scene.intersect(ray, &isect)) { // no intersection was found
         for (auto const &light : scene.lights)
@@ -23,9 +23,9 @@ RGBSpectrum Whitted::compute_Li(const RayDifferential &ray, const Scene &scene, 
         Vector3f wi;
         Float pdf;
         VisibilityTester visib;
-        RGBSpectrum Li = light->sample_Li(isect, sampler.get2D(), &wi, &pdf, &visib);
+        Spectrum Li = light->sample_Li(isect, sampler.get2D(), &wi, &pdf, &visib);
         if (Li.isBlack() || pdf == 0) continue;
-        RGBSpectrum f = isect.bsdf->compute_f(wo, wi);
+        Spectrum f = isect.bsdf->compute_f(wo, wi);
         if (!f.isBlack() && visib.unoccluded(scene))
             L += f * Li * absDot(wi, n) / pdf;
     }

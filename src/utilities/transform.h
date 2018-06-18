@@ -32,11 +32,10 @@ public:
     static Transform orthographic(Float znear, Float zfar);
     static Transform perspective(Float fov, Float znear, Float zfar);
 
-    void print(FILE *f) const;
-
     Transform inverse() { return Transform(mInv, m); }
     Transform transpose() { return Transform(m.transpose(), mInv.transpose()); }
 
+    Transform operator * (const Transform &t2) const { return Transform(m * t2.m, t2.mInv * mInv); }
     bool operator == (const Transform &t) const { return t.m == m && t.mInv == mInv; }
     bool operator != (const Transform &t) const { return t.m != m || t.mInv != mInv; }
     bool operator < (const Transform &t2) const {
@@ -48,7 +47,17 @@ public:
         return false;
     }
 
+    template <typename T>
+    inline Point3<T> operator () (const Point3<T> &p) const;
+    template <typename T>
+    inline Vector3<T> operator () (const Vector3<T> &v) const;
+    template <typename T>
+    inline Normal3<T> operator () (const Normal3<T> &) const;
+    inline Ray operator () (const Ray &r) const;
+    inline RayDifferential operator () (const RayDifferential &r) const;
+    Bounds3f operator () (const Bounds3f &b) const;
     SurfaceInteraction operator () (const SurfaceInteraction &si) const;
+
     template <typename T>
     inline Point3<T> operator () (const Point3<T> &pt, Vector3<T> *absError) const;
     template <typename T>
@@ -61,22 +70,14 @@ public:
                                    Vector3<T> *vTransError) const;
     inline Ray operator () (const Ray &r, Vector3f *oError, Vector3f *dError) const;
     inline Ray operator () (const Ray &r, const Vector3f &oErrorIn, const Vector3f &dErrorIn,
-                          Vector3f *oErrorOut, Vector3f *dErrorOut) const;
-    template <typename T>
-    inline Point3<T> operator () (const Point3<T> &p) const;
-    template <typename T>
-    inline Vector3<T> operator () (const Vector3<T> &v) const;
-    template <typename T>
-    inline Normal3<T> operator () (const Normal3<T> &) const;
-    inline Ray operator () (const Ray &r) const;
-    inline RayDifferential operator () (const RayDifferential &r) const;
-    Bounds3f operator () (const Bounds3f &b) const;
-    Transform operator * (const Transform &t2) const;
+                            Vector3f *oErrorOut, Vector3f *dErrorOut) const;
 
     friend ostream & operator << (ostream &os, const Transform &t) {
         os << "t=" << t.m << ", inv=" << t.mInv;
         return os;
     }
+
+    void print(FILE *f) const { m.print(f); }
 
     bool isIdentity() const {
         return (m.m[0][0] == 1.f && m.m[0][1] == 0.f && m.m[0][2] == 0.f &&

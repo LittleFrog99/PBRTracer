@@ -8,7 +8,7 @@ enum class SpectrumType {
     Illuminant
 };
 
-class Spectrum {
+class SpectrumUtil {
 public:
     static constexpr int SAMPLED_LAMBDA_START = 400;
     static constexpr int SAMPLED_LAMBDA_END = 700;
@@ -30,7 +30,7 @@ public:
 };
 
 template <int nSpectrumSamples>
-class CoefficientSpectrum : public Spectrum {
+class CoefficientSpectrum : public SpectrumUtil {
 public:
     CoefficientSpectrum(Float v = 0.f) {
         for (int i = 0; i < nSpectrumSamples; ++i) channels[i] = v;

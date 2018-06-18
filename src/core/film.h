@@ -9,7 +9,7 @@
 #include "paramset.h"
 
 struct FilmTilePixel {
-    RGBSpectrum contribSum = 0.f;
+    Spectrum contribSum = 0.f;
     Float filterWeightSum = 0.f;
 };
 
@@ -25,7 +25,7 @@ public:
         pixels = vector<FilmTilePixel>(max(0, pixelBounds.area()));
     }
 
-    void addSample(const Point2f &pFilm, RGBSpectrum L, Float sampleWeight = 1.0);
+    void addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight = 1.0);
 
     FilmTilePixel & getPixel(const Point2i &p) {
         CHECK(insideExclusive(p, pixelBounds));
@@ -64,8 +64,8 @@ public:
     Bounds2f getPhysicalExtent() const;
     unique_ptr<FilmTile> getFilmTile(const Bounds2i &sampleBounds);
     void mergeFilmTile(unique_ptr<FilmTile> tile);
-    void setImage(const RGBSpectrum *img) const;
-    void addSplat(const Point2f &p, RGBSpectrum v);
+    void setImage(const Spectrum *img) const;
+    void addSplat(const Point2f &p, Spectrum v);
     void writeImage(Float splatScale = 1);
     void clear();
 

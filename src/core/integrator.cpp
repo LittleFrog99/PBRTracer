@@ -42,7 +42,7 @@ void SamplerIntegrator::render(const Scene &scene) {
                 ray.scaleDifferentials(1.0 / sqrt(tileSampler->samplesPerPixel));
                 ++nCameraRays;
 
-                RGBSpectrum L;
+                Spectrum L;
                 if (rayWeight > 0)
                     L = compute_Li(ray, scene, *tileSampler, arena);
 
@@ -52,19 +52,19 @@ void SamplerIntegrator::render(const Scene &scene) {
                         "Not-a-number radiance value returned "
                         "for pixel (%d, %d), sample %d. Setting to black.",
                         pixel.x, pixel.y, tileSampler->currentSampleNumber());
-                    L = RGBSpectrum(0.f);
+                    L = Spectrum(0.f);
                 } else if (L.luminance() < -1e-5) {
                     LOG(ERROR) << StringPrint::printf(
                         "Negative luminance value, %f, returned "
                         "for pixel (%d, %d), sample %d. Setting to black.",
                         L.luminance(), pixel.x, pixel.y, tileSampler->currentSampleNumber());
-                    L = RGBSpectrum(0.f);
+                    L = Spectrum(0.f);
                 } else if (isinf(L.luminance())) {
                       LOG(ERROR) << StringPrint::printf(
                         "Infinite luminance value returned "
                         "for pixel (%d, %d), sample %d. Setting to black.",
                         pixel.x, pixel.y, tileSampler->currentSampleNumber());
-                    L = RGBSpectrum(0.f);
+                    L = Spectrum(0.f);
                 }
 
                 filmTile->addSample(camSample.pFilm, L, rayWeight);
@@ -84,7 +84,7 @@ void SamplerIntegrator::render(const Scene &scene) {
     LOG(INFO) << "Rendering finished";
 }
 
-RGBSpectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const SurfaceInteraction &isect,
+Spectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const SurfaceInteraction &isect,
                                                const Scene &scene, Sampler &sampler,
                                                MemoryArena &arena, int depth) const
 {
@@ -92,7 +92,7 @@ RGBSpectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const
     Vector3f wo = isect.wo, wi;
     Float pdf;
     BxDFType type = BxDFType(BSDF_REFLECTION | BSDF_SPECULAR);
-    RGBSpectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdf, type);
+    Spectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdf, type);
 
     // Return contribution of specular reflection
     const Normal3f &ns = isect.shading.n;
@@ -113,10 +113,10 @@ RGBSpectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const
         }
         return f * compute_Li(rd, scene, sampler, arena, depth + 1) * absDot(wi, ns) / pdf;
     } else
-        return RGBSpectrum(0.0);
+        return Spectrum(0.0);
 }
 
-RGBSpectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const SurfaceInteraction &isect,
+Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const SurfaceInteraction &isect,
                                                 const Scene &scene, Sampler &sampler,
                                                 MemoryArena &arena, int depth) const
 {
@@ -125,9 +125,9 @@ RGBSpectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, cons
     const Point3f &p = isect.p;
     const Normal3f &ns = isect.shading.n;
     const BSDF &bsdf = *isect.bsdf;
-    RGBSpectrum f = bsdf.sample_f(wo, &wi, sampler.get2D(), &pdf,
+    Spectrum f = bsdf.sample_f(wo, &wi, sampler.get2D(), &pdf,
                                   BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR));
-    RGBSpectrum L;
+    Spectrum L;
     if (pdf > 0.f && !f.isBlack() && absDot(wi, ns) != 0.f) {
         RayDifferential rd = isect.spawnRay(wi);
         if (ray.hasDifferentials) {

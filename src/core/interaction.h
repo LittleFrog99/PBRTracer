@@ -94,7 +94,7 @@ public:
                                 bool allowMultipleLobes = false,
                                 TransportMode mode = TransportMode::Radiance);
     void computeDifferentials(const RayDifferential &r) const;
-    RGBSpectrum compute_Le(const Vector3f &w) const; // is calculated when intersecting an emissive surface
+    Spectrum compute_Le(const Vector3f &w) const; // is calculated when intersecting an emissive surface
 
     Point2f uv;
     Vector3f dpdu, dpdv;

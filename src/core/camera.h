@@ -18,9 +18,9 @@ public:
     virtual ~Camera();
     virtual Float genRay(const CameraSample &sample, Ray *ray) const = 0;
     virtual Float genRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
-    virtual RGBSpectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
+    virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
     virtual void Pdf_We(const Ray &ray, Float *pdfPos, Float *pdfDir) const;
-    virtual RGBSpectrum Sample_Wi(const Interaction &ref, const Point2f &u,
+    virtual Spectrum Sample_Wi(const Interaction &ref, const Point2f &u,
                                Vector3f *wi, Float *pdf, Point2f *pRaster,
                                VisibilityTester *vis) const;
 
