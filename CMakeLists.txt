@@ -7,7 +7,8 @@ INCLUDE_DIRECTORIES(src/utilities)
 
 PROJECT(pbr-tracer)
 
-SET(SOURCES_CORE src/core/paramset.cpp src/core/texture.cpp)
+SET(SOURCES_CORE src/core/renderer.cpp src/core/paramset.cpp src/core/texture.cpp
+    src/core/integrator.cpp)
 SET(SOURCES_UTILITIES src/utilities/random.cpp src/utilities/math.cpp src/utilities/report.cpp
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/parser.cpp
     src/utilities/parallel.cpp src/utilities/stats.cpp src/utilities/file.cpp

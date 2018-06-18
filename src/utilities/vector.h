@@ -535,7 +535,7 @@ inline T absDot(const Normal3<T> &n1, const Vector3<T> &v2) {
 
 template <class T>
 inline T absDot(const Vector3<T> &v1, const Normal3<T> &n2) {
-    return abs(v1.x * n2.x + v1.y * n2.y + v1.z * n2.z);
+    return std::abs(v1.x * n2.x + v1.y * n2.y + v1.z * n2.z);
 }
 
 template <class T>

@@ -185,7 +185,7 @@ public:
 
     bool hasNaNs() const {
         for (int i = 0; i < nSpectrumSamples; ++i)
-            if (std::isnan(channels[i])) return true;
+            if (isnan(channels[i])) return true;
         return false;
     }
 

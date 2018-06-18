@@ -19,7 +19,7 @@ public:
     virtual ~BxDF() {}
     virtual RGBSpectrum compute_f(const Vector3f &wo, const Vector3f &wi) const = 0;
     virtual RGBSpectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
-                              BxDFType *sampledType = nullptr) const;
+                                 BxDFType *sampledType = nullptr) const;
     virtual RGBSpectrum compute_rho(const Vector3f &wo, int nSamples, const Point2f *samples) const;
     virtual RGBSpectrum compute_rho(int nSamples, const Point2f *samples1,
                                     const Point2f *samples2) const;
