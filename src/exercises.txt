@@ -1,0 +1,5 @@
+Part of exercises in pbrt
+
+Chapter 2 Geometry and Transformation
+2.1 (A) A more efficient way to transform AABB
+2.2 (B) Non-axis-aligned bounding boxes / arbitrary bounding slabs

@@ -1,7 +1,6 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
-
 #include "bounds.h"
 #include "matrix.h"
 #include "quaternion.h"

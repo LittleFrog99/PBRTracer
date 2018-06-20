@@ -173,18 +173,15 @@ private:
 };
 
 template <typename T>
-inline bool Bounds3<T>::intersectP(const Ray &ray, Float *hitt0,
-                                   Float *hitt1) const {
+bool Bounds3<T>::intersectP(const Ray &ray, Float *hitt0, Float *hitt1) const {
     Float t0 = 0, t1 = ray.tMax;
     for (int i = 0; i < 3; ++i) {
-        // Update interval for _i_th bounding box slab
+        // Update interval for i_th bounding box slab
         Float invRayDir = 1 / ray.d[i];
         Float tNear = (pMin[i] - ray.o[i]) * invRayDir;
         Float tFar = (pMax[i] - ray.o[i]) * invRayDir;
-
-        // Update parametric interval from slab intersection $t$ values
+        // Update parametric interval from slab intersection t values
         if (tNear > tFar) swap(tNear, tFar);
-
         // Update _tFar_ to ensure robust ray--bounds intersection
         tFar *= 1 + 2 * Math::gamma(3);
         t0 = tNear > t0 ? tNear : t0;
@@ -245,10 +242,6 @@ inline Bounds3<T> unionOf(const Bounds3<T> &b1, const Bounds3<T> &b2) {
 
 template <typename T>
 inline Bounds3<T> intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
-    // Important: assign to pMin/pMax directly and don't run the Bounds2()
-    // constructor, since it takes min/max of the points passed to it.  In
-    // turn, that breaks returning an invalid bound for the case where we
-    // intersect non-overlapping bounds (as we'd like to happen).
     Bounds3<T> ret;
     ret.pMin = max(b1.pMin, b2.pMin);
     ret.pMax = min(b1.pMax, b2.pMax);
@@ -365,14 +358,9 @@ inline Bounds2iIterator begin(const Bounds2i &b) {
 }
 
 inline Bounds2iIterator end(const Bounds2i &b) {
-    // Normally, the ending point is at the minimum x value and one past
-    // the last valid y value.
     Point2i pEnd(b.pMin.x, b.pMax.y);
-    // However, if the bounds are degenerate, override the end point to
-    // equal the start point so that any attempt to iterate over the bounds
-    // exits out immediately.
-    if (b.pMin.x >= b.pMax.x || b.pMin.y >= b.pMax.y)
-        pEnd = b.pMin;
+    if (b.pMin.x >= b.pMax.x || b.pMin.y >= b.pMax.y) // bounds are degenerate
+        pEnd = b.pMin; // any attempt to iterate over the bounds exit immediately
     return Bounds2iIterator(b, pEnd);
 }
 

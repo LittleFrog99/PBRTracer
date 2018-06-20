@@ -81,12 +81,10 @@ public:
 class SurfaceInteraction : public Interaction {
 public:
     SurfaceInteraction() {}
-    SurfaceInteraction(const Point3f &p, const Vector3f &pError,
-                       const Point2f &uv, const Vector3f &wo,
+    SurfaceInteraction(const Point3f &p, const Vector3f &pError, const Point2f &uv, const Vector3f &wo,
                        const Vector3f &dpdu, const Vector3f &dpdv,
-                       const Normal3f &dndu, const Normal3f &dndv, Float time,
-                       const Shape *sh,
-                       int faceIndex = 0);
+                       const Normal3f &dndu, const Normal3f &dndv,
+                       Float time, const Shape *sh, int faceIndex = 0);
     void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv,
                             const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
@@ -100,7 +98,7 @@ public:
     Vector3f dpdu, dpdv;
     Normal3f dndu, dndv;
     const Shape *shape = nullptr;
-    struct {
+    struct Shading {
         Normal3f n;
         Vector3f dpdu, dpdv;
         Normal3f dndu, dndv;

@@ -10,8 +10,8 @@
 enum class APIState { Uninitialized, OptionsBlock, WorldBlock };
 
 class TransformSet;
-struct RenderOptions;
 class TransformCache;
+struct RenderOptions;
 struct MaterialInstance;
 struct GraphicsState;
 
@@ -19,11 +19,6 @@ class Renderer {
 public:
     static Options options;
     static int catIndentCount;
-
-    static constexpr int MAX_TRANSFORMS = 2;
-    static constexpr int START_TRANSFORM_BITS = 1 << 0;
-    static constexpr int END_TRANSFORM_BITS = 1 << 1;
-    static constexpr int ALL_TRANSFORM_BITS = (1 << MAX_TRANSFORMS) - 1;
 
 private:
     static APIState currentApiState;
@@ -43,30 +38,35 @@ class TransformSet {
 public:
     Transform & operator [] (int i) {
         CHECK_GE(i, 0);
-        CHECK_LT(i, Renderer::MAX_TRANSFORMS);
+        CHECK_LT(i, MAX_TRANSFORMS);
         return t[i];
     }
 
     const Transform & operator [] (int i) const {
         CHECK_GE(i, 0);
-        CHECK_LT(i, Renderer::MAX_TRANSFORMS);
+        CHECK_LT(i, MAX_TRANSFORMS);
         return t[i];
     }
 
     TransformSet inverse() {
         TransformSet tInv;
-        for (int i = 0; i < Renderer::MAX_TRANSFORMS; ++i) tInv.t[i] = t[i].inverse();
+        for (int i = 0; i < MAX_TRANSFORMS; ++i) tInv.t[i] = t[i].inverse();
         return tInv;
     }
 
     bool isAnimated() const {
-        for (int i = 0; i < Renderer::MAX_TRANSFORMS - 1; ++i)
+        for (int i = 0; i < MAX_TRANSFORMS - 1; ++i)
             if (t[i] != t[i + 1]) return true;
         return false;
     }
 
+    static constexpr int MAX_TRANSFORMS = 2;
+    static constexpr int START_TRANSFORM_BITS = 1 << 0;
+    static constexpr int END_TRANSFORM_BITS = 1 << 1;
+    static constexpr int ALL_TRANSFORM_BITS = (1 << MAX_TRANSFORMS) - 1;
+
 private:
-    Transform t[Renderer::MAX_TRANSFORMS];
+    Transform t[MAX_TRANSFORMS];
 };
 
 class TransformCache {
@@ -124,12 +124,10 @@ struct GraphicsState {
 
 
 struct RenderOptions {
-    // RenderOptions Public Methods
     Integrator *makeIntegrator() const;
     Scene *makeScene();
     Camera *makeCamera() const;
 
-    // RenderOptions Public Data
     Float transformStartTime = 0, transformEndTime = 1;
     string filterName = "box";
     ParamSet filterParams;

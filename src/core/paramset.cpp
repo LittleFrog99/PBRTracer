@@ -3,7 +3,7 @@
 #include "file.h"
 
 #define ADD_PARAM_TYPE(T, vec) \
-    (vec).emplace_back(new ParamSetItem<T>(name, std::move(values), nValues));
+    (vec).emplace_back(new ParamSetItem<T>(name, move(values), nValues));
 
 #define LOOKUP_PTR(vec)             \
     for (const auto &v : vec)       \
@@ -70,7 +70,7 @@ void ParamSet::addRGBSpectrum(const string &name, unique_ptr<Float[]> values, in
     unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
     for (int i = 0; i < nValues; ++i) s[i] = Spectrum::fromRGB(&values[3 * i]);
     shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+        new ParamSetItem<Spectrum>(name, move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -81,7 +81,7 @@ void ParamSet::addXYZSpectrum(const string &name, unique_ptr<Float[]> values, in
     unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
     for (int i = 0; i < nValues; ++i) s[i] = Spectrum::fromXYZ(&values[3 * i]);
     shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+        new ParamSetItem<Spectrum>(name, move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -98,7 +98,7 @@ void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> valu
                Spectrum::fromSampled(SpectrumUtil::CIE_LAMBDA, v.get(), SpectrumUtil::NUM_CIE_SAMPLES);
     }
     shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+        new ParamSetItem<Spectrum>(name, move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -115,7 +115,7 @@ void ParamSet::addSampledSpectrum(const string &name, unique_ptr<Float[]> values
     unique_ptr<Spectrum[]> s(new Spectrum[1]);
     s[0] = Spectrum::fromSampled(wl.get(), v.get(), nValues);
     shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), 1));
+        new ParamSetItem<Spectrum>(name, move(s), 1));
     spectra.push_back(psi);
 }
 
@@ -142,7 +142,7 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
                     "Ignoring it.",
                     fn.c_str());
             }
-            std::vector<Float> wls, v;
+            vector<Float> wls, v;
             for (size_t j = 0; j < vals.size() / 2; ++j) {
                 wls.push_back(vals[2 * j]);
                 v.push_back(vals[2 * j + 1]);
@@ -153,7 +153,7 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
     }
 
     shared_ptr<ParamSetItem<Spectrum>> psi(
-        new ParamSetItem<Spectrum>(name, std::move(s), nValues));
+        new ParamSetItem<Spectrum>(name, move(s), nValues));
     spectra.push_back(psi);
 }
 
@@ -170,7 +170,7 @@ void ParamSet::addTexture(const string &name, const string &value) {
     unique_ptr<string[]> str(new string[1]);
     str[0] = value;
     shared_ptr<ParamSetItem<string>> psi(
-        new ParamSetItem<string>(name, std::move(str), 1));
+        new ParamSetItem<string>(name, move(str), 1));
     textures.push_back(psi);
 }
 
@@ -595,17 +595,16 @@ void ParamSet::printSet(int indent) const {
     printItems("rgb", indent, spectra);
 }
 
-shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTexture(
-    const string &n, const Spectrum &def) const {
+shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTexture(const string &n,
+                                                                const Spectrum &def) const {
     shared_ptr<Texture<Spectrum>> tex = getSpectrumTextureOrNull(n);
     if (tex)
         return tex;
     else
-        return std::make_shared<ConstantTexture<Spectrum>>(def);
+        return make_shared<ConstantTexture<Spectrum>>(def);
 }
 
-shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
-    const string &n) const {
+shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(const string &n) const {
     // Check the shape parameters first.
     string name = geomParams.findTexture(n);
     if (name.empty()) {
@@ -615,7 +614,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
             if (count > 1)
                 Report::warning("Ignoring excess values provided with parameter \"%s\"",
                         n.c_str());
-            return std::make_shared<ConstantTexture<Spectrum>>(*s);
+            return make_shared<ConstantTexture<Spectrum>>(*s);
         }
 
         name = materialParams.findTexture(n);
@@ -626,7 +625,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
                 if (count > 1)
                     Report::warning("Ignoring excess values provided with parameter \"%s\"",
                             n.c_str());
-                return std::make_shared<ConstantTexture<Spectrum>>(*s);
+                return make_shared<ConstantTexture<Spectrum>>(*s);
             }
         }
 
@@ -645,17 +644,15 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(
     }
 }
 
-shared_ptr<Texture<Float>> TextureParams::getFloatTexture(
-    const string &n, Float def) const {
+shared_ptr<Texture<Float>> TextureParams::getFloatTexture(const string &n, Float def) const {
     shared_ptr<Texture<Float>> tex = getFloatTextureOrNull(n);
     if (tex)
         return tex;
     else
-        return std::make_shared<ConstantTexture<Float>>(def);
+        return make_shared<ConstantTexture<Float>>(def);
 }
 
-shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(
-    const string &n) const {
+shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(const string &n) const {
     // Check the shape parameters first.
     string name = geomParams.findTexture(n);
     if (name.empty()) {
@@ -664,7 +661,7 @@ shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(
         if (s) {
             if (count > 1)
                 Report::warning("Ignoring excess values provided with parameter \"%s\"", n.c_str());
-            return std::make_shared<ConstantTexture<Float>>(*s);
+            return make_shared<ConstantTexture<Float>>(*s);
         }
 
         name = materialParams.findTexture(n);
@@ -674,7 +671,7 @@ shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(
             if (s) {
                 if (count > 1)
                     Report::warning("Ignoring excess values provided with parameter \"%s\"", n.c_str());
-                return std::make_shared<ConstantTexture<Float>>(*s);
+                return make_shared<ConstantTexture<Float>>(*s);
             }
         }
 

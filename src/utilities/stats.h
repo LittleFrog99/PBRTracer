@@ -10,7 +10,7 @@ class StatsRegisterer {
 public:
     StatsRegisterer(function<void(StatsAccumulator &)> func) {
         if (!funcs)
-            funcs = new std::vector<function<void(StatsAccumulator &)>>;
+            funcs = new vector<function<void(StatsAccumulator &)>>;
         funcs->push_back(func);
     }
 
@@ -172,10 +172,10 @@ private:
     }                                                      \
     static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
 
-#define STATS_INT64_T_MIN std::numeric_limits<int64_t>::max()
-#define STATS_INT64_T_MAX std::numeric_limits<int64_t>::lowest()
-#define STATS_DBL_T_MIN std::numeric_limits<double>::max()
-#define STATS_DBL_T_MAX std::numeric_limits<double>::lowest()
+#define STATS_INT64_T_MIN numeric_limits<int64_t>::max()
+#define STATS_INT64_T_MAX numeric_limits<int64_t>::lowest()
+#define STATS_DBL_T_MIN numeric_limits<double>::max()
+#define STATS_DBL_T_MAX numeric_limits<double>::lowest()
 
 #define STAT_INT_DISTRIB(title, var)                                  \
     static thread_local int64_t var##sum;                             \
@@ -183,14 +183,14 @@ private:
     static thread_local int64_t var##min = (STATS_INT64_T_MIN);       \
     static thread_local int64_t var##max = (STATS_INT64_T_MAX);       \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                 \
-        accum.reportIntmap(title, var##sum, var##count, var##min, \
+        accum.reportIntDistrib(title, var##sum, var##count, var##min, \
                                     var##max);                             \
         var##sum = 0;                                                      \
         var##count = 0;                                                    \
-        var##min = std::numeric_limits<int64_t>::max();                    \
-        var##max = std::numeric_limits<int64_t>::lowest();                 \
+        var##min = numeric_limits<int64_t>::max();                    \
+        var##max = numeric_limits<int64_t>::lowest();                 \
     }                                                                      \
-    static StatRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
 
 #define STAT_FLOAT_DISTRIB(title, var)                                  \
     static thread_local double var##sum;                                \
@@ -198,21 +198,21 @@ private:
     static thread_local double var##min = (STATS_DBL_T_MIN);            \
     static thread_local double var##max = (STATS_DBL_T_MAX);            \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                   \
-        accum.reportFloatmap(title, var##sum, var##count, var##min, \
+        accum.reportFloatDistrib(title, var##sum, var##count, var##min, \
                                       var##max);                             \
         var##sum = 0;                                                        \
         var##count = 0;                                                      \
-        var##min = std::numeric_limits<double>::max();                       \
-        var##max = std::numeric_limits<double>::lowest();                    \
+        var##min = numeric_limits<double>::max();                       \
+        var##max = numeric_limits<double>::lowest();                    \
     }                                                                        \
-    static StatRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
 
 #define REPORT_VALUE(var, value)                                   \
     do {                                                          \
         var##sum += value;                                        \
         var##count += 1;                                          \
-        var##min = std::min(var##min, decltype(var##min)(value)); \
-        var##max = std::max(var##max, decltype(var##min)(value)); \
+        var##min = min(var##min, decltype(var##min)(value)); \
+        var##max = max(var##max, decltype(var##min)(value)); \
     } while (0)
 
 #define STAT_PERCENT(title, numVar, denomVar)                 \
@@ -221,7 +221,7 @@ private:
         accum.reportPercentage(title, numVar, denomVar);      \
         numVar = denomVar = 0;                                \
     }                                                         \
-    static StatRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
+    static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
 
 #define STAT_RATIO(title, numVar, denomVar)                   \
     static thread_local int64_t numVar, denomVar;        \
@@ -229,7 +229,7 @@ private:
         accum.reportRatio(title, numVar, denomVar);           \
         numVar = denomVar = 0;                                \
     }                                                         \
-    static StatRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
+    static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
 
 enum class Profiler::Stage {
     SceneConstruction,

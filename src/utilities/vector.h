@@ -438,14 +438,14 @@ inline Point3<T> lerp(Float t, const Point3<T> &p0, const Point3<T> &p1) {
 
 template <class T>
 inline Point3<T> min(const Point3<T> &p1, const Point3<T> &p2) {
-    return Point3<T>(min(p1.x, p2.x), min(p1.y, p2.y),
-                     min(p1.z, p2.z));
+    return Point3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
+                     std::min(p1.z, p2.z));
 }
 
 template <class T>
 inline Point3<T> max(const Point3<T> &p1, const Point3<T> &p2) {
-    return Point3<T>(max(p1.x, p2.x), max(p1.y, p2.y),
-                     max(p1.z, p2.z));
+    return Point3<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
+                     std::max(p1.z, p2.z));
 }
 
 template <class T>

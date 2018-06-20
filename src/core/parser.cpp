@@ -388,7 +388,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                 else if (s == "false")
                     bdata[j] = false;
                 else {
-                    Report::warning(
+                    WARNING(
                         "Value \"%s\" unknown for Boolean parameter \"%s\"."
                         "Using \"false\".",
                         s.c_str(), item.name.c_str());
@@ -402,7 +402,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addFloat(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_POINT2) {
             if ((nItems % 2) != 0)
-                Report::warning(
+                WARNING(
                     "Excess values given with point2 parameter \"%s\". "
                     "Ignoring last one of them.",
                     item.name.c_str());
@@ -414,7 +414,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addPoint2f(name, move(pts), nItems / 2);
         } else if (type == PARAM_TYPE_VECTOR2) {
             if ((nItems % 2) != 0)
-                Report::warning(
+                WARNING(
                     "Excess values given with vector2 parameter \"%s\". "
                     "Ignoring last one of them.",
                     item.name.c_str());
@@ -426,7 +426,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addVector2f(name, move(vecs), nItems / 2);
         } else if (type == PARAM_TYPE_POINT3) {
             if ((nItems % 3) != 0)
-                Report::warning(
+                WARNING(
                     "Excess values given with point3 parameter \"%s\". "
                     "Ignoring last %d of them.",
                     item.name.c_str(), nItems % 3);
@@ -439,7 +439,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addPoint3f(name, move(pts), nItems / 3);
         } else if (type == PARAM_TYPE_VECTOR3) {
             if ((nItems % 3) != 0)
-                Report::warning(
+                WARNING(
                     "Excess values given with vector3 parameter \"%s\". "
                     "Ignoring last %d of them.",
                     item.name.c_str(), nItems % 3);
@@ -452,7 +452,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addVector3f(name, move(vecs), nItems / 3);
         } else if (type == PARAM_TYPE_NORMAL) {
             if ((nItems % 3) != 0)
-                Report::warning(
+                WARNING(
                     "Excess values given with \"normal\" parameter \"%s\". "
                     "Ignoring last %d of them.",
                     item.name.c_str(), nItems % 3);
@@ -465,7 +465,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addNormal3f(name, move(normals), nItems / 3);
         } else if (type == PARAM_TYPE_RGB) {
             if ((nItems % 3) != 0) {
-                Report::warning(
+                WARNING(
                     "Excess RGB values given with parameter \"%s\". "
                     "Ignoring last %d of them",
                     item.name.c_str(), nItems % 3);
@@ -476,7 +476,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addRGBSpectrum(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_XYZ) {
             if ((nItems % 3) != 0) {
-                Report::warning(
+                WARNING(
                     "Excess XYZ values given with parameter \"%s\". "
                     "Ignoring last %d of them",
                     item.name.c_str(), nItems % 3);
@@ -487,7 +487,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             ps.addXYZSpectrum(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_BLACKBODY) {
             if ((nItems % 2) != 0) {
-                Report::warning(
+                WARNING(
                     "Excess value given with blackbody parameter \"%s\". "
                     "Ignoring extra one.",
                     item.name.c_str());
@@ -501,7 +501,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                 ps.addSampledSpectrumFiles(name, item.stringValues, nItems);
             } else {
                 if ((nItems % 2) != 0) {
-                    Report::warning(
+                    WARNING(
                         "Non-even number of values given with sampled "
                         "spectrum "
                         "parameter \"%s\". Ignoring extra.",
@@ -529,7 +529,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                     name.c_str());
         }
     } else
-        Report::warning("Type of parameter \"%s\" is unknown", item.name.c_str());
+        WARNING("Type of parameter \"%s\" is unknown", item.name.c_str());
 }
 
 template <typename Next, typename Unget>
