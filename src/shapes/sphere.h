@@ -20,6 +20,9 @@ public:
 
     bool intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture = true) const;
+    virtual bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
+
+    virtual Float area() const { return phiMax * radius * (zMax - zMin); }
 
 private:
     const Float radius;
