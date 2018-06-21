@@ -58,7 +58,6 @@ static_assert(int(Profiler::Stage::NumProfCategories) ==
               sizeof(Profiler::stageNames) / sizeof(Profiler::stageNames[0]),
               "stageNames[] array and Stage enumerant have different numbers of entries!");
 
-StatsAccumulator Stats::statsAccum;
 vector<function<void(StatsAccumulator &)>> * StatsRegisterer::funcs = nullptr;
 
 void StatsAccumulator::print(FILE *dest) {
@@ -172,7 +171,9 @@ void StatsAccumulator::getCategoryAndTitle(const string &str, string *category, 
     }
 }
 
-void Stats::reportThread() {
+StatsAccumulator Statistics::statsAccum;
+
+void Statistics::reportThread() {
     static mutex mut;
     lock_guard<mutex> lock(mut);
     StatsRegisterer::callCallbacks(statsAccum);

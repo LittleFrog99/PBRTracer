@@ -2,7 +2,7 @@
 
 bool Math::solveQuadratic(Float a, Float b, Float c, Float *t0, Float *t1)
 {
-    Float discr = SQ(b) - 4.0 * a * c;
+    Float discr = b * b - 4.0 * a * c;
     if (discr < 0) return false;
     Float rtDiscr = sqrt(discr);
     Float q;

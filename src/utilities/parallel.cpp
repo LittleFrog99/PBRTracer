@@ -23,7 +23,7 @@ void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSiz
     }
 
     // Create and enqueue _ParallelForLoop_ for this loop
-    ForLoop loop(std::move(func), count, chunkSize, Profiler::state);
+    ForLoop loop(move(func), count, chunkSize, Profiler::state);
     workListMutex.lock();
     loop.next = workList;
     workList = &loop;
@@ -39,7 +39,7 @@ void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSiz
 
         // Find the set of loop iterations to run next
         int64_t indexStart = loop.nextIndex;
-        int64_t indexEnd = std::min(indexStart + loop.chunkSize, loop.maxIndex);
+        int64_t indexEnd = min(indexStart + loop.chunkSize, loop.maxIndex);
 
         // Update _loop_ to reflect iterations this thread will run
         loop.nextIndex = indexEnd;
@@ -76,7 +76,7 @@ void Parallel::forLoop2D(function<void(Point2i)> func, const Point2i &count)
         return;
     }
 
-    ForLoop loop(std::move(func), count, Profiler::state);
+    ForLoop loop(move(func), count, Profiler::state);
     {
         lock_guard<mutex> lock(workListMutex);
         loop.next = workList;
@@ -125,7 +125,7 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
     unique_lock<mutex> lock(workListMutex);
     while (!shutdownThreads) {
         if (reportWorkerStats) {
-            Stats::reportThread();
+            Statistics::reportThread();
             if (--reporterCount == 0)
                 // Once all worker threads have merged their stats, wake up
                 // the main thread.
@@ -200,7 +200,7 @@ void Parallel::cleanup() {
     if (threads.empty()) return;
 
     {
-        std::lock_guard<std::mutex> lock(workListMutex);
+        lock_guard<mutex> lock(workListMutex);
         shutdownThreads = true;
         workListCondition.notify_all();
     }

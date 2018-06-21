@@ -2,7 +2,7 @@
 #define REPORT_H
 
 #include "stringprint.h"
-#include "parser.h"
+#include "core/parser.h"
 #include <thread>
 
 class ProgressReporter {

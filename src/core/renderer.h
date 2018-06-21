@@ -17,6 +17,24 @@ struct GraphicsState;
 
 class Renderer {
 public:
+    static shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
+                                         const Transform &medium2world);
+    static shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
+    static shared_ptr<Texture<Float>> makeFloatTexture(const string &name, const Transform &tex2world,
+                                                       const TextureParams &tp);
+    static shared_ptr<Texture<Spectrum>> makeSpectrumTexture(const string &name,  const Transform &tex2world,
+                                                             const TextureParams &tp);
+    static shared_ptr<Light> makeLight(const string &name, const ParamSet &paramSet,
+                                       const Transform &light2world, const MediumInterface &mediumInterface);
+    static vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object2world,
+                                                const Transform *world2object, bool reverseOrientation,
+                                                const ParamSet &paramSet);
+    static shared_ptr<AreaLight> makeAreaLight(const string &name, const Transform &light2world,
+                                             const MediumInterface &mediumInterface,
+                                             const ParamSet &paramSet, const shared_ptr<Shape> &shape);
+    static shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Primitive>> prims,
+                                                 const ParamSet &paramSet);
+
     static Options options;
     static int catIndentCount;
 
@@ -32,6 +50,7 @@ private:
     static vector<uint32_t> pushedActiveTransformBits;
     static TransformCache transformCache;
 
+    friend class API;
 };
 
 class TransformSet {

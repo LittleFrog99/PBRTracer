@@ -533,7 +533,9 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
 }
 
 template <typename Next, typename Unget>
-ParamSet Parser::parseParams(Next nextToken, Unget ungetToken, MemoryArena &arena, SpectrumType spectrumType) {
+ParamSet Parser::parseParams(Next nextToken, Unget ungetToken, MemoryArena &arena,
+                             SpectrumType spectrumType)
+{
     ParamSet ps;
     while (true) {
         string_view decl = nextToken(TOKEN_OPTIONAL);

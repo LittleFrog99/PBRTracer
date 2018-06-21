@@ -77,40 +77,6 @@ public:
     void reportUnused() const;
     void clear();
     string toString() const;
-    void printSet(int indent) const;
-
-private:
-    vector<shared_ptr<ParamSetItem<bool>>> bools;
-    vector<shared_ptr<ParamSetItem<int>>> ints;
-    vector<shared_ptr<ParamSetItem<Float>>> floats;
-    vector<shared_ptr<ParamSetItem<Point2f>>> point2fs;
-    vector<shared_ptr<ParamSetItem<Vector2f>>> vector2fs;
-    vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
-    vector<shared_ptr<ParamSetItem<Vector3f>>> vector3fs;
-    vector<shared_ptr<ParamSetItem<Normal3f>>> normals;
-    vector<shared_ptr<ParamSetItem<Spectrum>>> spectra;
-    vector<shared_ptr<ParamSetItem<string>>> strings;
-    vector<shared_ptr<ParamSetItem<string>>> textures;
-    static map<string, Spectrum> cachedSpectra;
-
-    friend class TextureParams;
-    friend bool shapeMaySetMaterialParameters(const ParamSet &ps);
-
-    template <typename T>
-    static void printItems(
-        const char *type, int indent,
-        const std::vector<std::shared_ptr<ParamSetItem<T>>> &items) {
-        for (const auto &item : items) {
-            int np = printf("\n%*s\"%s %s\" [ ", indent + 8, "", type,
-                            item->name.c_str());
-            for (int i = 0; i < item->nValues; ++i) {
-                np += print(item->values[i]);
-                if (np > 80 && i < item->nValues - 1)
-                    np = printf("\n%*s", indent + 8, "");
-            }
-            printf("] ");
-        }
-    }
 
     static int print(int i) { return printf("%d ", i); }
     static int print(bool v) { return v ? printf("\"true\" ") : printf("\"false\" ");}
@@ -158,6 +124,41 @@ private:
         int np = print(rgb[0]);
         np += print(rgb[1]);
         return np + print(rgb[2]);
+    }
+
+    void printSet(int indent) const;
+
+private:
+    vector<shared_ptr<ParamSetItem<bool>>> bools;
+    vector<shared_ptr<ParamSetItem<int>>> ints;
+    vector<shared_ptr<ParamSetItem<Float>>> floats;
+    vector<shared_ptr<ParamSetItem<Point2f>>> point2fs;
+    vector<shared_ptr<ParamSetItem<Vector2f>>> vector2fs;
+    vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
+    vector<shared_ptr<ParamSetItem<Vector3f>>> vector3fs;
+    vector<shared_ptr<ParamSetItem<Normal3f>>> normals;
+    vector<shared_ptr<ParamSetItem<Spectrum>>> spectra;
+    vector<shared_ptr<ParamSetItem<string>>> strings;
+    vector<shared_ptr<ParamSetItem<string>>> textures;
+    static map<string, Spectrum> cachedSpectra;
+
+    friend class TextureParams;
+    friend bool shapeMaySetMaterialParameters(const ParamSet &ps);
+
+    template <typename T>
+    static void printItems(
+        const char *type, int indent,
+        const std::vector<std::shared_ptr<ParamSetItem<T>>> &items) {
+        for (const auto &item : items) {
+            int np = printf("\n%*s\"%s %s\" [ ", indent + 8, "", type,
+                            item->name.c_str());
+            for (int i = 0; i < item->nValues; ++i) {
+                np += print(item->values[i]);
+                if (np > 80 && i < item->nValues - 1)
+                    np = printf("\n%*s", indent + 8, "");
+            }
+            printf("] ");
+        }
     }
 };
 

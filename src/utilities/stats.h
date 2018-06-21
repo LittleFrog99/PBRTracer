@@ -90,7 +90,7 @@ private:
     static void getCategoryAndTitle(const string &str, string *category, string *title);
 };
 
-class Stats {
+class Statistics {
 public:
     static void print(FILE *dest) { statsAccum.print(dest); }
     static void clear() { statsAccum.clear(); }
