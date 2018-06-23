@@ -53,19 +53,19 @@ public:
         }
     }
 
-    inline Vector3f cosineSampleHemisphere(const Point2f &u) {
+    Vector3f cosineSampleHemisphere(const Point2f &u) {
         Point2f d = concentricSampleDisk(u);
         Float z = sqrt(max((Float)0, 1 - d.x * d.x - d.y * d.y));
         return Vector3f(d.x, d.y, z);
     }
 
-    inline Float cosineHemispherePdf(Float cosTheta) { return cosTheta * INV_PI; }
+    Float cosineHemispherePdf(Float cosTheta) { return cosTheta * INV_PI; }
 
-    inline Float balanceHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
+    Float balanceHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
         return (nf * fPdf) / (nf * fPdf + ng * gPdf);
     }
 
-    inline Float powerHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
+    Float powerHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
         Float f = nf * fPdf, g = ng * gPdf;
         return (f * f) / (f * f + g * g);
     }

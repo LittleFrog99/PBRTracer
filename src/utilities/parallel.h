@@ -2,7 +2,6 @@
 #define PARALLEL_H
 
 #include "vector.h"
-// #include "core/renderer.h"
 #include <thread>
 
 class Barrier {

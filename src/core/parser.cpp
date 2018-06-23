@@ -899,3 +899,18 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
     }
 }
 
+void API::parseFile(string filename) {
+    if (filename != "-") File::setSearchDirectory(File::directoryContaining(filename));
+    auto tokError = [](const char *msg) { ERROR("%s", msg); exit(1); };
+    unique_ptr<Tokenizer> t = Tokenizer::createFromFile(filename, tokError);
+    if (!t) return;
+    Parser::parse(move(t));
+}
+
+void API::parseString(string str) {
+    auto tokError = [](const char *msg) { ERROR("%s", msg); exit(1); };
+    unique_ptr<Tokenizer> t = Tokenizer::createFromString(move(str), tokError);
+    if (!t) return;
+    Parser::parse(move(t));
+}
+

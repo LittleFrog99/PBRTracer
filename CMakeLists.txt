@@ -15,12 +15,15 @@ SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/math.cpp src/utilities/report.cpp
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
     src/utilities/parallel.cpp src/utilities/stats.cpp )
-SET(SOURCE_SHAPES
-    src/shapes/sphere.cpp)
+SET(SOURCES_SHAPES
+    src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp
+    src/shapes/triangle.cpp src/shapes/curve.cpp)
 SET(SOURCE_ACCELERATORS)
 SET(SOURCES src/main.cpp ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES}
     ${SOURCES_ACCELERATORS})
 
-LINK_LIBRARIES(glog)
+FIND_LIBRARY(GLOG_LIB glog)
+
+LINK_LIBRARIES(${GLOG_LIB})
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES})

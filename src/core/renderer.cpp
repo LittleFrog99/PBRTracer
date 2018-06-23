@@ -76,7 +76,7 @@ void API::init(const Options &opt) {
     Renderer::graphicsState = GraphicsState();
     Renderer::catIndentCount = 0;
 
-    // SampledSpectrum::init(); // Uncomment when using #SampleSpectrum
+    // SampledSpectrum::init(); // TODO: Uncomment when using #SampleSpectrum
     Parallel::init();  // Threads must be launched before the profiler is initialized.
     Profiler::init();
 }
@@ -543,8 +543,7 @@ void API::shape(const string &name, const ParamSet &params) {
                         mi, Renderer::graphicsState.areaLightParams, s);
                 if (area) areaLights.push_back(area);
             }
-            prims.push_back(
-                make_shared<GeometricPrimitive>(s, mtl, area, mi));
+            prims.push_back(make_shared<GeometricPrimitive>(s, mtl, area, mi));
         }
     } else {
         // Initialize _prims_ and _areaLights_ for animated shape
@@ -698,12 +697,6 @@ void API::worldEnd() {
         unique_ptr<Integrator> integrator(Renderer::renderOptions->makeIntegrator());
         unique_ptr<Scene> scene(Renderer::renderOptions->makeScene());
 
-        // This is kind of ugly; we directly override the current profiler
-        // state to switch from parsing/scene construction related stuff to
-        // rendering stuff and then switch it back below. The underlying
-        // issue is that all the rest of the profiling system assumes
-        // hierarchical inheritance of profiling state; this is the only
-        // place where that isn't the case.
         CHECK_EQ(Profiler::state, Profiler::profToBits(Profiler::Stage::SceneConstruction));
         Profiler::state = Profiler::profToBits(Profiler::Stage::IntegratorRender);
 
@@ -718,7 +711,7 @@ void API::worldEnd() {
     Renderer::graphicsState = GraphicsState();
     Renderer::transformCache.clear();
     Renderer::currentApiState = APIState::OptionsBlock;
-    // ImageTexture<Float, Float>::ClearCache();
+    // ImageTexture<Float, Float>::ClearCache(); // TODO: Uncomment after implementing $ImageTexture
     // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
     Renderer::renderOptions.reset(new RenderOptions);
 

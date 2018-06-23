@@ -31,8 +31,8 @@ public:
     static Transform orthographic(Float znear, Float zfar);
     static Transform perspective(Float fov, Float znear, Float zfar);
 
-    Transform inverse() { return Transform(mInv, m); }
-    Transform transpose() { return Transform(m.transpose(), mInv.transpose()); }
+    Transform inverse() const { return Transform(mInv, m); }
+    Transform transpose() const { return Transform(m.transpose(), mInv.transpose()); }
 
     Transform operator * (const Transform &t2) const { return Transform(m * t2.m, t2.mInv * mInv); }
     bool operator == (const Transform &t) const { return t.m == m && t.mInv == mInv; }

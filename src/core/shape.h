@@ -27,7 +27,7 @@ public:
 
     virtual Float solidAngle(const Point3f &p, int nSamples = 512) const;
 
-    virtual ~Shape();
+    virtual ~Shape() {}
 
     const Transform *objectToWorld, *worldToObject;
     const bool reverseOrientation;
