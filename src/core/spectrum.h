@@ -1,5 +1,5 @@
-#ifndef SPECTRUM_H
-#define SPECTRUM_H
+#ifndef CORE_SPECTRUM
+#define CORE_SPECTRUM
 
 #include "stringprint.h"
 
@@ -285,4 +285,4 @@ private:
 };
 
 
-#endif // SPECTRUM_H
+#endif // CORE_SPECTRUM

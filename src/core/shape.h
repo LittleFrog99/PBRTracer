@@ -1,5 +1,5 @@
-#ifndef SHAPE_H
-#define SHAPE_H
+#ifndef CORE_SHAPE
+#define CORE_SHAPE
 
 #include "bounds.h"
 #include "interaction.h"
@@ -34,4 +34,4 @@ public:
     const bool transformSwapsHandedness;
 };
 
-#endif // SHAPE_H
+#endif // CORE_SHAPE

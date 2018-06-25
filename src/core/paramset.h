@@ -1,5 +1,5 @@
-#ifndef PARAMSET_H
-#define PARAMSET_H
+#ifndef CORE_PARAMSET
+#define CORE_PARAMSET
 
 
 #include "vector.h"
@@ -242,4 +242,4 @@ private:
     }
 };
 
-#endif // PARAMSET_H
+#endif // CORE_PARAMSET

@@ -1,5 +1,5 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef CORE_CAMERA
+#define CORE_CAMERA
 
 #include "interaction.h"
 #include "light.h"
@@ -66,4 +66,4 @@ protected:
     Float lensRadius, focalDistance;
 };
 
-#endif // CAMERA_H
+#endif // CORE_CAMERA

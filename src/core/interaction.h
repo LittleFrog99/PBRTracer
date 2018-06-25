@@ -1,5 +1,5 @@
-#ifndef INTERACTION_H
-#define INTERACTION_H
+#ifndef CORE_INTERACTION
+#define CORE_INTERACTION
 
 #include "ray.h"
 #include "spectrum.h"
@@ -112,4 +112,4 @@ public:
     // int faceIndex = 0;
 };
 
-#endif // INTERACTION_H
+#endif // CORE_INTERACTION

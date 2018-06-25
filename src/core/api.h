@@ -1,5 +1,5 @@
-#ifndef API_H
-#define API_H
+#ifndef CORE_API
+#define CORE_API
 
 #include "utilities.h"
 
@@ -52,4 +52,4 @@ public:
     static void parseString(string str);
 };
 
-#endif // API_H
+#endif // CORE_API

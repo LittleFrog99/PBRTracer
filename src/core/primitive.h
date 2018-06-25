@@ -1,5 +1,5 @@
-#ifndef PRIMITIVE_H
-#define PRIMITIVE_H
+#ifndef CORE_PRIMITIVE
+#define CORE_PRIMITIVE
 
 #include "bounds.h"
 #include "light.h"
@@ -67,5 +67,5 @@ public:
     void computeScatteringFuncs(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
                                 bool allowMultipleLobes) const;
 };
-#endif // PRIMITIVE_H
+#endif // CORE_PRIMITIVE
 

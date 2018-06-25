@@ -1,5 +1,5 @@
-#ifndef LIGHT_H
-#define LIGHT_H
+#ifndef CORE_LIGHT
+#define CORE_LIGHT
 
 #include "spectrum.h"
 #include "transform.h"
@@ -63,4 +63,4 @@ public:
     virtual Spectrum compute_L(const Interaction &intr, const Vector3f &w) const = 0;
 };
 
-#endif // LIGHT_H
+#endif // CORE_LIGHT

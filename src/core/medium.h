@@ -1,5 +1,5 @@
-#ifndef MEDIUM_H
-#define MEDIUM_H
+#ifndef CORE_MEDIUM
+#define CORE_MEDIUM
 
 #include "ray.h"
 #include "spectrum.h"
@@ -62,4 +62,4 @@ struct MediumInterface {
     const Medium *inside, *outside;
 };
 
-#endif // MEDIUM_H
+#endif // CORE_MEDIUM

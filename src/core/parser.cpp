@@ -69,7 +69,7 @@ unique_ptr<Tokenizer> Tokenizer::createFromFile(
     }
 
     size_t len = stat.st_size;
-    void *ptr = mmap(0, len, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+    void *ptr = mmap(nullptr, len, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
     if (close(fd) != 0) {
         errorCallback(StringPrint::printf("%s: %s", filename.c_str(), strerror(errno)).c_str());
         return nullptr;

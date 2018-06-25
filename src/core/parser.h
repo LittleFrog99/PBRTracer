@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef CORE_PARSER
+#define CORE_PARSER
 
 #include "utilities.h"
 #include <string_view>
@@ -115,4 +115,4 @@ private:
     string sEscaped;
 };
 
-#endif // PARSER_H
+#endif // CORE_PARSER

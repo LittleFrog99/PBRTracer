@@ -1,5 +1,5 @@
-#ifndef INTEGRATOR_H
-#define INTEGRATOR_H
+#ifndef CORE_INTEGRATOR
+#define CORE_INTEGRATOR
 
 #include "interaction.h"
 #include "light.h"
@@ -52,4 +52,4 @@ private:
     const Bounds2i pixelBounds;
 };
 
-#endif // INTEGRATOR_H
+#endif // CORE_INTEGRATOR

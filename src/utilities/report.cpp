@@ -155,8 +155,7 @@ void Report::processError(Parser::Location *loc, const char *format, va_list arg
     string errorString;
     // Print line and position in input file, if available
     if (loc)
-        errorString = StringPrint::printf("%s:%d:%d: ", loc->filename.c_str(),
-                                          loc->line, loc->column);
+        errorString = StringPrint::printf("%s:%d:%d: ", loc->filename.c_str(), loc->line, loc->column);
     errorString += errorType;
     errorString += ": ";
     errorString += StringPrint::printf(format, args);

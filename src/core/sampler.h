@@ -1,5 +1,5 @@
-#ifndef SAMPLER_H
-#define SAMPLER_H
+#ifndef CORE_SAMPLER
+#define CORE_SAMPLER
 
 #include "camera.h"
 #include "random.h"
@@ -198,4 +198,4 @@ private:
 };
 
 
-#endif // SAMPLER_H
+#endif // CORE_SAMPLER

@@ -1,5 +1,5 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#ifndef CORE_MATERIAL
+#define CORE_MATERIAL
 
 
 #include "memory.h"
@@ -17,4 +17,4 @@ public:
     static void bump(const shared_ptr<Texture<Float>> &d, SurfaceInteraction *si);
 };
 
-#endif // MATERIAL_H
+#endif // CORE_MATERIAL

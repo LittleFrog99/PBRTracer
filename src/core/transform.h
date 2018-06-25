@@ -1,5 +1,5 @@
-#ifndef TRANSFORM_H
-#define TRANSFORM_H
+#ifndef CORE_TRANSFORM
+#define CORE_TRANSFORM
 
 #include "bounds.h"
 #include "matrix.h"
@@ -332,4 +332,4 @@ private:
     DerivativeTerm c1[3], c2[3], c3[3], c4[3], c5[3];
 };
 
-#endif // TRANSFORM_H
+#endif // CORE_TRANSFORM

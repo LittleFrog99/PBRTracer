@@ -1,5 +1,5 @@
-#ifndef BOUNDS_H
-#define BOUNDS_H
+#ifndef CORE_BOUNDS
+#define CORE_BOUNDS
 
 #include "vector.h"
 #include "ray.h"
@@ -364,4 +364,4 @@ inline Bounds2iIterator end(const Bounds2i &b) {
     return Bounds2iIterator(b, pEnd);
 }
 
-#endif // BOUNDS_H
+#endif // CORE_BOUNDS

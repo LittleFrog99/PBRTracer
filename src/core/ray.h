@@ -1,5 +1,5 @@
-#ifndef RAY_H
-#define RAY_H
+#ifndef CORE_RAY
+#define CORE_RAY
 
 #include "vector.h"
 
@@ -65,4 +65,4 @@ public:
     Vector3f rxDirection, ryDirection;
 };
 
-#endif // RAY_H
+#endif // CORE_RAY

@@ -1,5 +1,5 @@
-#ifndef SCENE_H
-#define SCENE_H
+#ifndef CORE_SCENE
+#define CORE_SCENE
 
 #include "primitive.h"
 
@@ -29,4 +29,4 @@ private:
     Bounds3f worldBound;
 };
 
-#endif // SCENE_H
+#endif // CORE_SCENE

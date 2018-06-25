@@ -1,5 +1,5 @@
-#ifndef FILM_H
-#define FILM_H
+#ifndef CORE_FILM
+#define CORE_FILM
 
 #include "spectrum.h"
 #include "bounds.h"
@@ -104,4 +104,4 @@ private:
 
 
 
-#endif // FILM_H
+#endif // CORE_FILM

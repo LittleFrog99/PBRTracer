@@ -1,5 +1,5 @@
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#ifndef CORE_TEXTURE
+#define CORE_TEXTURE
 
 #include "transform.h"
 
@@ -87,4 +87,4 @@ private:
     const Transform worldToTexture;
 };
 
-#endif // TEXTURE_H
+#endif // CORE_TEXTURE

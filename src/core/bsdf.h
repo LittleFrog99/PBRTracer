@@ -1,5 +1,5 @@
-#ifndef BSDF_H
-#define BSDF_H
+#ifndef CORE_BSDF
+#define CORE_BSDF
 
 #include "interaction.h"
 
@@ -85,4 +85,4 @@ inline ostream & operator << (ostream &os, const BSDF &bsdf) {
 }
 
 
-#endif // BSDF_H
+#endif // CORE_BSDF

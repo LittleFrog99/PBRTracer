@@ -1,5 +1,5 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef CORE_RENDERER
+#define CORE_RENDERER
 
 #include "scene.h"
 #include "medium.h"
@@ -171,4 +171,4 @@ struct RenderOptions {
 
 
 
-#endif // RENDERER_H
+#endif // CORE_RENDERER
