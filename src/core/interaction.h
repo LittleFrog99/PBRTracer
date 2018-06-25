@@ -84,7 +84,7 @@ public:
     SurfaceInteraction(const Point3f &p, const Vector3f &pError, const Point2f &uv, const Vector3f &wo,
                        const Vector3f &dpdu, const Vector3f &dpdv,
                        const Normal3f &dndu, const Normal3f &dndv,
-                       Float time, const Shape *sh, int faceIndex = 0);
+                       Float time, const Shape *sh);
     void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv,
                             const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
@@ -109,7 +109,7 @@ public:
     mutable Vector3f dpdx, dpdy;
     mutable Float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
 
-    int faceIndex = 0;
+    // int faceIndex = 0;
 };
 
 #endif // INTERACTION_H

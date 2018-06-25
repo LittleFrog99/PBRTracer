@@ -2,6 +2,7 @@
 #define TRIANGLE_H
 
 #include "core/shape.h"
+#include "report.h"
 
 struct TriangleMesh {
     TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices, int nVertices,
@@ -20,8 +21,6 @@ struct TriangleMesh {
     unique_ptr<Vector3f[]> s;
     unique_ptr<Point2f[]> uv;
     shared_ptr<Texture<Float>> alphaMask;
-    shared_ptr<Texture<Float>> shadowAlphaMask; // newly added in pbrt
-    vector<int> faceIndices; // newly added in pbrt
 };
 
 class Triangle : public Shape {
@@ -29,7 +28,9 @@ public:
     Triangle(const Transform *objToWorld, const Transform *worldToObj, bool revOrient,
              const shared_ptr<TriangleMesh> &mesh, int triNumber)
         : Shape(objToWorld, worldToObj, revOrient), mesh(mesh)
-    { v = &mesh->vertexIndices[3 * triNumber]; }
+    {
+        v = &mesh->vertexIndices[3 * triNumber];
+    }
 
     Bounds3f objectBound() const;
     Bounds3f worldBound() const;
@@ -55,6 +56,88 @@ private:
 
     shared_ptr<TriangleMesh> mesh;
     const int *v;
+    // int faceIndex;
+};
+
+class Subdivision {
+public:
+    static vector<shared_ptr<Shape>> subdivide(const Transform *objToWorld, const Transform *worldToObj,
+                                               bool reverseOrientation, int nLevels, int nIndices,
+                                               const int *vertexIndices, int nVertices, const Point3f *p);
+
+private:
+#define NEXT(i) ((i + 1) % 3)
+#define PREV(i) ((i + 2) % 3)
+
+    struct SDFace;
+
+    struct SDVertex {
+        SDVertex(const Point3f &p = Point3f()) : p(p) {}
+        int valence();
+        void oneRing(Point3f *p);
+
+        Point3f p;
+        SDFace *startFace = nullptr;
+        SDVertex *child = nullptr;
+        bool regular = false, boundary = false;
+    };
+
+    struct SDFace  {
+        SDFace() {}
+
+        int vNum(SDVertex *vert) const {
+            for (int i = 0; i < 3; i++)
+                if (v[i] == vert) return i;
+            SEVERE("Basic logic error in SDFace::vNum()");
+            return -1;
+        }
+
+        SDVertex * otherVert(SDVertex *v0, SDVertex *v1) {
+            for (int i = 0; i < 3; i++)
+                if (v[i] != v0 && v[i] != v1)
+                    return v[i];
+            SEVERE("Basic logic error in SDVertex::otherVert()");
+            return nullptr;
+        }
+
+        SDFace * nextFace(SDVertex *vert) { return f[vNum(vert)]; }
+        SDFace * prevFace(SDVertex *vert) { return f[PREV(vNum(vert))]; }
+        SDVertex * nextVert(SDVertex *vert) { return v[NEXT(vNum(vert))]; }
+        SDVertex * prevVert(SDVertex *vert) { return v[PREV(vNum(vert))]; }
+
+        SDVertex *v[3] = { nullptr, nullptr, nullptr };
+        SDFace *f[3] = { nullptr, nullptr, nullptr }; // neighboring faces
+        SDFace *children[4] = { nullptr, nullptr, nullptr, nullptr };
+    };
+
+    struct SDEdge {
+        SDEdge(SDVertex *v0 = nullptr, SDVertex *v1 = nullptr) {
+            v[0] = min(v0, v1);
+            v[1] = max(v0, v1);
+        }
+
+        bool operator < (const SDEdge &e2) const {
+            if (v[0] == e2.v[0]) return v[1] < e2.v[1];
+            return v[0] < e2.v[0];
+        }
+
+        SDVertex *v[2];
+        SDFace *f[2] = { nullptr, nullptr };
+        int f0EdgeNum = -1;
+    };
+
+    static Float beta(int valence) { // used to weigh nearby vertices
+        if (valence == 3) return 3.0 / 16.0;
+        else return 3.0 / (8.0 * valence);
+    }
+
+    static Float loopGamma(int valence) {
+        return 1.f / (valence + 3.f / (8.f * beta(valence)));
+    }
+
+    static Point3f weightOneRing(SDVertex *vert, Float beta);
+    static Point3f weightBoundary(SDVertex *vert, Float beta);
+
 };
 
 #endif // TRIANGLE_H

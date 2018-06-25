@@ -21,11 +21,12 @@ typedef float Float;
 typedef double Float;
 #endif
 
-class RGBSpectrum;
-typedef RGBSpectrum Spectrum;
-
 #define SQ(x) (x) * (x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
+
+/* Type Definitions */
+class RGBSpectrum;
+typedef RGBSpectrum Spectrum;
 
 using namespace std;
 
@@ -58,7 +59,7 @@ static constexpr Float SQRT_TWO = 1.41421356237309504880;
 static constexpr Float MACHINE_EPSILON = numeric_limits<Float>::epsilon() * 0.5;
 static constexpr Float SHADOW_EPSILON = 0.0001f;
 
-/* Utility Funtions and Classes */
+/* Utility Inline Funtions */
 template <class T, class U, class V>
 inline T clamp(T value, U low, V high) {
     if (value < low) return low;

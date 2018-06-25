@@ -144,7 +144,7 @@ SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
     ret.bssrdf = si.bssrdf;
     ret.primitive = si.primitive;
     ret.shading.n = faceforward(ret.shading.n, ret.n);
-    ret.faceIndex = si.faceIndex;
+    // ret.faceIndex = si.faceIndex;
     return ret;
 }
 

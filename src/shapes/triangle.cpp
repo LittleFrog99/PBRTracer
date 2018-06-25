@@ -1,5 +1,6 @@
 #include "triangle.h"
 #include "stats.h"
+#include <set>
 
 TriangleMesh::TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices,
                            int nVertices, const Point3f *P, const Vector3f *S, const Normal3f *N, const Point2f *UV,
@@ -337,4 +338,267 @@ Float Triangle::area() const {
     const auto &p1 = mesh->p[v[1]];
     const auto &p2 = mesh->p[v[2]];
     return 0.5 * cross(p1 - p0, p2 - p0).length();
+}
+
+int Subdivision::SDVertex::valence() {
+    auto f = startFace;
+    unsigned nFace = 1;
+    if (!boundary) { // interior vertex
+        while ((f = f->nextFace(this)) != startFace) nFace++;
+        return nFace;
+    } else {
+        while ((f = f->nextFace(this)) != nullptr) nFace++;
+        f = startFace;
+        while ((f = f->prevFace(this)) != nullptr) nFace++;
+        return nFace + 1;
+    }
+}
+
+void Subdivision::SDVertex::oneRing(Point3f *p) {
+    if (!boundary) {
+        auto face = startFace;
+        do {
+            *p++ = face->nextVert(this)->p;
+            face = face->nextFace(this);
+        } while (face != startFace);
+    } else {
+        SDFace *face  = startFace, *f2;
+        while ((f2 = face->nextFace(this)) != nullptr)
+            face = f2;
+        *p++ = face->nextVert(this)->p;
+        do {
+            *p++ = face->prevVert(this)->p;
+            face = face->prevFace(this);
+        } while (face != nullptr);
+    }
+}
+
+Point3f Subdivision::weightOneRing(SDVertex *vert, Float beta) {
+    int valence = vert->valence();
+    Point3f *pRing = ALLOCA(Point3f, valence);
+    vert->oneRing(pRing);
+    Point3f p = (1 - valence * beta) * vert->p;
+    for (int i = 0; i < valence; i++)
+        p += beta * pRing[i];
+    return p;
+}
+
+Point3f Subdivision::weightBoundary(SDVertex *vert, Float beta) {
+    int valence = vert->valence();
+    Point3f *pRing = ALLOCA(Point3f, valence);
+    vert->oneRing(pRing);
+    Point3f p = (1 - 2 * beta) * vert->p;
+    p += beta * pRing[0];
+    p += beta * pRing[valence - 1];
+    return p;
+}
+
+vector<shared_ptr<Shape>> Subdivision::subdivide(const Transform *objToWorld, const Transform *worldToObj,
+                                                 bool reverseOrientation, int nLevels, int nIndices,
+                                                 const int *vertexIndices, int nVertices, const Point3f *p)
+{
+    vector<SDVertex *> vertices;
+    vector<SDFace *> faces;
+
+    // Allocate vertices and faces
+    unique_ptr<SDVertex[]> vertArr(new SDVertex[nVertices]);
+    for (int i = 0; i < nVertices; ++i) {
+        vertArr[i] = SDVertex(p[i]);
+        vertices.push_back(&vertArr[i]);
+    }
+    int nFaces = nIndices / 3;
+    unique_ptr<SDFace[]> faceArr(new SDFace[nFaces]);
+    for (int i = 0; i < nFaces; ++i)
+        faces.push_back(&faceArr[i]);
+
+    // Set face to vertex pointers
+    const int *vp = vertexIndices;
+    for (int i = 0; i < nFaces; i++, vp += 3) {
+        auto f = faces[i];
+        for (unsigned j = 0; j < 3; j++) {
+            auto v = vertices[vp[j]];
+            f->v[j] = v;
+            v->startFace = f;
+        }
+    }
+
+    // Set neighbor pointers in faces
+    set<SDEdge> edges;
+    for (int i = 0; i < nFaces; i++) {
+        auto f = faces[i];
+        for (int edgeNum = 0; edgeNum < 3; edgeNum++) {
+            int v0 = edgeNum, v1 = NEXT(edgeNum);
+            SDEdge e(f->v[v0], f->v[v1]);
+            if (edges.find(e) == edges.end()) { // new edge
+                e.f[0] = f;
+                e.f0EdgeNum = edgeNum;
+                edges.insert(e);
+            } else { // preexisting edge
+                e = *edges.find(e);
+                e.f[0]->f[e.f0EdgeNum] = f;
+                f->f[edgeNum] = e.f[0];
+                edges.erase(e);
+            }
+        }
+    }
+
+    // Finish vertex initialization
+    for (int i = 0; i < nVertices; i++) {
+        auto v = vertices[i];
+        auto f = v->startFace;
+        do
+            f = f->nextFace(v);
+        while (f && f != v->startFace);
+        v->boundary = (f == nullptr);
+        v->regular = (!v->boundary && v->valence() == 6) || (v->boundary && v->valence() == 4);
+    }
+
+    // Refine subdivision mesh into triangles
+    auto f = faces;
+    auto v = vertices;
+    MemoryArena arena;
+
+    for (int i = 0; i < nLevels; i++) {
+        // Update f and v for next level of subdivision
+        vector<SDFace *> newFaces;
+        vector<SDVertex *> newVertices;
+
+        // Allocate next level of children in mesh tree
+        for (auto vertex : v) {
+            vertex->child = arena.alloc<SDVertex>();
+            vertex->child->regular = vertex->regular;
+            vertex->child->boundary = vertex->boundary;
+            newVertices.push_back(vertex->child);
+        }
+        for (auto face : f)
+            for (int k = 0; k < 4; k++) {
+                face->children[k] = arena.alloc<SDFace>();
+                newFaces.push_back(face->children[k]);
+            }
+
+        // Update vertex positions and create new edge vertices
+        for (auto vertex : v)
+            vertex->child->p = vertex->boundary ? weightBoundary(vertex, 1.0 / 8.0)
+                                                : vertex->regular ? weightOneRing(vertex, 1.0 / 16.0)
+                                                                  : weightOneRing(vertex, beta(vertex->valence()));
+        map<SDEdge, SDVertex *> edgeVerts;
+        for (auto face : f)
+            for (int k = 0; k < 3; k++) {
+                SDEdge edge(face->v[k], face->v[NEXT(k)]);
+                auto vert = edgeVerts[edge];
+                if (!vert) {
+                    vert = arena.alloc<SDVertex>();
+                    newVertices.push_back(vert);
+                    vert->regular = true;
+                    vert->boundary = (face->f[k] == nullptr);
+                    vert->startFace = face->children[3]; // newly added face in the center of triangle
+                    if (vert->boundary) {
+                           vert->p =  0.5 * edge.v[0]->p;
+                           vert->p += 0.5 * edge.v[1]->p;
+                       } else {
+                           vert->p =  3.0 / 8.0 * edge.v[0]->p;
+                           vert->p += 3.0 / 8.0 * edge.v[1]->p;
+                           vert->p += 1.0 / 8.0 * face->otherVert(edge.v[0], edge.v[1])->p;
+                           vert->p += 1.0 / 8.0 * face->f[k]->otherVert(edge.v[0], edge.v[1])->p;
+                    }
+                }
+                edgeVerts[edge] = vert;
+            }
+
+        // Update new mesh topology
+        // Update even vertex face pointers
+        for (auto vertex : v) {
+            int vertNum = vertex->startFace->vNum(vertex);
+            vertex->child->startFace = vertex->startFace->children[vertNum];
+        }
+        // Update face neighbor pointers
+        for (auto face : f)
+            for (int j = 0; j < 3; j++) {
+                face->children[3]->f[j] = face->children[NEXT(j)]; // neighor faces of the same parent
+                face->children[j]->f[NEXT(j)] = face->children[3];
+                auto f2 = face->f[j]; // of other parents
+                face->children[j]->f[j] = f2 ? f2->children[f2->vNum(face->v[j])] : nullptr;
+                f2 = face->f[PREV(j)];
+                face->children[j]->f[PREV(j)] = f2 ? f2->children[f2->vNum(face->v[j])] : nullptr;
+            }
+        // Update face vertex pointers
+        for (auto face : f)
+            for (int j = 0; j < 3; j++) {
+                face->children[j]->v[j] = face->v[j]->child;
+                SDVertex *vert = edgeVerts[SDEdge(face->v[j], face->v[NEXT(j)])];
+                face->children[j]->v[NEXT(j)] = vert;
+                face->children[NEXT(j)]->v[j] = vert;
+                face->children[3]->v[j] = vert;
+            }
+
+        // Prepare for next level of subdivision
+        f = newFaces;
+        v = newVertices;
+    }
+
+    // Push vertices to limit surface
+    unique_ptr<Point3f[]> pLimit(new Point3f[v.size()]);
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (v[i]->boundary)
+            pLimit[i] = weightBoundary(v[i], 1.f / 5.f);
+        else
+            pLimit[i] = weightOneRing(v[i], loopGamma(v[i]->valence()));
+    }
+    for (size_t i = 0; i < v.size(); ++i) v[i]->p = pLimit[i];
+
+    // Compute vertex tangents on limit surface
+    vector<Normal3f> Ns;
+    Ns.reserve(v.size());
+    vector<Point3f> pRing(16, Point3f());
+    for (SDVertex *vertex : v) {
+        Vector3f S(0, 0, 0), T(0, 0, 0);
+        int valence = vertex->valence();
+        if (valence > (int)pRing.size()) pRing.resize(valence);
+        vertex->oneRing(&pRing[0]);
+        if (!vertex->boundary) {
+            // Compute tangents of interior face
+            for (int j = 0; j < valence; ++j) {
+                S += cos(2 * PI * j / valence) * Vector3f(pRing[j]);
+                T += sin(2 * PI * j / valence) * Vector3f(pRing[j]);
+            }
+        } else {
+            // Compute tangents of boundary face
+            S = pRing[valence - 1] - pRing[0];
+            if (valence == 2)
+                T = Vector3f(pRing[0] + pRing[1] - 2 * vertex->p);
+            else if (valence == 3)
+                T = pRing[1] - vertex->p;
+            else if (valence == 4)  // regular
+                T = Vector3f(-1 * pRing[0] + 2 * pRing[1] + 2 * pRing[2] +
+                             -1 * pRing[3] + -2 * vertex->p);
+            else {
+                Float theta = PI / float(valence - 1);
+                T = Vector3f(sin(theta) * (pRing[0] + pRing[valence - 1]));
+                for (int k = 1; k < valence - 1; ++k) {
+                    Float wt = (2 * cos(theta) - 2) * sin((k)*theta);
+                    T += Vector3f(wt * pRing[k]);
+                }
+                T = -T;
+            }
+        }
+        Ns.push_back(Normal3f(cross(S, T)));
+    }
+
+    // Create triangle mesh from subdivision mesh
+    {
+        size_t ntris = f.size();
+        unique_ptr<int[]> verts(new int[3 * ntris]);
+        int *vp = verts.get();
+        size_t totVerts = v.size();
+        map<SDVertex *, int> usedVerts;
+        for (unsigned i = 0; i < totVerts; ++i) usedVerts[v[i]] = i;
+        for (unsigned i = 0; i < ntris; ++i)
+            for (int j = 0; j < 3; ++j) {
+                *vp = usedVerts[f[i]->v[j]];
+                ++vp;
+            }
+
+        return TriangleMesh::create(objToWorld, worldToObj, reverseOrientation, ntris, verts.get(),
+                                    totVerts, pLimit.get(), nullptr, &Ns[0], nullptr, nullptr);
+    }
 }
