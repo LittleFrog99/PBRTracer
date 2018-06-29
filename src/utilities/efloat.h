@@ -141,7 +141,7 @@ public:
 
     inline bool operator == (EFloat fe) const { return v == fe.v; }
 
-    EFloat &operator=(const EFloat &ef) {
+    EFloat &operator = (const EFloat &ef) {
         ef.check();
         if (&ef != this) {
             v = ef.v;
@@ -206,7 +206,7 @@ public:
 
     friend inline bool solveQuadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
         // Find quadratic discriminant
-        double discrim = double(B.v) * double(B.v) - 4. * double(A.v) * double(C.v);
+        double discrim = SQ(double(B.v)) - 4. * double(A.v) * double(C.v);
         if (discrim < 0.) return false;
         double rootDiscrim = sqrt(discrim);
 

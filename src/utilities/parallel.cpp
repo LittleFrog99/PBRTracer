@@ -161,7 +161,6 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
                     CHECK(loop.func2D);
                     loop.func2D(Point2i(index % loop.nX, index / loop.nX));
                 }
-
                 Profiler::state = oldState;
             }
             lock.lock();

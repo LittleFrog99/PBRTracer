@@ -10,6 +10,8 @@
 #pragma GCC diagnostic ignored "-Wformat-security"
 #endif  // __GNUG__
 
+#define STRING_PRINTF(args...) StringPrint::printf(args)
+
 class StringPrint {
 public:
     template <typename... Args>

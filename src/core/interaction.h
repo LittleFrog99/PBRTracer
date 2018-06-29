@@ -85,11 +85,9 @@ public:
                        const Vector3f &dpdu, const Vector3f &dpdv,
                        const Normal3f &dndu, const Normal3f &dndv,
                        Float time, const Shape *sh);
-    void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv,
-                            const Normal3f &dndu, const Normal3f &dndv,
+    void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv, const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
-    void computeScatteringFuncs(const RayDifferential &ray, MemoryArena &arena,
-                                bool allowMultipleLobes = false,
+    void computeScatteringFuncs(const RayDifferential &ray, MemoryArena &arena, bool allowMultipleLobes = false,
                                 TransportMode mode = TransportMode::Radiance);
     void computeDifferentials(const RayDifferential &r) const;
     Spectrum compute_Le(const Vector3f &w) const; // is calculated when intersecting an emissive surface

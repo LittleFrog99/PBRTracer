@@ -2,7 +2,7 @@
 #define TRIANGLE_H
 
 #include "core/shape.h"
-#include "report.h"
+#include "log.h"
 
 struct TriangleMesh {
     TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices, int nVertices,

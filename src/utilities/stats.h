@@ -3,6 +3,7 @@
 
 #include "utilities.h"
 #include <array>
+#include <thread>
 
 class StatsAccumulator;
 
@@ -153,6 +154,33 @@ public:
 private:
     bool reset;
     uint64_t categoryBit;
+};
+
+class ProgressReporter {
+public:
+    ProgressReporter(int64_t totalWork, const string &title);
+    ~ProgressReporter();
+
+    void update(int64_t num = 1);
+
+    Float elapsedMS() const {
+        chrono::system_clock::time_point now = chrono::system_clock::now();
+        int64_t elapsedMS = chrono::duration_cast<chrono::milliseconds>(now - startTime).count();
+        return Float(elapsedMS);
+    }
+
+    void done();
+
+  private:
+    void printBar();
+    int terminalWidth();
+
+    const int64_t totalWork;
+    const string title;
+    const chrono::system_clock::time_point startTime;
+    atomic<int64_t> workDone;
+    atomic<bool> exitThread;
+    thread updateThread;
 };
 
 // Statistics Macros

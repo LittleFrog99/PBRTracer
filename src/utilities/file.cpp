@@ -1,5 +1,5 @@
 #include "file.h"
-#include "report.h"
+#include "log.h"
 #include <libgen.h>
 
 string File::searchDirectory;

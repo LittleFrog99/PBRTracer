@@ -20,7 +20,7 @@ public:
 
     virtual Float area() const = 0;
 
-    virtual Interaction sample(const Point2f &u, Float *pdf) const = 0;
+    // virtual Interaction sample(const Point2f &u, Float *pdf) const = 0;
     virtual Float pdf(const Interaction &) const { return 1 / area(); }
     virtual Interaction sample(const Interaction &ref, const Point2f &u, Float *pdf) const;
     virtual Float pdf(const Interaction &ref, const Vector3f &wi) const;

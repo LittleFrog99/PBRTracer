@@ -1,5 +1,5 @@
 #include "paramset.h"
-#include "report.h"
+#include "log.h"
 #include "file.h"
 
 #define ADD_PARAM_TYPE(T, vec) \
@@ -131,13 +131,13 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
 
         vector<Float> vals;
         if (!File::readFloatFile(fn.c_str(), &vals)) {
-            Report::warning(
+            WARNING(
                 "Unable to read SPD file \"%s\".  Using black distribution.",
                 fn.c_str());
             s[i] = Spectrum(0.);
         } else {
             if (vals.size() % 2) {
-                Report::warning(
+                WARNING(
                     "Extra value found in spectrum file \"%s\". "
                     "Ignoring it.",
                     fn.c_str());
@@ -379,7 +379,7 @@ string ParamSet::findTexture(const string &name) const {
 #define CHECK_UNUSED(v)                                                 \
     for (size_t i = 0; i < (v).size(); ++i)                             \
         if (!(v)[i]->lookedUp)                                          \
-            Report::warning("Parameter \"%s\" not used", (v)[i]->name.c_str())
+            WARNING("Parameter \"%s\" not used", (v)[i]->name.c_str())
 
 void ParamSet::reportUnused() const {
     CHECK_UNUSED(ints);
@@ -612,7 +612,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(const stri
         const Spectrum *s = geomParams.findSpectrum(n, &count);
         if (s) {
             if (count > 1)
-                Report::warning("Ignoring excess values provided with parameter \"%s\"",
+                WARNING("Ignoring excess values provided with parameter \"%s\"",
                         n.c_str());
             return make_shared<ConstantTexture<Spectrum>>(*s);
         }
@@ -623,7 +623,7 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(const stri
             const Spectrum *s = materialParams.findSpectrum(n, &count);
             if (s) {
                 if (count > 1)
-                    Report::warning("Ignoring excess values provided with parameter \"%s\"",
+                    WARNING("Ignoring excess values provided with parameter \"%s\"",
                             n.c_str());
                 return make_shared<ConstantTexture<Spectrum>>(*s);
             }
@@ -660,7 +660,7 @@ shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(const string &n)
         const Float *s = geomParams.findFloat(n, &count);
         if (s) {
             if (count > 1)
-                Report::warning("Ignoring excess values provided with parameter \"%s\"", n.c_str());
+                WARNING("Ignoring excess values provided with parameter \"%s\"", n.c_str());
             return make_shared<ConstantTexture<Float>>(*s);
         }
 
@@ -670,7 +670,7 @@ shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(const string &n)
             const Float *s = materialParams.findFloat(n, &count);
             if (s) {
                 if (count > 1)
-                    Report::warning("Ignoring excess values provided with parameter \"%s\"", n.c_str());
+                    WARNING("Ignoring excess values provided with parameter \"%s\"", n.c_str());
                 return make_shared<ConstantTexture<Float>>(*s);
             }
         }

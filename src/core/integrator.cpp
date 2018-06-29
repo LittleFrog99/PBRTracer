@@ -85,8 +85,8 @@ void SamplerIntegrator::render(const Scene &scene) {
 }
 
 Spectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const SurfaceInteraction &isect,
-                                               const Scene &scene, Sampler &sampler,
-                                               MemoryArena &arena, int depth) const
+                                            const Scene &scene, Sampler &sampler,
+                                            MemoryArena &arena, int depth) const
 {
     // Compute specular reflection direction _wi_ and BSDF value
     Vector3f wo = isect.wo, wi;
@@ -117,16 +117,15 @@ Spectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const Su
 }
 
 Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const SurfaceInteraction &isect,
-                                                const Scene &scene, Sampler &sampler,
-                                                MemoryArena &arena, int depth) const
+                                             const Scene &scene, Sampler &sampler,
+                                             MemoryArena &arena, int depth) const
 {
     Vector3f wo = isect.wo, wi;
     Float pdf;
     const Point3f &p = isect.p;
     const Normal3f &ns = isect.shading.n;
     const BSDF &bsdf = *isect.bsdf;
-    Spectrum f = bsdf.sample_f(wo, &wi, sampler.get2D(), &pdf,
-                                  BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR));
+    Spectrum f = bsdf.sample_f(wo, &wi, sampler.get2D(), &pdf, BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR));
     Spectrum L;
     if (pdf > 0.f && !f.isBlack() && absDot(wi, ns) != 0.f) {
         RayDifferential rd = isect.spawnRay(wi);

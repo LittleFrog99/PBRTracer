@@ -30,16 +30,14 @@ public:
     FilmTilePixel & getPixel(const Point2i &p) {
         CHECK(insideExclusive(p, pixelBounds));
         int width = pixelBounds.pMax.x - pixelBounds.pMin.x;
-        int offset =
-            (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
+        int offset = (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
         return pixels[offset];
     }
 
     const FilmTilePixel & getPixel(const Point2i &p) const {
         CHECK(insideExclusive(p, pixelBounds));
         int width = pixelBounds.pMax.x - pixelBounds.pMin.x;
-        int offset =
-            (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
+        int offset = (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
         return pixels[offset];
     }
 
@@ -94,7 +92,7 @@ private:
     const Float maxSampleLuminance;
 
     Pixel & getPixel(const Point2i &p) {
-        CHECK(Math::insideExclusive(p, croppedPixelBounds));
+        CHECK(insideExclusive(p, croppedPixelBounds));
         int width = croppedPixelBounds.pMax.x - croppedPixelBounds.pMin.x;
         int offset = (p.x - croppedPixelBounds.pMin.x) +
                      (p.y - croppedPixelBounds.pMin.y) * width;

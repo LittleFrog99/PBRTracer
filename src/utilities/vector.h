@@ -21,8 +21,8 @@ class Vector2 {
 public:
     // Vector2 Public Methods
     Vector2() { x = y = 0; }
-    bool hasNaNs() const { return isNaN(x) || isNaN(y); }
-    Vector2(T xx, T yy) : x(xx), y(yy) {}
+    bool hasNaNs() const { return isnan(x) || isnan(y); }
+    Vector2(T xx, T yy) : x(xx), y(yy) { DCHECK(!hasNaNs()); }
     explicit Vector2(const Point2<T> &p);
     explicit Vector2(const Point3<T> &p);
 
@@ -75,8 +75,8 @@ class Vector3 {
 public:
     Vector3() { x = y = z = 0; }
     bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
-    Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
-    Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; }
+    Vector3(T x, T y, T z) : x(x), y(y), z(z) { DCHECK(!hasNaNs()); }
+    Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; DCHECK(!hasNaNs()); }
     explicit Vector3(const Point3<T> &p);
     explicit Vector3(const Normal3<T> &n);
 
@@ -136,9 +136,9 @@ class Point2 {
 public:
     Point2() { x = y = 0; }
     Point2(T xx, T yy) : x(xx), y(yy) { }
-    Point2(const Point2<T> &p) { x = p.x; y = p.y; }
-    explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) { }
-    bool hasNaNs() const { return isNaN(x) || isNaN(y); }
+    Point2(const Point2<T> &p) { x = p.x; y = p.y; DCHECK(!hasNaNs()); }
+    explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) { DCHECK(!hasNaNs()); }
+    bool hasNaNs() const { return isnan(x) || isnan(y); }
 
     template <class U>
     explicit Point2(const Point2<U> &p) { x = T(p.x); y = T(p.y); }
@@ -198,8 +198,8 @@ template <class T>
 class Point3 {
 public:
     Point3() { x = y = z = 0; }
-    Point3(T x, T y, T z) : x(x), y(y), z(z) { }
-    Point3(const Point3<T> &p) { x = p.x; y = p.y; z = p.z; }
+    Point3(T x, T y, T z) : x(x), y(y), z(z) { DCHECK(!hasNaNs()); }
+    Point3(const Point3<T> &p) { x = p.x; y = p.y; z = p.z; DCHECK(!hasNaNs()); }
     bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
 
     template <class U>
@@ -263,10 +263,10 @@ template <class T>
 class Normal3 {
 public:
     Normal3() { x = y = z = 0; }
-    Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { }
-    Normal3<T>(const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; }
-    explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {}
-    bool hasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
+    Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { DCHECK(!hasNaNs()); }
+    Normal3<T>(const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; DCHECK(!hasNaNs()); }
+    explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) { DCHECK(!hasNaNs()); }
+    bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
 
     Normal3<T> & operator = (const Normal3<T> &n) { x = n.x; y = n.y; z = n.z; return *this; }
     Normal3<T> operator - () const { return Normal3(-x, -y, -z); }
@@ -534,7 +534,7 @@ inline T dot(const Vector3<T> &v1, const Vector3<T> &v2) {
 
 template <class T>
 inline T absDot(const Normal3<T> &n1, const Vector3<T> &v2) {
-    return abs(n1.x * v2.x + n1.y * v2.y + n1.z * v2.z);
+    return std::abs(n1.x * v2.x + n1.y * v2.y + n1.z * v2.z);
 }
 
 template <class T>
@@ -544,7 +544,7 @@ inline T absDot(const Vector3<T> &v1, const Normal3<T> &n2) {
 
 template <class T>
 inline T absDot(const Normal3<T> &n1, const Normal3<T> &n2) {
-    return abs(n1.x * n2.x + n1.y * n2.y + n1.z * n2.z);
+    return std::abs(n1.x * n2.x + n1.y * n2.y + n1.z * n2.z);
 }
 
 template <class T>

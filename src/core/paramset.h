@@ -3,7 +3,7 @@
 
 
 #include "vector.h"
-#include "report.h"
+#include "log.h"
 #include "spectrum.h"
 #include "core/texture.h"
 
@@ -237,7 +237,7 @@ private:
                              [&param](const shared_ptr<ParamSetItem<T>> &gp) {
                                  return gp->name == param->name;
                              }) == geom.end())
-                Report::warning("Parameter \"%s\" not used", param->name.c_str());
+                WARNING("Parameter \"%s\" not used", param->name.c_str());
         }
     }
 };

@@ -12,9 +12,8 @@ class Sampler;
 class PhaseFunction {
 public:
     virtual ~PhaseFunction();
-    virtual Float p(const Vector3f &wo, const Vector3f &wi) const = 0;
-    virtual Float Sample_p(const Vector3f &wo, Vector3f *wi,
-                           const Point2f &u) const = 0;
+    virtual Float compute_p(const Vector3f &wo, const Vector3f &wi) const = 0;
+    virtual Float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
     virtual string toString() const = 0;
 };
 
@@ -26,8 +25,8 @@ inline ostream & operator << (ostream &os, const PhaseFunction &p) {
 class Medium {
 public:
     virtual ~Medium() {}
-    virtual Spectrum Tr(const Ray &ray, Sampler &sampler) const = 0;
-    virtual Spectrum Sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
+    virtual Spectrum compute_Tr(const Ray &ray, Sampler &sampler) const = 0;
+    virtual Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
                             MediumInteraction *mi) const = 0;
 
     static bool getMediumScatteringProperties(const string &name, Spectrum *sigma_a, Spectrum *sigma_s);
@@ -41,9 +40,8 @@ public:
 class HenyeyGreenstein : public PhaseFunction {
 public:
     HenyeyGreenstein(Float g) : g(g) {}
-    Float p(const Vector3f &wo, const Vector3f &wi) const;
-    Float Sample_p(const Vector3f &wo, Vector3f *wi,
-                   const Point2f &sample) const;
+    Float compute_p(const Vector3f &wo, const Vector3f &wi) const;
+    Float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
     string toString() const {
         return StringPrint::printf("[ HenyeyGreenstein g: %f ]", g);
     }

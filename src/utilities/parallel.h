@@ -17,8 +17,18 @@ private:
 
 class Parallel {
 public:
+    static void init();
+    static void cleanup();
+    static void mergeWorkerThreadStats();
+
+    static void forLoop(function<void(int64_t)> func, int64_t count, int chunkSize = 1);
+    static void forLoop2D(function<void(Point2i)> func, const Point2i &count);
+
+    static unsigned numSystemCores() { return max(1u, thread::hardware_concurrency()); }
+
+private:
     struct ForLoop {
-        ForLoop(function<void(int64_t)> func1D, int64_t maxIndex, int chunkSize,
+        ForLoop(function<void(int64_t)> func1D, uint64_t maxIndex, int chunkSize,
                 uint64_t profState)
             : func1D(move(func1D)), maxIndex(maxIndex), chunkSize(chunkSize),
               profilerState(profState) {}
@@ -40,16 +50,6 @@ public:
         int nX = -1;
     };
 
-    static void init();
-    static void cleanup();
-    static void mergeWorkerThreadStats();
-
-    static void forLoop(function<void(int64_t)> func, int64_t count, int chunkSize = 1);
-    static void forLoop2D(function<void(Point2i)> func, const Point2i &count);
-
-    static int numSystemCores() { return max(1u, thread::hardware_concurrency()); }
-
-private:
     static vector<thread> threads;
     static bool shutdownThreads;
     static ForLoop *workList;

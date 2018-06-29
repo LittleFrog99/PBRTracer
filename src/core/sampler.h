@@ -176,7 +176,7 @@ class Distribution2D {
 public:
     Distribution2D(const Float *data, int nu, int nv);
 
-    Point2f SampleContinuous(const Point2f &u, Float *pdf) const {
+    Point2f sampleContinuous(const Point2f &u, Float *pdf) const {
         Float pdfs[2];
         int v;
         Float d1 = pMarginal->sampleContinuous(u[1], &pdfs[1], &v);

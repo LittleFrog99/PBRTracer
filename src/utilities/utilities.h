@@ -109,6 +109,17 @@ inline double bitsToFloat(uint64_t ui) {
     return f;
 }
 
+inline float nextFloatUp(float v) {
+    if (isinf(v) && v > 0.0f) return v;
+    if (v == -0.0f) v = 0.0f;
+    uint32_t ui = floatToBits(v);
+    if (v >= 0.0f)
+        ++ui;
+    else
+        --ui;
+    return bitsToFloat(ui);
+}
+
 inline float nextFloatDown(float v) {
     // Handle infinity and positive zero for _NextFloatDown()_
     if (isinf(v) && v < 0.) return v;
@@ -123,7 +134,7 @@ inline float nextFloatDown(float v) {
 
 inline double nextFloatUp(double v, int delta = 1) {
     if (isinf(v) && v > 0.) return v;
-    if (v == -0.f) v = 0.f;
+    if (v == -0.0) v = 0.0;
     uint64_t ui = floatToBits(v);
     if (v >= 0.)
         ui += delta;
@@ -143,7 +154,7 @@ inline double nextFloatDown(double v, int delta = 1) {
     return bitsToFloat(ui);
 }
 
-inline Float gamma(int n) {
+inline constexpr Float gamma(int n) {
     return (n * MACHINE_EPSILON) / (1 - n * MACHINE_EPSILON);
 }
 

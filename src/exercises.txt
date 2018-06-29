@@ -3,3 +3,11 @@ Part of exercises in pbrt
 Chapter 2 Geometry and Transformation
 2.1 (A) A more efficient way to transform AABB
 2.2 (B) Non-axis-aligned bounding boxes / arbitrary bounding slabs
+
+Chapter 3 Shapes
+3.2 (A) Tighter bounding box for quadrics
+3.3 (B) Optimize quadrics intersection
+3.4 (A) Speed/storage trade-off of precomputing partial derivatives for triangles
+3.5 (B) Efficient ray-polygon intersection
+3.12 (C) Ray-trace point cloud geometry
+3.15 (C) L-systems

@@ -27,10 +27,11 @@ TriangleMesh::TriangleMesh(const Transform &objToWorld, int nTriangles, const in
     }
 }
 
-vector<shared_ptr<Shape>> TriangleMesh::create(const Transform *objToWorld, const Transform *worldToObj,
-                                               bool revOrient, int nTriangles, const int *vertexIndices, int nVertices,
-                                               const Point3f *p, const Vector3f *s, const Normal3f *n, const Point2f *uv,
-                                               const shared_ptr<Texture<Float>> &alphaMask)
+vector<shared_ptr<Shape>>
+TriangleMesh::create(const Transform *objToWorld, const Transform *worldToObj, bool revOrient,
+                     int nTriangles, const int *vertexIndices, int nVertices,
+                     const Point3f *p, const Vector3f *s, const Normal3f *n, const Point2f *uv,
+                     const shared_ptr<Texture<Float>> &alphaMask)
 {
     shared_ptr<TriangleMesh> mesh = make_shared<TriangleMesh>(*objToWorld, nTriangles, vertexIndices,
                                                               nVertices, p, s, n, uv, alphaMask);
@@ -550,7 +551,7 @@ vector<shared_ptr<Shape>> Subdivision::subdivide(const Transform *objToWorld, co
     vector<Normal3f> Ns;
     Ns.reserve(v.size());
     vector<Point3f> pRing(16, Point3f());
-    for (SDVertex *vertex : v) {
+    for (auto vertex : v) {
         Vector3f S(0, 0, 0), T(0, 0, 0);
         int valence = vertex->valence();
         if (valence > (int)pRing.size()) pRing.resize(valence);

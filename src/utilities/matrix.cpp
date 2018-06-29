@@ -1,5 +1,5 @@
 #include "matrix.h"
-#include "report.h"
+#include "log.h"
 
 Matrix4x4 Matrix4x4::inverse() const {
     int indxc[4], indxr[4];
