@@ -1,5 +1,5 @@
-#ifndef STRINGPRINT_H
-#define STRINGPRINT_H
+#ifndef UTILITY_STRINGPRINT
+#define UTILITY_STRINGPRINT
 
 #include "utilities.h"
 #include <string>
@@ -108,4 +108,4 @@ private:
 #endif  // __GNUG__
 
 
-#endif // STRINGPRINT_H
+#endif // UTILITY_STRINGPRINT

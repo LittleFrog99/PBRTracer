@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef UTILITY_MATRIX
+#define UTILITY_MATRIX
 
 #include "stringprint.h"
 
@@ -86,4 +86,4 @@ public:
     Float m[4][4];
 };
 
-#endif // MATRIX_H
+#endif // UTILITY_MATRIX

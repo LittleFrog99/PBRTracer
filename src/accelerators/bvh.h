@@ -1,5 +1,5 @@
-#ifndef BVH_H
-#define BVH_H
+#ifndef ACCELERATOR_BVH
+#define ACCELERATOR_BVH
 
 #include "core/primitive.h"
 
@@ -49,4 +49,4 @@ private:
 };
 
 
-#endif // BVH_H
+#endif // ACCELERATOR_BVH

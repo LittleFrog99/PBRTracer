@@ -1,5 +1,5 @@
-#ifndef STATS_H
-#define STATS_H
+#ifndef UTILITY_STATS
+#define UTILITY_STATS
 
 #include "utilities.h"
 #include <array>
@@ -308,4 +308,4 @@ enum class Profiler::Stage {
     NumProfCategories
 };
 
-#endif // STATS_H
+#endif // UTILITY_STATS

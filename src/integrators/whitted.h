@@ -1,5 +1,5 @@
-#ifndef WHITTED_H
-#define WHITTED_H
+#ifndef INTEGRATOR_WHITTED
+#define INTEGRATOR_WHITTED
 
 #include "core/integrator.h"
 
@@ -16,4 +16,4 @@ private:
     const int maxDepth;
 };
 
-#endif // WHITTED_H
+#endif // INTEGRATOR_WHITTED

@@ -1,5 +1,5 @@
-#ifndef TRIANGLE_H
-#define TRIANGLE_H
+#ifndef SHAPE_TRIANGLE
+#define SHAPE_TRIANGLE
 
 #include "core/shape.h"
 #include "log.h"
@@ -140,4 +140,4 @@ private:
 
 };
 
-#endif // TRIANGLE_H
+#endif // SHAPE_TRIANGLE

@@ -1,5 +1,5 @@
-#ifndef FILE_H
-#define FILE_H
+#ifndef UTILITY_FILE
+#define UTILITY_FILE
 
 #include "utilities.h"
 
@@ -25,4 +25,4 @@ private:
     static string searchDirectory;
 };
 
-#endif // FILE_H
+#endif // UTILITY_FILE

@@ -1,5 +1,5 @@
-#ifndef BEZIER_H
-#define BEZIER_H
+#ifndef SHAPE_BEZIER
+#define SHAPE_BEZIER
 
 #include "core/shape.h"
 
@@ -51,4 +51,4 @@ private:
     Float uMin, uMax;
 };
 
-#endif // BEZIER_H
+#endif // SHAPE_BEZIER

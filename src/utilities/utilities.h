@@ -1,5 +1,5 @@
-#ifndef COMMON_UTILITIES
-#define COMMON_UTILITIES
+#ifndef UTILITY_COMMON
+#define UTILITY_COMMON
 
 /* Common Included Headers */
 #include <algorithm>
@@ -217,4 +217,4 @@ bool solveLinear2x2(const Float A[2][2], const Float B[2], Float *x0, Float *x1)
 
 using namespace Math;
 
-#endif // COMMON_UTILITIES
+#endif // UTILITY_COMMON

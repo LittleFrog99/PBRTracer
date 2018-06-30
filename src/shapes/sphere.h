@@ -1,5 +1,5 @@
-#ifndef SPHERE_H
-#define SPHERE_H
+#ifndef SHAPE_SPHERE
+#define SHAPE_SPHERE
 
 #include "core/shape.h"
 
@@ -31,4 +31,4 @@ private:
     const Float phiMax; // azimuth
 };
 
-#endif // SPHERE_H
+#endif // SHAPE_SPHERE

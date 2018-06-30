@@ -1,5 +1,5 @@
-#ifndef DISK_H
-#define DISK_H
+#ifndef SHAPE_DISK
+#define SHAPE_DISK
 
 #include "core/shape.h"
 
@@ -25,4 +25,4 @@ private:
     Float height, radius, innerRadius, phiMax;
 };
 
-#endif // DISK_H
+#endif // SHAPE_DISK

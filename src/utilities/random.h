@@ -1,5 +1,5 @@
-#ifndef RANDOM_H
-#define RANDOM_H
+#ifndef UTILITY_RANDOM
+#define UTILITY_RANDOM
 
 #include "utilities.h"
 
@@ -36,4 +36,4 @@ private:
     uint64_t state, inc;
 };
 
-#endif // RANDOM_H
+#endif // UTILITY_RANDOM

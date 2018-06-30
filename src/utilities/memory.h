@@ -1,5 +1,5 @@
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef UTILITY_MEMORY
+#define UTILITY_MEMORY
 
 #include "utilities.h"
 #include <list>
@@ -127,4 +127,4 @@ private:
     const int uRes, vRes, uBlocks;
 };
 
-#endif // MEMORY_H
+#endif // UTILITY_MEMORY

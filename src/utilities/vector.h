@@ -1,5 +1,5 @@
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef UTILITY_VECTOR
+#define UTILITY_VECTOR
 
 #include "stringprint.h"
 
@@ -614,4 +614,4 @@ inline Float sphericalPhi(const Vector3f &v) {
 
 }
 
-#endif // VECTOR_H
+#endif // UTILITY_VECTOR

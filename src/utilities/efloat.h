@@ -1,5 +1,5 @@
-#ifndef EFLOAT_H
-#define EFLOAT_H
+#ifndef UTILITY_EFLOAT
+#define UTILITY_EFLOAT
 
 #include "stringprint.h"
 
@@ -238,4 +238,4 @@ inline EFloat operator + (float f, EFloat fe) { return EFloat(f) + fe; }
 inline EFloat operator - (float f, EFloat fe) { return EFloat(f) - fe; }
 
 
-#endif // EFLOAT_H
+#endif // UTILITY_EFLOAT

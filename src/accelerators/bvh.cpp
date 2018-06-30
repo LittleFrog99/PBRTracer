@@ -32,6 +32,16 @@ struct BVH::BuildNode {
     }
 };
 
+struct BVH::LinearNode {
+    Bounds3f bounds;
+    union {
+        int primsOffset; // leaf
+        int secondChildOffset; // interior
+    };
+    uint16_t nPrims; // 0 -> interior node
+    uint16_t axis; // interior node: xyz
+};
+
 BVH::BVH(vector<shared_ptr<Primitive>> p, int maxPrimsInNode, SplitMethod splitMethod)
     : maxPrimsInNode(min(255, maxPrimsInNode)), primitives(p), splitMethod(splitMethod)
 {
@@ -53,6 +63,9 @@ BVH::BVH(vector<shared_ptr<Primitive>> p, int maxPrimsInNode, SplitMethod splitM
     primitives.swap(orderedPrims);
 
     // Compute representation of depth-first traversal of BVH tree
+    nodes = Memory::allocAligned<LinearNode>(totalNodes);
+    int offset = 0;
+    flattenBVHTree(root, &offset);
 }
 
 BVH::BuildNode *BVH::recursiveBuild(MemoryArena &arena, vector<PrimitiveInfo> &primsInfo,
@@ -295,8 +308,233 @@ BVH::BuildNode *BVH::HLBVHBuild(MemoryArena &arena, const vector<PrimitiveInfo> 
     Parallel::forLoop(
                 [&] (unsigned i) {
         // Generate ith LBVH treelet
+        int nodesCreated = 0;
+        const int firstBitIndex = 29 - 12;
+        LBVHTreelet &tr = treeletsToBuild[i];
+        tr.buildNodes = emitLBVH(tr.buildNodes, primsInfo, &mortonPrims[tr.startIndex], tr.nPrims, &nodesCreated,
+                orderedPrims, &orderedPrimsOffset, firstBitIndex);
+        atomicTotal += nodesCreated;
     }, treeletsToBuild.size());
     *totalNodes = atomicTotal;
 
     // Create and return SAH BVH from LBVH treelets
+    vector<BuildNode *> finishedTreelets;
+    finishedTreelets.reserve(treeletsToBuild.size());
+    for (LBVHTreelet &treelet : treeletsToBuild)
+        finishedTreelets.push_back(treelet.buildNodes);
+    return buildUpperSAH(arena, finishedTreelets, 0, finishedTreelets.size(), totalNodes);
+}
+
+BVH::BuildNode * BVH::emitLBVH(BuildNode *&buildNodes, const vector<PrimitiveInfo> &primitiveInfo,
+                               MortonPrimitive *mortonPrims, int nPrimitives, int *totalNodes,
+                               vector<shared_ptr<Primitive>> &orderedPrims,
+                               atomic<int> *orderedPrimsOffset, int bitIndex) const {
+    if (bitIndex == -1 || nPrimitives < maxPrimsInNode) {
+        // Create and return leaf node of LBVH treelet
+        (*totalNodes)++;
+        BuildNode *node = buildNodes++;
+        Bounds3f bounds;
+        int firstPrimOffset = orderedPrimsOffset->fetch_add(nPrimitives);
+        for (int i = 0; i < nPrimitives; ++i) {
+            int primitiveIndex = mortonPrims[i].primitiveIndex;
+            orderedPrims[firstPrimOffset + i] = primitives[primitiveIndex];
+            bounds = unionOf(bounds, primitiveInfo[primitiveIndex].bounds);
+        }
+        node->initLeaf(firstPrimOffset, nPrimitives, bounds);
+        return node;
+    } else {
+        int mask = 1 << bitIndex;
+        // Advance to next subtree level if there's no LBVH split for this bit
+        if ((mortonPrims[0].mortonCode & mask) == (mortonPrims[nPrimitives - 1].mortonCode & mask))
+            return emitLBVH(buildNodes, primitiveInfo, mortonPrims, nPrimitives,totalNodes, orderedPrims,
+                            orderedPrimsOffset, bitIndex - 1);
+
+        // Find LBVH split point for this dimension
+        int searchStart = 0, searchEnd = nPrimitives - 1;
+        while (searchStart + 1 != searchEnd) {
+            int mid = (searchStart + searchEnd) / 2;
+            if ((mortonPrims[searchStart].mortonCode & mask) == (mortonPrims[mid].mortonCode & mask))
+                searchStart = mid;
+            else
+                searchEnd = mid;
+        }
+        int splitOffset = searchEnd;
+
+        // Create and return interior LBVH node
+        (*totalNodes)++;
+        BuildNode *node = buildNodes++;
+        auto *lbvh0 = emitLBVH(buildNodes, primitiveInfo, mortonPrims, splitOffset, totalNodes, orderedPrims,
+                               orderedPrimsOffset, bitIndex - 1);
+        auto *lbvh1 = emitLBVH(buildNodes, primitiveInfo, &mortonPrims[splitOffset], nPrimitives - splitOffset,
+                               totalNodes, orderedPrims, orderedPrimsOffset, bitIndex - 1);
+        int axis = bitIndex % 3;
+        node->initInterior(axis, lbvh0, lbvh1);
+        return node;
+    }
+}
+
+BVH::BuildNode * BVH::buildUpperSAH(MemoryArena &arena, vector<BuildNode *> &treeletRoots,
+                                    int start, int end, int *totalNodes) const {
+    int nNodes = end - start;
+    if (nNodes == 1) return treeletRoots[start];
+    (*totalNodes)++;
+    BuildNode *node = arena.alloc<BuildNode>();
+
+    // Compute bounds of all nodes under this HLBVH node
+    Bounds3f bounds;
+    for (int i = start; i < end; ++i)
+        bounds = unionOf(bounds, treeletRoots[i]->bounds);
+
+    // Compute bound of HLBVH node centroids, choose split dimension _dim_
+    Bounds3f centroidBounds;
+    for (int i = start; i < end; ++i) {
+        Point3f centroid = (treeletRoots[i]->bounds.pMin + treeletRoots[i]->bounds.pMax) * 0.5f;
+        centroidBounds = unionOf(centroidBounds, centroid);
+    }
+    int dim = centroidBounds.maxExtent();
+
+    // Allocate _BucketInfo_ for SAH partition buckets
+    constexpr int nBuckets = 12;
+    struct BucketInfo {
+        int count = 0;
+        Bounds3f bounds;
+    };
+    BucketInfo buckets[nBuckets];
+
+    // Initialize _BucketInfo_ for HLBVH SAH partition buckets
+    for (int i = start; i < end; ++i) {
+        Float centroid = (treeletRoots[i]->bounds.pMin[dim] +
+                          treeletRoots[i]->bounds.pMax[dim]) *
+                         0.5f;
+        int b = nBuckets * ((centroid - centroidBounds.pMin[dim]) /
+                            (centroidBounds.pMax[dim] - centroidBounds.pMin[dim]));
+        if (b == nBuckets) b = nBuckets - 1;
+        buckets[b].count++;
+        buckets[b].bounds = unionOf(buckets[b].bounds, treeletRoots[i]->bounds);
+    }
+
+    // Compute costs for splitting after each bucket
+    Float cost[nBuckets - 1];
+    for (int i = 0; i < nBuckets - 1; ++i) {
+        Bounds3f b0, b1;
+        int count0 = 0, count1 = 0;
+        for (int j = 0; j <= i; ++j) {
+            b0 = unionOf(b0, buckets[j].bounds);
+            count0 += buckets[j].count;
+        }
+        for (int j = i + 1; j < nBuckets; ++j) {
+            b1 = unionOf(b1, buckets[j].bounds);
+            count1 += buckets[j].count;
+        }
+        cost[i] = .125f + (count0 * b0.surfaceArea() + count1 * b1.surfaceArea()) / bounds.surfaceArea();
+    }
+
+    // Find bucket to split at that minimizes SAH metric
+    Float minCost = cost[0];
+    int minCostSplitBucket = 0;
+    for (int i = 1; i < nBuckets - 1; ++i) {
+        if (cost[i] < minCost) {
+            minCost = cost[i];
+            minCostSplitBucket = i;
+        }
+    }
+
+    // Split nodes and create interior HLBVH SAH node
+    BuildNode **pmid = partition(&treeletRoots[start], &treeletRoots[end - 1] + 1,
+            [=] (const BuildNode *node) {
+        Float centroid = (node->bounds.pMin[dim] + node->bounds.pMax[dim]) * 0.5f;
+        int b = nBuckets * ((centroid - centroidBounds.pMin[dim]) /
+                            (centroidBounds.pMax[dim] - centroidBounds.pMin[dim]));
+        if (b == nBuckets) b = nBuckets - 1;
+        return b <= minCostSplitBucket;
+    });
+    int mid = pmid - &treeletRoots[0];
+    node->initInterior(dim, this->buildUpperSAH(arena, treeletRoots, start, mid, totalNodes),
+                       this->buildUpperSAH(arena, treeletRoots, mid, end, totalNodes));
+    return node;
+}
+
+int BVH::flattenBVHTree(BuildNode *node, int *offset) {
+    auto linearNode = &nodes[*offset];
+    linearNode->bounds = node->bounds;
+    int localOffset = (*offset)++;
+    if (node->nPrims > 0) { // leaf
+        linearNode->primsOffset = node->firstPrimOffset;
+        linearNode->nPrims = node->nPrims;
+    } else { // interior
+        linearNode->axis = node->splitAxis;
+        linearNode->nPrims = 0;
+        flattenBVHTree(node->children[0], offset);
+        linearNode->secondChildOffset = flattenBVHTree(node->children[1], offset);
+    }
+    return localOffset;
+}
+
+bool BVH::intersect(const Ray &ray, SurfaceInteraction *isect) const {
+    if (!nodes) return false;
+    bool hit = false;
+    Vector3f invDir = Vector3f(1.0 / ray.d.x, 1.0 / ray.d.y, 1.0 / ray.d.z);
+    int dirIsDeg[3] = { invDir.x < 0, invDir.y < 0, invDir.z < 0 };
+    int toVisitOffset = 0, curNodeIndex = 0;
+    int nodesToVisit[64]; // serve as a stack
+    while (true) {
+        const auto *node = &nodes[curNodeIndex];
+        if (node->bounds.intersectP(ray, invDir, dirIsDeg)) {
+            if (node->nPrims > 0) { // leaf
+                for (int i = 0; i < node->nPrims; i++)
+                    if (primitives[node->primsOffset + i]->intersect(ray, isect))
+                        return true;
+                if (toVisitOffset == 0) break;
+                curNodeIndex = nodesToVisit[--toVisitOffset];
+            } else { // interior
+                if (dirIsDeg[node->axis]) {
+                    nodesToVisit[toVisitOffset++] = curNodeIndex + 1; // second child first search
+                    curNodeIndex = node->secondChildOffset;
+                } else {
+                    nodesToVisit[toVisitOffset++] = node->secondChildOffset;
+                    curNodeIndex++;
+                }
+            }
+        } else {
+            if (toVisitOffset == 0) break;
+            curNodeIndex = nodesToVisit[--toVisitOffset];
+        }
+    }
+    return hit;
+}
+
+bool BVH::intersectP(const Ray &ray) const {
+    if (!nodes) return false;
+    Vector3f invDir = Vector3f(1.0 / ray.d.x, 1.0 / ray.d.y, 1.0 / ray.d.z);
+    int dirIsDeg[3] = { invDir.x < 0, invDir.y < 0, invDir.z < 0 };
+    int toVisitOffset = 0, curNodeIndex = 0;
+    int nodesToVisit[64]; // serve as a stack
+    while (true) {
+        const auto *node = &nodes[curNodeIndex];
+        if (node->bounds.intersectP(ray, invDir, dirIsDeg)) {
+            if (node->nPrims > 0) { // leaf
+                for (int i = 0; i < node->nPrims; i++)
+                    if (primitives[node->primsOffset + i]->intersectP(ray))
+                        return true;
+                if (toVisitOffset == 0) break;
+                curNodeIndex = nodesToVisit[--toVisitOffset];
+            } else { // interior
+                if (dirIsDeg[node->axis]) {
+                    nodesToVisit[toVisitOffset++] = curNodeIndex + 1; // second child first search
+                    curNodeIndex = node->secondChildOffset;
+                } else {
+                    nodesToVisit[toVisitOffset++] = node->secondChildOffset;
+                    curNodeIndex++;
+                }
+            }
+        } else {
+            if (toVisitOffset == 0) break;
+            curNodeIndex = nodesToVisit[--toVisitOffset];
+        }
+    }
+    return false;
+}
+
+Bounds3f BVH::worldBound() const {
+    return nodes ? nodes[0].bounds : Bounds3f();
 }

@@ -1,5 +1,5 @@
-#ifndef CYLINDER_H
-#define CYLINDER_H
+#ifndef SHAPE_CYLINDER
+#define SHAPE_CYLINDER
 
 #include "core/shape.h"
 
@@ -24,4 +24,4 @@ private:
     Float radius, zMin, zMax, phiMax;
 };
 
-#endif // CYLINDER_H
+#endif // SHAPE_CYLINDER

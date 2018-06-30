@@ -1,5 +1,5 @@
-#ifndef REPORT_H
-#define REPORT_H
+#ifndef UTILITY_LOG
+#define UTILITY_LOG
 
 #include "stringprint.h"
 #include "core/parser.h"
@@ -49,4 +49,4 @@ Log::severe("Assertion \"%s\" failed in %s, line %d", expr, __FILE__, __LINE__))
 #endif // NDEBUG
 
 
-#endif // REPORT_H
+#endif // UTILITY_LOG

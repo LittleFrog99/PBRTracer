@@ -1,5 +1,5 @@
-#ifndef QUATERNION_H
-#define QUATERNION_H
+#ifndef UTILITY_QUATERNION
+#define UTILITY_QUATERNION
 
 #include "vector.h"
 
@@ -93,4 +93,4 @@ inline Quaternion Quaternion::normalize() {
     return (*this) / sqrt(dot(*this, *this));
 }
 
-#endif // QUATERNION_H
+#endif // UTILITY_QUATERNION
