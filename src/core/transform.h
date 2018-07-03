@@ -291,6 +291,46 @@ inline Ray Transform::operator()(const Ray &r, const Vector3f &oErrorIn, const V
     return Ray(o, d, tMax, r.time, r.medium);
 }
 
+class Interval {
+public:
+    Interval(Float v) : low(v), high(v) {}
+    Interval(Float v0, Float v1) : low(min(v0, v1)), high(max(v0, v1)) {}
+
+    Interval operator + (const Interval &i) const { return Interval(low + i.low, high + i.high); }
+    Interval operator - (const Interval &i) const { return Interval(low - i.high, high - i.low); }
+    Interval operator * (const Interval &i) const {
+        return Interval(min(min(low * i.low, high * i.low), min(low * i.high, high * i.high)),
+                        max(max(low * i.low, high * i.low), max(low * i.high, high * i.high)));
+    }
+
+    static void findZeros(Float c1, Float c2, Float c3, Float c4, Float c5, Float theta,
+                          Interval tInterval, Float *zeros, int *zeroCount, int depth = 8);
+
+    Float low, high;
+};
+
+namespace Math {
+inline Interval sin(const Interval &i) {
+    CHECK_GE(i.low, 0);
+    CHECK_LE(i.high, 2.0001 * PI);
+    Float sinLow = std::sin(i.low), sinHigh = std::sin(i.high);
+    if (sinLow > sinHigh) swap(sinLow, sinHigh);
+    if (i.low < PI / 2 && i.high > PI / 2) sinHigh = 1.;
+    if (i.low < (3.f / 2.f) * PI && i.high > (3.f / 2.f) * PI) sinLow = -1.;
+    return Interval(sinLow, sinHigh);
+}
+
+inline Interval cos(const Interval &i) {
+    CHECK_GE(i.low, 0);
+    CHECK_LE(i.high, 2.0001 * PI);
+    Float cosLow = std::cos(i.low), cosHigh = std::cos(i.high);
+    if (cosLow > cosHigh) swap(cosLow, cosHigh);
+    if (i.low < PI && i.high > PI) cosLow = -1.;
+    return Interval(cosLow, cosHigh);
+}
+
+}
+
 class AnimatedTransform {
 public:
     AnimatedTransform(const Transform *startTransform, Float startTime,

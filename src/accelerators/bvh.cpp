@@ -538,3 +538,7 @@ bool BVH::intersectP(const Ray &ray) const {
 Bounds3f BVH::worldBound() const {
     return nodes ? nodes[0].bounds : Bounds3f();
 }
+
+BVH::~BVH() {
+    Memory::freeAligned(nodes);
+}

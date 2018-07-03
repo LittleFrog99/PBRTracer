@@ -58,20 +58,20 @@ unique_ptr<Tokenizer> Tokenizer::createFromFile(
 
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1) {
-        errorCallback(StringPrint::printf("%s: %s", filename.c_str(), strerror(errno)).c_str());
+        errorCallback(STRING_PRINTF("%s: %s", filename.c_str(), strerror(errno)).c_str());
         return nullptr;
     }
 
     struct stat stat;
     if (fstat(fd, &stat) != 0) {
-        errorCallback(StringPrint::printf("%s: %s", filename.c_str(), strerror(errno)).c_str());
+        errorCallback(STRING_PRINTF("%s: %s", filename.c_str(), strerror(errno)).c_str());
         return nullptr;
     }
 
     size_t len = stat.st_size;
     void *ptr = mmap(nullptr, len, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
     if (close(fd) != 0) {
-        errorCallback(StringPrint::printf("%s: %s", filename.c_str(), strerror(errno)).c_str());
+        errorCallback(STRING_PRINTF("%s: %s", filename.c_str(), strerror(errno)).c_str());
         return nullptr;
     }
 
@@ -174,7 +174,7 @@ string_view Tokenizer::next() {
 Tokenizer::~Tokenizer() {
     if (unmapPtr && unmapLength > 0)
         if (munmap(unmapPtr, unmapLength) != 0)
-            errorCallback(StringPrint::printf("munmap: %s", strerror(errno)).c_str());
+            errorCallback(STRING_PRINTF("munmap: %s", strerror(errno)).c_str());
 }
 
 string_view Parser::dequoteString(string_view str) {

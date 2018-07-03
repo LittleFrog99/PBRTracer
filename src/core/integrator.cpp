@@ -48,19 +48,19 @@ void SamplerIntegrator::render(const Scene &scene) {
 
                 // Issue warning if unexpected radiance value returned
                 if (L.hasNaNs()) {
-                    LOG(ERROR) << StringPrint::printf(
+                    LOG(ERROR) << STRING_PRINTF(
                         "Not-a-number radiance value returned "
                         "for pixel (%d, %d), sample %d. Setting to black.",
                         pixel.x, pixel.y, tileSampler->currentSampleNumber());
                     L = Spectrum(0.f);
                 } else if (L.luminance() < -1e-5) {
-                    LOG(ERROR) << StringPrint::printf(
+                    LOG(ERROR) << STRING_PRINTF(
                         "Negative luminance value, %f, returned "
                         "for pixel (%d, %d), sample %d. Setting to black.",
                         L.luminance(), pixel.x, pixel.y, tileSampler->currentSampleNumber());
                     L = Spectrum(0.f);
                 } else if (isinf(L.luminance())) {
-                      LOG(ERROR) << StringPrint::printf(
+                      LOG(ERROR) << STRING_PRINTF(
                         "Infinite luminance value returned "
                         "for pixel (%d, %d), sample %d. Setting to black.",
                         pixel.x, pixel.y, tileSampler->currentSampleNumber());

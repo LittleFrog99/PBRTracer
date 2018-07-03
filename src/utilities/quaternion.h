@@ -33,7 +33,7 @@ struct Quaternion {
         return ret;
     }
 
-    Quaternion operator - (const Quaternion &q2) {
+    Quaternion operator - (const Quaternion &q2) const {
         Quaternion ret = *this;
         return ret -= q2;
     }
@@ -65,7 +65,7 @@ struct Quaternion {
     }
 
     friend ostream & operator << (ostream &os, const Quaternion &q) {
-        os << StringPrint::printf("[ %f, %f, %f, %f ]", q.v.x, q.v.y, q.v.z, q.w);
+        os << STRING_PRINTF("[ %f, %f, %f, %f ]", q.v.x, q.v.y, q.v.z, q.w);
         return os;
     }
 
@@ -91,6 +91,18 @@ inline Float dot(const Quaternion &q1, const Quaternion &q2) {
 
 inline Quaternion Quaternion::normalize() {
     return (*this) / sqrt(dot(*this, *this));
+}
+
+inline Quaternion Math::slerp(Float t, const Quaternion &q1, const Quaternion &q2) {
+    Float cosTheta = dot(q1, q2);
+    if (cosTheta > .9995f)
+        return ((1 - t) * q1 + t * q2).normalize();
+    else {
+        Float theta = acos(clamp(cosTheta, -1, 1));
+        Float thetap = theta * t;
+        Quaternion qperp = (q2 - cosTheta * q1).normalize();
+        return q1 * cos(thetap) + qperp * sin(thetap);
+    }
 }
 
 #endif // UTILITY_QUATERNION

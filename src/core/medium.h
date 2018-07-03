@@ -43,7 +43,7 @@ public:
     Float compute_p(const Vector3f &wo, const Vector3f &wi) const;
     Float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
     string toString() const {
-        return StringPrint::printf("[ HenyeyGreenstein g: %f ]", g);
+        return STRING_PRINTF("[ HenyeyGreenstein g: %f ]", g);
     }
 
 private:

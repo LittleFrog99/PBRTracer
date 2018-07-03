@@ -26,7 +26,9 @@ typedef double Float;
 
 /* Type Definitions */
 class RGBSpectrum;
+class SampledSpectrum;
 typedef RGBSpectrum Spectrum;
+// typedef SampledSpectrum Spectrum;
 
 using namespace std;
 

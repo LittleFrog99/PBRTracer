@@ -76,7 +76,7 @@ void API::init(const Options &opt) {
     Renderer::graphicsState = GraphicsState();
     Renderer::catIndentCount = 0;
 
-    // SampledSpectrum::init(); // TODO: Uncomment when using #SampleSpectrum
+    // SampledSpectrum::init(); // TODO: Uncomment when using _SampleSpectrum_
     Parallel::init();  // Threads must be launched before the profiler is initialized.
     Profiler::init();
 }
@@ -126,6 +126,14 @@ void API::concatTransform(Float tr[16]) {
         for (int i = 0; i < 16; ++i) printf("%.9g ", tr[i]);
         printf(" ]\n");
     }
+}
+
+void API::translate(Float dx, Float dy, Float dz) {
+    VERIFY_INITIALIZED("Translate");
+    FOR_ACTIVE_TRANSFORMS(Renderer::curTransform[i] = Renderer::curTransform[i] *
+                                            Transform::translate(Vector3f(dx, dy, dz));)
+    if (Renderer::options.cat || Renderer::options.toPly)
+        printf("%*sTranslate %.9g %.9g %.9g\n", Renderer::catIndentCount, "", dx, dy, dz);
 }
 
 void API::rotate(Float angle, Float dx, Float dy, Float dz) {

@@ -14,10 +14,10 @@ public:
             high = nextFloatUp(v + err);
         }
 // Store high precision reference value in _EFloat_
-#ifndef NDEBUG
+/* #ifndef NDEBUG
         vPrecise = v;
         check();
-#endif  // NDEBUG
+#endif  // NDEBUG*/
     }
 
     EFloat(const EFloat &ef) {
@@ -26,7 +26,7 @@ public:
         low = ef.low;
         high = ef.high;
 #ifndef NDEBUG
-        vPrecise = ef.vPrecise;
+        // vPrecise = ef.vPrecise;
 #endif
     }
 
@@ -40,12 +40,12 @@ public:
     void check() const {
         if (!isinf(low) && !isnan(low) && !isinf(high) && !isnan(high))
             CHECK_LE(low, high);
-#ifndef NDEBUG
+/* #ifndef NDEBUG
         if (!isinf(v) && !isnan(v)) {
             CHECK_LE(lowerBound(), vPrecise);
             CHECK_LE(vPrecise, upperBound());
         }
-#endif
+#endif */
     }
 
     float getAbsoluteError() const { return high - low; }
@@ -66,10 +66,10 @@ public:
         EFloat r;
         r.v = v + ef.v;
 #ifndef NDEBUG
-        r.vPrecise = vPrecise + ef.vPrecise;
+        // r.vPrecise = vPrecise + ef.vPrecise;
 #endif  // DEBUG
         // Interval arithemetic addition, with the result rounded away from
-        // the value r.v in order to be conservative.
+        // the value r.v in order to be conservative
         r.low = nextFloatDown(lowerBound() + ef.lowerBound());
         r.high = nextFloatUp(upperBound() + ef.upperBound());
         r.check();
@@ -80,7 +80,7 @@ public:
         EFloat r;
         r.v = v - ef.v;
 #ifndef NDEBUG
-        r.vPrecise = vPrecise - ef.vPrecise;
+        // r.vPrecise = vPrecise - ef.vPrecise;
 #endif
         r.low = nextFloatDown(lowerBound() - ef.upperBound());
         r.high = nextFloatUp(upperBound() - ef.lowerBound());
@@ -92,7 +92,7 @@ public:
         EFloat r;
         r.v = v * ef.v;
 #ifndef NDEBUG
-        r.vPrecise = vPrecise * ef.vPrecise;
+        // r.vPrecise = vPrecise * ef.vPrecise;
 #endif
         Float prod[4] = {
             lowerBound() * ef.lowerBound(), upperBound() * ef.lowerBound(),
@@ -109,7 +109,7 @@ public:
         EFloat r;
         r.v = v / ef.v;
 #ifndef NDEBUG
-        r.vPrecise = vPrecise / ef.vPrecise;
+        // r.vPrecise = vPrecise / ef.vPrecise;
 #endif
         if (ef.low < 0 && ef.high > 0) {
             // Bah. The interval we're dividing by straddles zero, so just
@@ -131,7 +131,7 @@ public:
         EFloat r;
         r.v = -v;
 #ifndef NDEBUG
-        r.vPrecise = -vPrecise;
+        // r.vPrecise = -vPrecise;
 #endif
         r.low = -high;
         r.high = -low;
@@ -148,17 +148,17 @@ public:
             low = ef.low;
             high = ef.high;
 #ifndef NDEBUG
-            vPrecise = ef.vPrecise;
+            // vPrecise = ef.vPrecise;
 #endif
         }
         return *this;
     }
 
     friend ostream & operator << (ostream &os, const EFloat &ef) {
-        os << StringPrint::printf("v=%f (%a) - [%f, %f]",
+        os << STRING_PRINTF("v=%f (%a) - [%f, %f]",
                            ef.v, ef.v, ef.low, ef.high);
 #ifndef NDEBUG
-        os << StringPrint::printf(", precise=%.30Lf", ef.vPrecise);
+        // os << STRING_PRINTF(", precise=%.30Lf", ef.vPrecise);
 #endif // !NDEBUG
         return os;
     }
@@ -166,9 +166,9 @@ public:
     friend inline EFloat sqrt(EFloat fe) {
         EFloat r;
         r.v = sqrt(fe.v);
-    #ifndef NDEBUG
-        r.vPrecise = sqrt(fe.vPrecise);
-    #endif
+#ifndef NDEBUG
+        // r.vPrecise = sqrt(fe.vPrecise);
+#endif
         r.low = nextFloatDown(sqrt(fe.low));
         r.high = nextFloatUp(sqrt(fe.high));
         r.check();
@@ -184,7 +184,7 @@ public:
             EFloat r;
             r.v = -fe.v;
 #ifndef NDEBUG
-            r.vPrecise = -fe.vPrecise;
+            // r.vPrecise = -fe.vPrecise;
 #endif
             r.low = -fe.high;
             r.high = -fe.low;
@@ -195,7 +195,7 @@ public:
             EFloat r;
             r.v = abs(fe.v);
 #ifndef NDEBUG
-            r.vPrecise = abs(fe.vPrecise);
+            // r.vPrecise = abs(fe.vPrecise);
 #endif
             r.low = 0;
             r.high = max(-fe.low, fe.high);

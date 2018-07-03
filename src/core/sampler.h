@@ -22,7 +22,7 @@ public:
     const Point2f *get2DArray(int n);
 
     string stateString() const {
-      return StringPrint::printf("(%d,%d), sample %" PRId64, currentPixel.x,
+      return STRING_PRINTF("(%d,%d), sample %" PRId64, currentPixel.x,
                           currentPixel.y, currentPixelSampleIndex);
     }
 

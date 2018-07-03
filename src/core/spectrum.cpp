@@ -1,14 +1,14 @@
 #include "spectrum.h"
 
 
-bool SpectrumUtil::samplesAreSorted(const float *lambda, const float *vals, int n)
+bool SpectrumBase::samplesAreSorted(const float *lambda, const float *vals, int n)
 {
     for (int i = 0; i < n - 1; ++i)
             if (lambda[i] > lambda[i + 1]) return false;
         return true;
 }
 
-void SpectrumUtil::sortSamples(float *lambda, float *vals, int n) {
+void SpectrumBase::sortSamples(float *lambda, float *vals, int n) {
     vector<pair<float, float>> sortVec;
     sortVec.reserve(n);
     for (int i = 0; i < n; ++i)
@@ -20,7 +20,7 @@ void SpectrumUtil::sortSamples(float *lambda, float *vals, int n) {
     }
 }
 
-float SpectrumUtil::interpolateSamples(const float *lambda, const float *vals, int n, float l)
+float SpectrumBase::interpolateSamples(const float *lambda, const float *vals, int n, float l)
 {
     if (l <= lambda[0]) return vals[0];
     if (l >= lambda[n - 1]) return vals[n - 1];
@@ -29,7 +29,7 @@ float SpectrumUtil::interpolateSamples(const float *lambda, const float *vals, i
     return Math::lerp(t, vals[offset], vals[offset + 1]);
 }
 
-void SpectrumUtil::blackbody(const Float *lambda, int n, Float T, Float *Le)
+void SpectrumBase::blackbody(const Float *lambda, int n, Float T, Float *Le)
 {
     if (T <= 0) {
         for (int i = 0; i < n; ++i) Le[i] = 0.f;
@@ -46,7 +46,7 @@ void SpectrumUtil::blackbody(const Float *lambda, int n, Float T, Float *Le)
     }
 }
 
-void SpectrumUtil::blackbodyNormalized(const Float *lambda, int n, Float T, Float *Le) {
+void SpectrumBase::blackbodyNormalized(const Float *lambda, int n, Float T, Float *Le) {
     blackbody(lambda, n, T, Le);
     // Normalize _Le_ values based on maximum blackbody radiance
     Float lambdaMax = 2.8977721e-3 / T * 1e9;
@@ -79,7 +79,7 @@ RGBSpectrum RGBSpectrum::fromSampled(const float *lambda, const float *v, int n)
     return fromXYZ(xyz);
 }
 
-const float SpectrumUtil::CIE_LAMBDA[NUM_CIE_SAMPLES] = {
+const float SpectrumBase::CIE_LAMBDA[NUM_CIE_SAMPLES] = {
     360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374,
     375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389,
     390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404,
@@ -114,7 +114,7 @@ const float SpectrumUtil::CIE_LAMBDA[NUM_CIE_SAMPLES] = {
     825, 826, 827, 828, 829, 830
 };
 
-const float SpectrumUtil::CIE_X[NUM_CIE_SAMPLES] = {
+const float SpectrumBase::CIE_X[NUM_CIE_SAMPLES] = {
     // CIE X function values
     0.0001299000f,   0.0001458470f,   0.0001638021f,   0.0001840037f,
     0.0002066902f,   0.0002321000f,   0.0002607280f,   0.0002930750f,
@@ -235,7 +235,7 @@ const float SpectrumUtil::CIE_X[NUM_CIE_SAMPLES] = {
     0.000001905497f, 0.000001776509f, 0.000001656215f, 0.000001544022f,
     0.000001439440f, 0.000001341977f, 0.000001251141f};
 
-const float SpectrumUtil::CIE_Y[NUM_CIE_SAMPLES] = {
+const float SpectrumBase::CIE_Y[NUM_CIE_SAMPLES] = {
     // CIE Y function values
     0.000003917000f,  0.000004393581f,  0.000004929604f,  0.000005532136f,
     0.000006208245f,  0.000006965000f,  0.000007813219f,  0.000008767336f,
@@ -357,7 +357,7 @@ const float SpectrumUtil::CIE_Y[NUM_CIE_SAMPLES] = {
     0.0000005198080f, 0.0000004846123f, 0.0000004518100f
 };
 
-const float SpectrumUtil::CIE_Z[NUM_CIE_SAMPLES] = {
+const float SpectrumBase::CIE_Z[NUM_CIE_SAMPLES] = {
     0.0006061f,     0.000680879f,     0.000765146f,     0.000860012f,
   0.000966593f,        0.001086f,      0.00122059f,      0.00137273f,
    0.00154358f,      0.00173429f,        0.001946f,      0.00217778f,

@@ -33,7 +33,7 @@ public:
 
 inline ostream & operator << (ostream &os, const CameraSample &cs) {
     os << "[ pFilm: " << cs.pFilm << " , pLens: " << cs.pLens <<
-        StringPrint::printf(", time %f ]", cs.time);
+        STRING_PRINTF(", time %f ]", cs.time);
     return os;
 }
 

@@ -90,12 +90,12 @@ void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> valu
     CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
     unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
-    unique_ptr<Float[]> v(new Float[SpectrumUtil::NUM_CIE_SAMPLES]);
+    unique_ptr<Float[]> v(new Float[SpectrumBase::NUM_CIE_SAMPLES]);
     for (int i = 0; i < nValues; ++i) {
-        SpectrumUtil::blackbodyNormalized(SpectrumUtil::CIE_LAMBDA, SpectrumUtil::NUM_CIE_SAMPLES,
+        SpectrumBase::blackbodyNormalized(SpectrumBase::CIE_LAMBDA, SpectrumBase::NUM_CIE_SAMPLES,
                                           values[2 * i], v.get());
         s[i] = values[2 * i + 1] *
-               Spectrum::fromSampled(SpectrumUtil::CIE_LAMBDA, v.get(), SpectrumUtil::NUM_CIE_SAMPLES);
+               Spectrum::fromSampled(SpectrumBase::CIE_LAMBDA, v.get(), SpectrumBase::NUM_CIE_SAMPLES);
     }
     shared_ptr<ParamSetItem<Spectrum>> psi(
         new ParamSetItem<Spectrum>(name, move(s), nValues));
@@ -427,7 +427,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%d ", item->values[j]);
+            ret += STRING_PRINTF("%d ", item->values[j]);
         ret += string("] ");
     }
     for (i = 0; i < bools.size(); ++i) {
@@ -441,7 +441,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("\"%s\" ", item->values[j] ? "true" : "false");
+            ret += STRING_PRINTF("\"%s\" ", item->values[j] ? "true" : "false");
         ret += string("] ");
     }
     for (i = 0; i < floats.size(); ++i) {
@@ -455,7 +455,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%.8g ", item->values[j]);
+            ret += STRING_PRINTF("%.8g ", item->values[j]);
         ret += string("] ");
     }
     for (i = 0; i < point2fs.size(); ++i) {
@@ -469,7 +469,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%.8g %.8g ", item->values[j].x,
+            ret += STRING_PRINTF("%.8g %.8g ", item->values[j].x,
                                 item->values[j].y);
         ret += string("] ");
     }
@@ -484,7 +484,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%.8g %.8g ", item->values[j].x,
+            ret += STRING_PRINTF("%.8g %.8g ", item->values[j].x,
                                 item->values[j].y);
         ret += string("] ");
     }
@@ -499,7 +499,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%.8g %.8g %.8g ", item->values[j].x,
+            ret += STRING_PRINTF("%.8g %.8g %.8g ", item->values[j].x,
                                 item->values[j].y, item->values[j].z);
         ret += string("] ");
     }
@@ -514,7 +514,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%.8g %.8g %.8g ", item->values[j].x,
+            ret += STRING_PRINTF("%.8g %.8g %.8g ", item->values[j].x,
                                 item->values[j].y, item->values[j].z);
         ret += string("] ");
     }
@@ -529,7 +529,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("%.8g %.8g %.8g ", item->values[j].x,
+            ret += STRING_PRINTF("%.8g %.8g %.8g ", item->values[j].x,
                                 item->values[j].y, item->values[j].z);
         ret += string("] ");
     }
@@ -544,7 +544,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("\"%s\" ", item->values[j].c_str());
+            ret += STRING_PRINTF("\"%s\" ", item->values[j].c_str());
         ret += string("] ");
     }
     for (i = 0; i < textures.size(); ++i) {
@@ -558,7 +558,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j)
-            ret += StringPrint::printf("\"%s\" ", item->values[j].c_str());
+            ret += STRING_PRINTF("\"%s\" ", item->values[j].c_str());
         ret += string("] ");
     }
     for (i = 0; i < spectra.size(); ++i) {
@@ -574,7 +574,7 @@ string ParamSet::toString() const {
         for (j = 0; j < nPrint; ++j) {
             Float rgb[3];
             item->values[j].toRGB(rgb);
-            ret += StringPrint::printf("%.8g %.8g %.8g ", rgb[0], rgb[1], rgb[2]);
+            ret += STRING_PRINTF("%.8g %.8g %.8g ", rgb[0], rgb[1], rgb[2]);
         }
         ret += string("] ");
     }

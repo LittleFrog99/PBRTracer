@@ -72,7 +72,7 @@ void StatsAccumulator::print(FILE *dest) {
         if (counter.second == 0) continue;
         string category, title;
         getCategoryAndTitle(counter.first, &category, &title);
-        toPrint[category].push_back(StringPrint::printf(
+        toPrint[category].push_back(STRING_PRINTF(
             "%-42s               %12" PRIu64, title.c_str(), counter.second));
     }
     for (auto &counter : memoryCounters) {
@@ -81,16 +81,16 @@ void StatsAccumulator::print(FILE *dest) {
         getCategoryAndTitle(counter.first, &category, &title);
         double kb = double(counter.second) / 1024.;
         if (kb < 1024.)
-            toPrint[category].push_back(StringPrint::printf(
+            toPrint[category].push_back(STRING_PRINTF(
                 "%-42s                  %9.2f kB", title.c_str(), kb));
         else {
             float mib = kb / 1024.;
             if (mib < 1024.)
-                toPrint[category].push_back(StringPrint::printf(
+                toPrint[category].push_back(STRING_PRINTF(
                     "%-42s                  %9.2f MiB", title.c_str(), mib));
             else {
                 float gib = mib / 1024.;
-                toPrint[category].push_back(StringPrint::printf(
+                toPrint[category].push_back(STRING_PRINTF(
                     "%-42s                  %9.2f GiB", title.c_str(), gib));
             }
         }
@@ -103,7 +103,7 @@ void StatsAccumulator::print(FILE *dest) {
         double avg = (double)DistribSum.second /
                      (double)intDistribCounts[name];
         toPrint[category].push_back(
-            StringPrint::printf("%-42s                      %.3f avg [range %" PRIu64
+            STRING_PRINTF("%-42s                      %.3f avg [range %" PRIu64
                          " - %" PRIu64 "]",
                          title.c_str(), avg, intDistribMins[name],
                          intDistribMaxs[name]));
@@ -116,7 +116,7 @@ void StatsAccumulator::print(FILE *dest) {
         double avg = (double)DistribSum.second /
                      (double)floatDistribCounts[name];
         toPrint[category].push_back(
-            StringPrint::printf("%-42s                      %.3f avg [range %f - %f]",
+            STRING_PRINTF("%-42s                      %.3f avg [range %f - %f]",
                          title.c_str(), avg, floatDistribMins[name],
                          floatDistribMaxs[name]));
     }
@@ -127,7 +127,7 @@ void StatsAccumulator::print(FILE *dest) {
         string category, title;
         getCategoryAndTitle(percentage.first, &category, &title);
         toPrint[category].push_back(
-            StringPrint::printf("%-42s%12" PRIu64 " / %12" PRIu64 " (%.2f%%)",
+            STRING_PRINTF("%-42s%12" PRIu64 " / %12" PRIu64 " (%.2f%%)",
                          title.c_str(), num, denom, (100.f * num) / denom));
     }
     for (auto &ratio : ratios) {
@@ -136,7 +136,7 @@ void StatsAccumulator::print(FILE *dest) {
         int64_t denom = ratio.second.second;
         string category, title;
         getCategoryAndTitle(ratio.first, &category, &title);
-        toPrint[category].push_back(StringPrint::printf(
+        toPrint[category].push_back(STRING_PRINTF(
             "%-42s%12" PRIu64 " / %12" PRIu64 " (%.2fx)", title.c_str(), num,
             denom, (double)num / (double)denom));
     }
@@ -267,7 +267,7 @@ string Profiler::timeString(float pct, chrono::system_clock::time_point now)
     int s = ms / 1000;
     ms -= s * 1000;
     ms /= 10;  // only printing 2 digits of fractional seconds
-    return StringPrint::printf("%4d:%02d:%02d.%02d", h, m, s, ms);
+    return STRING_PRINTF("%4d:%02d:%02d.%02d", h, m, s, ms);
 }
 
 void Profiler::reportResults(FILE *dest) {

@@ -17,14 +17,14 @@ SET(SOURCES_CORE
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/math.cpp src/utilities/log.cpp
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
-    src/utilities/parallel.cpp src/utilities/stats.cpp )
+    src/utilities/parallel.cpp src/utilities/stats.cpp src/utilities/quaternion.cpp)
 
 SET(SOURCES_SHAPES
     src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp
     src/shapes/triangle.cpp src/shapes/curve.cpp)
 
 SET(SOURCES_ACCELERATORS
-    src/accelerators/bvh.cpp)
+    src/accelerators/bvh.cpp src/accelerators/kdtree.cpp)
 
 SET(SOURCES_INTEGRATORS
     src/integrators/whitted.cpp)

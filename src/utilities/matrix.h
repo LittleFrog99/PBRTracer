@@ -57,7 +57,7 @@ public:
     }
 
     friend ostream & operator << (ostream &os, const Matrix4x4 &m) {
-        os << StringPrint::printf("[ [ %f, %f, %f, %f ] "
+        os << STRING_PRINTF("[ [ %f, %f, %f, %f ] "
                                   "[ %f, %f, %f, %f ] "
                                   "[ %f, %f, %f, %f ] "
                                   "[ %f, %f, %f, %f ] ]",
