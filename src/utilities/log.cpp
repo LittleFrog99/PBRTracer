@@ -1,6 +1,6 @@
 #include "log.h"
-#include "stats.h"
-#include "parallel.h"
+#include "core/stats.h"
+#include "core/parallel.h"
 #include "core/renderer.h"
 
 void Log::severe(const char *format, ...) {

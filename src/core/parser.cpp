@@ -1,6 +1,6 @@
 #include "parser.h"
 #include "file.h"
-#include "stats.h"
+#include "core/stats.h"
 #include "memory.h"
 #include "core/api.h"
 #include "core/renderer.h"

@@ -1,5 +1,5 @@
 #include "triangle.h"
-#include "stats.h"
+#include "core/stats.h"
 #include <set>
 
 TriangleMesh::TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices,

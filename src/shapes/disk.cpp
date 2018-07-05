@@ -1,5 +1,5 @@
 #include "disk.h"
-#include "stats.h"
+#include "core/stats.h"
 #include "efloat.h"
 
 bool Disk::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect,

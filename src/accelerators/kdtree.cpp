@@ -211,7 +211,7 @@ bool KDTree::intersect(const Ray &ray, SurfaceInteraction *isect) const {
             Float tPlane = (node->splitPos() - ray.o[axis]) * invDir[axis];
             // Get node children pointers for ray
             const Node *firstChild, *secondChild;
-            int belowFirst = (ray.o[axis] < node->splitPos() ||
+            bool belowFirst = (ray.o[axis] < node->splitPos() ||
                               (ray.o[axis] == node->splitPos() && ray.d[axis] <= 0));
             if (belowFirst) {
                 firstChild = node + 1;
@@ -226,7 +226,7 @@ bool KDTree::intersect(const Ray &ray, SurfaceInteraction *isect) const {
             else if (tPlane < tMin)
                 node = secondChild;
             else {
-                // Enque second child in todo list
+                // Enqueue second child in todo list
                 todo[todoPos].node = secondChild;
                 todo[todoPos].tMin = tPlane;
                 todo[todoPos].tMax = tMax;
@@ -283,7 +283,7 @@ bool KDTree::intersectP(const Ray &ray) const {
             Float tPlane = (node->splitPos() - ray.o[axis]) * invDir[axis];
             // Get node children pointers for ray
             const Node *firstChild, *secondChild; // front-to-back
-            int belowFirst = (ray.o[axis] < node->splitPos() ||
+            bool belowFirst = (ray.o[axis] < node->splitPos() ||
                               (ray.o[axis] == node->splitPos() && ray.d[axis] <= 0));
             if (belowFirst) {
                 firstChild = node + 1;
@@ -298,7 +298,7 @@ bool KDTree::intersectP(const Ray &ray) const {
             else if (tPlane < tMin)
                 node = secondChild;
             else {
-                // Enque second child in todo list
+                // Enqueue second child in todo list
                 todo[todoPos].node = secondChild;
                 todo[todoPos].tMin = tPlane;
                 todo[todoPos].tMax = tMax;

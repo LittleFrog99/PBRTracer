@@ -4,8 +4,8 @@
 #include "spectrum.h"
 #include "bounds.h"
 #include "filter.h"
-#include "stats.h"
-#include "parallel.h"
+#include "core/stats.h"
+#include "core/parallel.h"
 #include "paramset.h"
 
 struct FilmTilePixel {

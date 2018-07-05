@@ -1,6 +1,6 @@
 #include "core/api.h"
 #include "core/bounds.h"
-#include "parallel.h"
+#include "core/parallel.h"
 
 static void usage(const char *msg = nullptr) {
     if (msg)

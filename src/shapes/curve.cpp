@@ -1,5 +1,5 @@
 #include "curve.h"
-#include "stats.h"
+#include "core/stats.h"
 
 Bounds3f Curve::objectBound() const {
     Point3f ctrlPts[4];

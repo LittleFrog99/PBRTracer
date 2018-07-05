@@ -22,7 +22,7 @@ int Renderer::catIndentCount = 0;
     if (!(Renderer::options.cat || Renderer::options.toPly) &&           \
         Renderer::currentApiState == APIState::Uninitialized) {        \
         ERROR(                                             \
-            "pbrtInit() must be before calling \"%s()\". " \
+            "API::init() must be before calling \"%s()\". " \
             "Ignoring.",                                   \
             func);                                         \
         return;                                            \
@@ -70,13 +70,13 @@ void API::init(const Options &opt) {
     Renderer::options = opt;
     // API Initialization
     if (Renderer::currentApiState != APIState::Uninitialized)
-        ERROR("pbrtInit() has already been called.");
+        ERROR("API::init() has already been called.");
     Renderer::currentApiState = APIState::OptionsBlock;
     Renderer::renderOptions.reset(new RenderOptions);
     Renderer::graphicsState = GraphicsState();
     Renderer::catIndentCount = 0;
 
-    // SampledSpectrum::init(); // TODO: Uncomment when using _SampleSpectrum_
+    SampledSpectrum::init();
     Parallel::init();  // Threads must be launched before the profiler is initialized.
     Profiler::init();
 }

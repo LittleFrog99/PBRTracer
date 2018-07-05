@@ -20,6 +20,7 @@
 core
 !core/
 build
+gtest
 tags
 .DS_Store
 .directory

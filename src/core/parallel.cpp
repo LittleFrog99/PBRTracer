@@ -1,5 +1,5 @@
-#include "parallel.h"
-#include "stats.h"
+#include "core/parallel.h"
+#include "core/stats.h"
 #include "core/renderer.h"
 
 vector<thread> Parallel::threads;

@@ -207,7 +207,8 @@ inline int findInterval(int size, function<bool(int)> compare) {
     return clamp(first - 1, 0, size - 2);
 }
 
-inline Float lerp(Float t, Float v1, Float v2) {
+template <class T>
+inline T lerp(Float t, T v1, T v2) {
     return (1 - t) * v1 + t * v2;
 }
 

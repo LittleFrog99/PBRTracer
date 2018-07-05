@@ -1,7 +1,7 @@
 #include "integrator.h"
-#include "parallel.h"
+#include "core/parallel.h"
 #include "sampler.h"
-#include "stats.h"
+#include "core/stats.h"
 #include "bsdf.h"
 
 STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);

@@ -1,4 +1,4 @@
-#include "stats.h"
+#include "core/stats.h"
 #include "stringprint.h"
 #include "core/renderer.h"
 #include <signal.h>

@@ -1,5 +1,5 @@
 #include "bvh.h"
-#include "parallel.h"
+#include "core/parallel.h"
 
 struct BVH::PrimitiveInfo {
     PrimitiveInfo() {}
