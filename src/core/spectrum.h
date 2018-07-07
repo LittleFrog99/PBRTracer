@@ -19,7 +19,7 @@ public:
     static const Float CIE_X[nCIESamples];
     static const Float CIE_Y[nCIESamples];
     static const Float CIE_Z[nCIESamples];
-    static constexpr Float CIE_Y_INTEGRAL = 106.856895;
+    static constexpr Float CIE_Y_integral = 106.856895;
 
     static constexpr int nRGB2SpectSamples = 32;
     static const Float RGB2SpectLambda[nRGB2SpectSamples];
@@ -45,6 +45,18 @@ public:
 
     static void blackbody(const Float *lambda, int n, Float T, Float *Le);
     static void blackbodyNormalized(const Float *lambda, int n, Float T, Float *Le);
+
+    static void XYZToRGB(const Float xyz[3], Float rgb[3]) {
+        rgb[0] = 3.240479f * xyz[0] - 1.537150f * xyz[1] - 0.498535f * xyz[2];
+        rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
+        rgb[2] = 0.055648f * xyz[0] - 0.204043f * xyz[1] + 1.057311f * xyz[2];
+    }
+
+    static void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
+        xyz[0] = 0.412453f * rgb[0] + 0.357580f * rgb[1] + 0.180423f * rgb[2];
+        xyz[1] = 0.212671f * rgb[0] + 0.715160f * rgb[1] + 0.072169f * rgb[2];
+        xyz[2] = 0.019334f * rgb[0] + 0.119193f * rgb[1] + 0.950227f * rgb[2];
+    }
 };
 
 template <int nSpectrumSamples>
@@ -192,7 +204,7 @@ public:
     CoefficientSpectrum clamp(Float low = 0, Float high = INFINITY) const {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i)
-            ret.channels[i] = clamp(channels[i], low, high);
+            ret.channels[i] = Math::clamp(channels[i], low, high);
         return ret;
     }
 
@@ -238,10 +250,44 @@ public:
     SampledSpectrum(Float v = 0.0f) : CoefficientSpectrum(v) {}
     SampledSpectrum(const CoefficientSpectrum<nSpectralSamples> &v)
         : CoefficientSpectrum<nSpectralSamples>(v) {}
-
-    static SampledSpectrum fromSampled(const Float *lambda, const Float *v, int n);
+    inline SampledSpectrum(const RGBSpectrum &r, SpectrumType t);
 
     static void init();
+
+    static SampledSpectrum fromSampled(const Float *lambda, const Float *v, int n);
+    static SampledSpectrum fromRGB(const Float rgb[3], SpectrumType type);
+
+    static SampledSpectrum fromXYZ(const Float xyz[3], SpectrumType type) {
+        Float rgb[3];
+        XYZToRGB(xyz, rgb);
+        return fromRGB(rgb, type);
+    }
+
+    void toXYZ(Float xyz[3]) const {
+        xyz[0] = xyz[1] = xyz[2] = 0;
+        for (int i = 0; i < nSpectralSamples; i++) {
+            xyz[0] = X.channels[i] * channels[i];
+            xyz[1] = Y.channels[i] * channels[i];
+            xyz[2] = Z.channels[i] * channels[i];
+        }
+        Float scale = Float(sampledLambdaEnd - sampledLambdaStart) / Float(CIE_Y_integral * nSpectralSamples);
+        xyz[0] *= scale; xyz[1] *= scale; xyz[2] *= scale;
+    }
+
+    void toRGB(Float rgb[3]) const {
+        Float xyz[3];
+        toXYZ(xyz);
+        XYZToRGB(xyz, rgb);
+    }
+
+    inline RGBSpectrum toRGBSpectrum() const;
+
+    Float luminance() const {
+        Float yy = 0.f;
+        for (int i = 0; i < nSpectralSamples; ++i)
+            yy += Y.channels[i] * channels[i];
+        return yy * Float(sampledLambdaEnd - sampledLambdaStart) / Float(CIE_Y_integral * nSpectralSamples);
+    }
 
 private:
     static SampledSpectrum X, Y, Z;
@@ -270,35 +316,35 @@ public:
         return r;
     }
 
-    void toRGB(Float *rgb) const {
+    static RGBSpectrum fromSampled(const Float *lambda, const Float *v, int n);
+
+    void toRGB(Float rgb[3]) const {
         rgb[0] = channels[0];
         rgb[1] = channels[1];
         rgb[2] = channels[2];
     }
 
-    static RGBSpectrum fromSampled(const Float *lambda, const Float *v, int n);
+    RGBSpectrum toRGBSpectrum() const { return *this; }
 
-    const RGBSpectrum & toRGBSpectrum() const { return *this; }
     void toXYZ(Float xyz[3]) const { RGBToXYZ(channels, xyz); }
 
     Float luminance() const {
         static const Float YWeight[3] = { 0.212671f, 0.715160f, 0.072169f };
         return YWeight[0] * channels[0] + YWeight[1] * channels[1] + YWeight[2] * channels[2];
     }
-
-private:
-    static void XYZToRGB(const Float xyz[3], Float rgb[3]) {
-        rgb[0] = 3.240479f * xyz[0] - 1.537150f * xyz[1] - 0.498535f * xyz[2];
-        rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
-        rgb[2] = 0.055648f * xyz[0] - 0.204043f * xyz[1] + 1.057311f * xyz[2];
-    }
-
-    static void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
-        xyz[0] = 0.412453f * rgb[0] + 0.357580f * rgb[1] + 0.180423f * rgb[2];
-        xyz[1] = 0.212671f * rgb[0] + 0.715160f * rgb[1] + 0.072169f * rgb[2];
-        xyz[2] = 0.019334f * rgb[0] + 0.119193f * rgb[1] + 0.950227f * rgb[2];
-    }
 };
+
+inline RGBSpectrum SampledSpectrum::toRGBSpectrum() const {
+    Float rgb[3];
+    toRGB(rgb);
+    return RGBSpectrum::fromRGB(rgb);
+}
+
+inline SampledSpectrum::SampledSpectrum(const RGBSpectrum &r, SpectrumType t) {
+    Float rgb[3];
+    r.toRGB(rgb);
+    *this = fromRGB(rgb, t);
+}
 
 
 #endif // CORE_SPECTRUM
