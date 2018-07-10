@@ -44,7 +44,7 @@ const char * Profiler::stageNames[] = {
     "Other Shape::intersect()",
     "Other Shape::intersectP()",
     "Material::computeScatteringFuncs()",
-    "Camera::genRay()",
+    "Camera::generateRay()",
     "Film::mergeTile()",
     "Film::addSplat()",
     "Film::addSample()",

@@ -576,9 +576,6 @@ inline Point3f offsetRayOrigin(const Point3f &p, const Vector3f &pError,
                                const Normal3f &n, const Vector3f &w) {
     Float d = dot(abs(n), pError);
 #ifdef PBRT_FLOAT_AS_DOUBLE
-    // We have tons of precision; for now bump up the offset a bunch just
-    // to be extra sure that we start on the right side of the surface
-    // (In case of any bugs in the epsilons code...)
     d *= 1024.;
 #endif
     Vector3f offset = d * Vector3f(n);

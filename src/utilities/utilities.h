@@ -3,7 +3,6 @@
 
 /* Common Included Headers */
 #include <algorithm>
-#include <cinttypes>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -212,9 +211,27 @@ inline T lerp(Float t, T v1, T v2) {
     return (1 - t) * v1 + t * v2;
 }
 
-bool solveQuadratic(Float a, Float b, Float c, Float *t0, Float *t1);
+inline bool solveQuadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
+    Float discr = b * b - 4.0 * a * c;
+    if (discr < 0) return false;
+    Float rtDiscr = sqrt(discr);
+    Float q;
+    if (b < 0) q = -.5 * (b - rtDiscr);
+    else q = -.5 * (b + rtDiscr);
+    *t0 = q / a;
+    *t1 = c / q;
+    if (*t0 > *t1) swap(*t0, *t1);
+    return true;
+}
 
-bool solveLinear2x2(const Float A[2][2], const Float B[2], Float *x0, Float *x1);
+inline bool solveLinear2x2(const Float A[2][2], const Float B[2], Float *x0, Float *x1) {
+    Float det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+    if (std::abs(det) < 1e-10f) return false;
+    *x0 = (A[1][1] * B[0] - A[0][1] * B[1]) / det;
+    *x1 = (A[0][0] * B[1] - A[1][0] * B[0]) / det;
+    if (isnan(*x0) || isnan(*x1)) return false;
+    return true;
+}
 
 }
 

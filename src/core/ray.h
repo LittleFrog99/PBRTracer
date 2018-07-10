@@ -38,6 +38,7 @@ public:
         : Ray(o, d, tMax, time, medium) {
         hasDifferentials = false;
     }
+
     RayDifferential(const Ray &ray) : Ray(ray) { hasDifferentials = false; }
 
     bool hasNaNs() const {

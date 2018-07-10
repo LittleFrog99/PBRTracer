@@ -12,18 +12,15 @@ void FilmTile::addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight) {
     p1 = min(p1, pixelBounds.pMax);
 
     // Loop over filter support and add sample to pixel arrays
-
     // Precompute $x$ and $y$ filter table offsets
     int *ifx = ALLOCA(int, p1.x - p0.x);
     for (int x = p0.x; x < p1.x; ++x) {
-        Float fx = abs((x - pFilmDiscrete.x) * invFilterRadius.x *
-                            filterTableSize);
+        Float fx = abs((x - pFilmDiscrete.x) * invFilterRadius.x * filterTableSize);
         ifx[x - p0.x] = min(int(floor(fx)), filterTableSize - 1);
     }
     int *ify = ALLOCA(int, p1.y - p0.y);
     for (int y = p0.y; y < p1.y; ++y) {
-        Float fy = abs((y - pFilmDiscrete.y) * invFilterRadius.y *
-                            filterTableSize);
+        Float fy = abs((y - pFilmDiscrete.y) * invFilterRadius.y * filterTableSize);
         ify[y - p0.y] = min(int(floor(fy)), filterTableSize - 1);
     }
     for (int y = p0.y; y < p1.y; ++y) {
@@ -31,7 +28,6 @@ void FilmTile::addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight) {
             // Evaluate filter value at $(x,y)$ pixel
             int offset = ify[y - p0.y] * filterTableSize + ifx[x - p0.x];
             Float filterWeight = filterTable[offset];
-
             // Update pixel values with filtered sample contribution
             FilmTilePixel &pixel = getPixel(Point2i(x, y));
             pixel.contribSum += L * sampleWeight * filterWeight;

@@ -38,7 +38,7 @@ void SamplerIntegrator::render(const Scene &scene) {
             do {
                 CameraSample camSample = tileSampler->getCameraSample(pixel);
                 RayDifferential ray;
-                Float rayWeight = camera->genRayDifferential(camSample, &ray);
+                Float rayWeight = camera->generateRayDifferential(camSample, &ray);
                 ray.scaleDifferentials(1.0 / sqrt(tileSampler->samplesPerPixel));
                 ++nCameraRays;
 

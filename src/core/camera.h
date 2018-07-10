@@ -13,19 +13,20 @@ struct CameraSample {
 
 class Camera {
 public:
-    Camera(const AnimatedTransform &CameraToWorld, Float shutterOpen,
-           Float shutterClose, Film *film, const Medium *medium);
-    virtual ~Camera();
-    virtual Float genRay(const CameraSample &sample, Ray *ray) const = 0;
-    virtual Float genRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
-    virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
-    virtual void Pdf_We(const Ray &ray, Float *pdfPos, Float *pdfDir) const;
-    virtual Spectrum Sample_Wi(const Interaction &ref, const Point2f &u,
-                               Vector3f *wi, Float *pdf, Point2f *pRaster,
-                               VisibilityTester *vis) const;
+    Camera(const AnimatedTransform &camToWorld, Float shutterOpen, Float shutterClose,
+           Film *film, const Medium *medium)
+        : cameraToWorld(camToWorld), shutterOpen(shutterOpen), shutterClose(shutterClose),
+          film(film), medium(medium) {}
 
-    // Camera Public Data
-    AnimatedTransform CameraToWorld;
+    virtual Float generateRay(const CameraSample &sample, Ray *ray) const = 0;
+    virtual Float generateRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
+    virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
+    virtual void pdf_We(const Ray &ray, Float *pdfPos, Float *pdfDir) const;
+    virtual Spectrum sample_Wi(const Interaction &ref, const Point2f &u,Vector3f *wi, Float *pdf,
+                               Point2f *pRaster, VisibilityTester *vis) const;
+    virtual ~Camera();
+
+    AnimatedTransform cameraToWorld;
     const Float shutterOpen, shutterClose;
     Film *film;
     const Medium *medium;
@@ -38,19 +39,15 @@ inline ostream & operator << (ostream &os, const CameraSample &cs) {
 }
 
 class ProjectiveCamera : public Camera {
-  public:
-    // ProjectiveCamera Public Methods
-    ProjectiveCamera(const AnimatedTransform &CameraToWorld,
-                     const Transform &CameraToScreen,
+public:
+    ProjectiveCamera(const AnimatedTransform &camToWorld, const Transform &camToScreen,
                      const Bounds2f &screenWindow, Float shutterOpen,
                      Float shutterClose, Float lensr, Float focald, Film *film,
                      const Medium *medium)
-        : Camera(CameraToWorld, shutterOpen, shutterClose, film, medium),
-          cameraToScreen(CameraToScreen) {
-        // Initialize depth of field parameters
+        : Camera(camToWorld, shutterOpen, shutterClose, film, medium),
+          cameraToScreen(camToScreen) {
         lensRadius = lensr;
         focalDistance = focald;
-
         screenToRaster =
             Transform::scale(film->fullResolution.x, film->fullResolution.y, 1) *
             Transform::scale(1 / (screenWindow.pMax.x - screenWindow.pMin.x),

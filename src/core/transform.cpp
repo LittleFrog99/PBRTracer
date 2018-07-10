@@ -154,9 +154,9 @@ Transform Transform::orthographic(Float zNear, Float zFar) {
 
 Transform Transform::perspective(Float fov, Float n, Float f) {
     // Perform projective divide for perspective projection
-    Matrix4x4 persp(1, 0, 0, 0, 0,
-                    1, 0, 0, 0, 0,
-                    f / (f - n), -f * n / (f - n),
+    Matrix4x4 persp(1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, f / (f - n), -f * n / (f - n),
                     0, 0, 1, 0);
     // Scale canonical perspective view to specified field of view
     Float invTanAng = 1 / tan(radians(fov) / 2);

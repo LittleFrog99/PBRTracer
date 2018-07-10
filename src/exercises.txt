@@ -17,5 +17,5 @@ Chapter 4 Primitives and Intersection Acceleration
 4.3 (B) Smarter overlap tests
 4.5 (B) 64-bit Morton code
 4.6 (B) Alternate SAH cost functions
-4.8 (C) Hybrid accelearation structures
+4.8 (C) Hybrid acceleration structures
 4.? (B) Use Peano curve instead of Morton (Z-order) curve

@@ -1,8 +1,10 @@
 #ifndef CORE_SAMPLER
 #define CORE_SAMPLER
 
-#include "camera.h"
+#include "vector.h"
 #include "random.h"
+
+class CameraSample;
 
 class Sampler {
 public:
@@ -18,8 +20,8 @@ public:
     CameraSample getCameraSample(const Point2i &pRaster);
     void request1DArray(int n);
     void request2DArray(int n);
-    const Float *get1DArray(int n);
-    const Point2f *get2DArray(int n);
+    const Float * get1DArray(int n);
+    const Point2f * get2DArray(int n);
 
     string stateString() const {
       return STRING_PRINTF("(%d,%d), sample %" PRId64, currentPixel.x,
@@ -45,7 +47,7 @@ public:
     static Point2f uniformSampleTriangle(const Point2f &u);
 
     template <typename T>
-    void shuffle(T *samp, int count, int nDimensions, Random &rng) {
+    static void shuffle(T *samp, int count, int nDimensions, Random &rng) {
         for (int i = 0; i < count; ++i) {
             unsigned other = i + rng.uniformUInt32(count - i);
             for (int j = 0; j < nDimensions; ++j)
@@ -53,19 +55,19 @@ public:
         }
     }
 
-    Vector3f cosineSampleHemisphere(const Point2f &u) {
+    static Vector3f cosineSampleHemisphere(const Point2f &u) {
         Point2f d = concentricSampleDisk(u);
         Float z = sqrt(max((Float)0, 1 - d.x * d.x - d.y * d.y));
         return Vector3f(d.x, d.y, z);
     }
 
-    Float cosineHemispherePdf(Float cosTheta) { return cosTheta * INV_PI; }
+    static Float cosineHemispherePdf(Float cosTheta) { return cosTheta * INV_PI; }
 
-    Float balanceHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
+    static Float balanceHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
         return (nf * fPdf) / (nf * fPdf + ng * gPdf);
     }
 
-    Float powerHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
+    static Float powerHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
         Float f = nf * fPdf, g = ng * gPdf;
         return (f * f) / (f * f + g * g);
     }
@@ -81,7 +83,6 @@ protected:
 
 private:
     size_t array1DOffset, array2DOffset;
-
 };
 
 class PixelSampler : public Sampler {
@@ -108,8 +109,8 @@ public:
     Float get1D();
     Point2f get2D();
 
-    virtual int64_t GetIndexForSample(int64_t sampleNum) const = 0;
-    virtual Float SampleDimension(int64_t index, int dimension) const = 0;
+    virtual int64_t getIndexForSample(int64_t sampleNum) const = 0;
+    virtual Float sampleDimension(int64_t index, int dimension) const = 0;
 
 private:
     int dimension;
@@ -194,7 +195,6 @@ public:
 private:
     vector<unique_ptr<Distribution1D>> pConditionalV;
     unique_ptr<Distribution1D> pMarginal;
-
 };
 
 

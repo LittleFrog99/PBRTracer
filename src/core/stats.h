@@ -1,5 +1,5 @@
-#ifndef UTILITY_STATS
-#define UTILITY_STATS
+#ifndef CORE_STATS
+#define CORE_STATS
 
 #include "utilities.h"
 #include <array>
@@ -171,7 +171,7 @@ public:
 
     void done();
 
-  private:
+private:
     void printBar();
     int terminalWidth();
 
@@ -308,4 +308,4 @@ enum class Profiler::Stage {
     NumProfCategories
 };
 
-#endif // UTILITY_STATS
+#endif // CORE_STATS
