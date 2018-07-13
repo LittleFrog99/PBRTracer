@@ -24,7 +24,7 @@ public:
     virtual void pdf_We(const Ray &ray, Float *pdfPos, Float *pdfDir) const;
     virtual Spectrum sample_Wi(const Interaction &ref, const Point2f &u,Vector3f *wi, Float *pdf,
                                Point2f *pRaster, VisibilityTester *vis) const;
-    virtual ~Camera();
+    virtual ~Camera() { delete film; }
 
     AnimatedTransform cameraToWorld;
     const Float shutterOpen, shutterClose;
