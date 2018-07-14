@@ -11,6 +11,8 @@ public:
     bool intersect(const Ray &r, SurfaceInteraction *isect) const;
     bool intersectP(const Ray &r) const;
 
+    static shared_ptr<KDTree> create(vector<shared_ptr<Primitive>> prims, const ParamSet &ps);
+
 private:
     struct Node;
     struct BoundEdge;

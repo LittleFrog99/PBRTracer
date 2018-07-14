@@ -9,50 +9,6 @@
 
 enum class APIState { Uninitialized, OptionsBlock, WorldBlock };
 
-class TransformSet;
-class TransformCache;
-struct RenderOptions;
-struct MaterialInstance;
-struct GraphicsState;
-
-class Renderer {
-public:
-    static shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
-                                         const Transform &medium2world);
-    static shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
-    static shared_ptr<Texture<Float>> makeFloatTexture(const string &name, const Transform &tex2world,
-                                                       const TextureParams &tp);
-    static shared_ptr<Texture<Spectrum>> makeSpectrumTexture(const string &name,  const Transform &tex2world,
-                                                             const TextureParams &tp);
-    static shared_ptr<Light> makeLight(const string &name, const ParamSet &paramSet,
-                                       const Transform &light2world, const MediumInterface &mediumInterface);
-    static vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object2world,
-                                                const Transform *world2object, bool reverseOrientation,
-                                                const ParamSet &paramSet);
-    static shared_ptr<AreaLight> makeAreaLight(const string &name, const Transform &light2world,
-                                             const MediumInterface &mediumInterface,
-                                             const ParamSet &paramSet, const shared_ptr<Shape> &shape);
-    static shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Primitive>> prims,
-                                                 const ParamSet &paramSet);
-
-    static Options options;
-    static int catIndentCount;
-
-private:
-    static APIState currentApiState;
-    static TransformSet curTransform;
-    static uint32_t activeTransformBits;
-    static map<string, TransformSet> namedCoordinateSystems;
-    static unique_ptr<RenderOptions> renderOptions;
-    static GraphicsState graphicsState;
-    static vector<GraphicsState> pushedGraphicsStates;
-    static vector<TransformSet> pushedTransforms;
-    static vector<uint32_t> pushedActiveTransformBits;
-    static TransformCache transformCache;
-
-    friend class API;
-};
-
 class TransformSet {
 public:
     Transform & operator [] (int i) {
@@ -152,7 +108,7 @@ struct RenderOptions {
     ParamSet filterParams;
     string filmName = "image";
     ParamSet filmParams;
-    string samplerName = "halton";
+    string samplerName = "stratified";
     ParamSet samplerParams;
     string acceleratorName = "bvh";
     ParamSet acceleratorParams;
@@ -169,6 +125,41 @@ struct RenderOptions {
     bool haveScatteringMedia = false;
 };
 
+namespace Renderer {
+    vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object2world,
+                                                const Transform *world2object, bool reverseOrientation,
+                                                const ParamSet &paramSet);
+    shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Primitive>> prims,
+                                          const ParamSet &paramSet);
+    Camera * makeCamera(const string &name, const ParamSet &paramSet, const TransformSet &cam2worldSet,
+                        Float transformStart, Float transformEnd, Film *film);
+    shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
+                                  const Transform &medium2world);
+    shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
+    shared_ptr<Texture<Float>> makeFloatTexture(const string &name, const Transform &tex2world,
+                                                const TextureParams &tp);
+    shared_ptr<Texture<Spectrum>> makeSpectrumTexture(const string &name,  const Transform &tex2world,
+                                                      const TextureParams &tp);
+    shared_ptr<Light> makeLight(const string &name, const ParamSet &paramSet,
+                                const Transform &light2world, const MediumInterface &mediumInterface);
+    shared_ptr<AreaLight> makeAreaLight(const string &name, const Transform &light2world,
+                                        const MediumInterface &mediumInterface,
+                                        const ParamSet &paramSet, const shared_ptr<Shape> &shape);
+
+    static Options options;
+    static int catIndentCount = 0;
+
+    static APIState currentApiState = APIState::Uninitialized;
+    static TransformSet curTransform;
+    static uint32_t activeTransformBits = TransformSet::ALL_TRANSFORM_BITS;
+    static map<string, TransformSet> namedCoordinateSystems;
+    static unique_ptr<RenderOptions> renderOptions;
+    static GraphicsState graphicsState;
+    static vector<GraphicsState> pushedGraphicsStates;
+    static vector<TransformSet> pushedTransforms;
+    static vector<uint32_t> pushedActiveTransformBits;
+    static TransformCache transformCache;
+};
 
 
 #endif // CORE_RENDERER

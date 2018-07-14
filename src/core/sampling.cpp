@@ -1,4 +1,4 @@
-#include "sampler.h"
+#include "sampling.h"
 #include "core/camera.h"
 
 using namespace Sampling;

@@ -1,5 +1,6 @@
 #include "cylinder.h"
 #include "core/stats.h"
+#include "core/paramset.h"
 #include "efloat.h"
 
 bool Cylinder::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect,
@@ -133,4 +134,14 @@ bool Cylinder::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
     }
 
     return true;
+}
+
+shared_ptr<Shape> Cylinder::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                   const ParamSet &params)
+{
+    Float radius = params.findOneFloat("radius", 1);
+    Float zmin = params.findOneFloat("zmin", -1);
+    Float zmax = params.findOneFloat("zmax", 1);
+    Float phimax = params.findOneFloat("phimax", 360);
+    return std::make_shared<Cylinder>(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
 }

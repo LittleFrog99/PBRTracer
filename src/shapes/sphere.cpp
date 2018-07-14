@@ -1,5 +1,6 @@
 #include "sphere.h"
 #include "core/stats.h"
+#include "core/paramset.h"
 #include "efloat.h"
 
 bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isect,
@@ -139,4 +140,14 @@ bool Sphere::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
     }
 
     return true;
+}
+
+shared_ptr<Shape> Sphere::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                 const ParamSet &params)
+{
+    Float radius = params.findOneFloat("radius", 1.f);
+    Float zmin = params.findOneFloat("zmin", -radius);
+    Float zmax = params.findOneFloat("zmax", radius);
+    Float phimax = params.findOneFloat("phimax", 360.f);
+    return make_shared<Sphere>(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
 }

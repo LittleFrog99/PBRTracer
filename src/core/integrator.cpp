@@ -1,6 +1,6 @@
 #include "integrator.h"
 #include "core/parallel.h"
-#include "sampler.h"
+#include "sampling.h"
 #include "core/stats.h"
 #include "bsdf.h"
 

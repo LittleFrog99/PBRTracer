@@ -4,7 +4,7 @@
 #include "interaction.h"
 #include "light.h"
 #include "camera.h"
-#include "sampler.h"
+#include "sampling.h"
 
 class Integrator {
 public:

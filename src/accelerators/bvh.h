@@ -18,6 +18,8 @@ public:
     bool intersectP(const Ray &ray) const;
     ~BVH();
 
+    static shared_ptr<BVH> create(vector<shared_ptr<Primitive>> prims, const ParamSet &ps);
+
 private:
     struct BuildNode;
     struct PrimitiveInfo;

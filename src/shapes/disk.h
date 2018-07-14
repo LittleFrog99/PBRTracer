@@ -9,8 +9,10 @@ public:
          Float height, Float radius, Float innerRadius, Float phiMax)
         : Shape(objToWorld, worldToObj, revOrient),
           height(height), radius(radius), innerRadius(innerRadius),
-          phiMax(radians(clamp(phiMax, 0, 360)))
-    {}
+          phiMax(radians(clamp(phiMax, 0, 360))) {}
+
+    static shared_ptr<Shape> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                    const ParamSet &params);
 
     Bounds3f objectBound() const {
            return Bounds3f(Point3f(-radius, -radius, height), Point3f( radius,  radius, height));

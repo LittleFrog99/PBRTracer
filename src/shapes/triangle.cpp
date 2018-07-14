@@ -1,5 +1,6 @@
 #include "triangle.h"
 #include "core/stats.h"
+#include "core/paramset.h"
 #include <set>
 
 TriangleMesh::TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices,
@@ -39,6 +40,82 @@ TriangleMesh::create(const Transform *objToWorld, const Transform *worldToObj, b
     for (int i = 0; i < nTriangles; ++i)
         tris.push_back(make_shared<Triangle>(objToWorld, worldToObj, revOrient, mesh, i));
     return tris;
+}
+
+vector<shared_ptr<Shape>>
+TriangleMesh::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                     const ParamSet &params, TriangleMesh::FloatTextureMap *floatTextures)
+{
+    int nvi, npi, nuvi, nsi, nni;
+    const int *vi = params.findInt("indices", &nvi);
+    const Point3f *P = params.findPoint3f("P", &npi);
+    const Point2f *uvs = params.findPoint2f("uv", &nuvi);
+    if (!uvs) uvs = params.findPoint2f("st", &nuvi);
+    vector<Point2f> tempUVs;
+    if (!uvs) {
+        const Float *fuv = params.findFloat("uv", &nuvi);
+        if (!fuv) fuv = params.findFloat("st", &nuvi);
+        if (fuv) {
+            nuvi /= 2;
+            tempUVs.reserve(nuvi);
+            for (int i = 0; i < nuvi; ++i)
+                tempUVs.push_back(Point2f(fuv[2 * i], fuv[2 * i + 1]));
+            uvs = &tempUVs[0];
+        }
+    }
+    if (uvs) {
+        if (nuvi < npi) {
+            ERROR("Not enough of \"uv\"s for triangle mesh.  Expected %d, "
+                  "found %d.  Discarding.", npi, nuvi);
+            uvs = nullptr;
+        } else if (nuvi > npi)
+            WARNING("More \"uv\"s provided than will be used for triangle "
+                    "mesh.  (%d expcted, %d found)", npi, nuvi);
+    }
+    if (!vi) {
+        ERROR("Vertex indices \"indices\" not provided with triangle mesh shape");
+        return vector<shared_ptr<Shape>>();
+    }
+    if (!P) {
+        ERROR("Vertex positions \"P\" not provided with triangle mesh shape");
+        return vector<shared_ptr<Shape>>();
+    }
+    const Vector3f *S = params.findVector3f("S", &nsi);
+    if (S && nsi != npi) {
+        ERROR("Number of \"S\"s for triangle mesh must match \"P\"s");
+        S = nullptr;
+    }
+    const Normal3f *N = params.findNormal3f("N", &nni);
+    if (N && nni != npi) {
+        ERROR("Number of \"N\"s for triangle mesh must match \"P\"s");
+        N = nullptr;
+    }
+    for (int i = 0; i < nvi; ++i)
+        if (vi[i] >= npi) {
+            ERROR("trianglemesh has out of-bounds vertex index %d (%d \"P\" "
+                  "values were given", vi[i], npi);
+            return vector<shared_ptr<Shape>>();
+        }
+
+    int nfi;
+    const int *faceIndices = params.findInt("faceIndices", &nfi);
+    if (faceIndices && nfi != nvi / 3) {
+        ERROR("Number of face indices, %d, doesn't match number of faces, %d", nfi, nvi / 3);
+        faceIndices = nullptr;
+    }
+
+    shared_ptr<Texture<Float>> alphaTex;
+    string alphaTexName = params.findTexture("alpha");
+    if (alphaTexName != "") {
+        if (floatTextures->find(alphaTexName) != floatTextures->end())
+            alphaTex = (*floatTextures)[alphaTexName];
+        else
+            ERROR("Couldn't find float texture \"%s\" for \"alpha\" parameter",
+                  alphaTexName.c_str());
+    } else if (params.findOneFloat("alpha", 1.f) == 0.f)
+        alphaTex.reset(new ConstantTexture<Float>(0.f));
+
+    return create(o2w, w2o, reverseOrientation, nvi / 3, vi, npi, P, S, N, uvs, alphaTex);
 }
 
 Bounds3f Triangle::objectBound() const {

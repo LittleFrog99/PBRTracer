@@ -28,6 +28,7 @@ class RGBSpectrum;
 class SampledSpectrum;
 typedef RGBSpectrum Spectrum;
 // typedef SampledSpectrum Spectrum;
+class ParamSet;
 
 using namespace std;
 

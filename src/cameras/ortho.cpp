@@ -1,5 +1,5 @@
 #include "ortho.h"
-#include "core/sampler.h"
+#include "core/sampling.h"
 
 Float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) const {
     auto pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
@@ -8,7 +8,7 @@ Float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) cons
 
     // Modify ray for depth of field
     if (lensRadius > 0) {
-        auto pLens = lensRadius * Sampler::concentricSampleDisk(sample.pLens);
+        auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
         Float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
@@ -28,7 +28,7 @@ Float OrthographicCamera::generateRayDifferential(const CameraSample &sample, Ra
     *ray = RayDifferential(pCam, Vector3f(0, 0, 1));
 
     if (lensRadius > 0) {
-        auto pLens = lensRadius * Sampler::concentricSampleDisk(sample.pLens);
+        auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
         Float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
@@ -36,7 +36,7 @@ Float OrthographicCamera::generateRayDifferential(const CameraSample &sample, Ra
     }
 
     if (lensRadius > 0) { // accounting for lens
-        Point2f pLens = lensRadius * Sampler::concentricSampleDisk(sample.pLens);
+        Point2f pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
         Float ft = focalDistance / ray->d.z;
 
         Point3f pFocus = pCam + dxCam + (ft * Vector3f(0, 0, 1));

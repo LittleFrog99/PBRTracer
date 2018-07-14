@@ -1,5 +1,6 @@
 #include "disk.h"
 #include "core/stats.h"
+#include "core/paramset.h"
 #include "efloat.h"
 
 bool Disk::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect,
@@ -67,4 +68,14 @@ bool Disk::intersectP(const Ray &worldRay, bool testAlphaTexture) const  {
     if (phi > phiMax) return false;
 
     return true;
+}
+
+shared_ptr<Shape> Disk::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                               const ParamSet &params)
+{
+    Float height = params.findOneFloat("height", 0.);
+    Float radius = params.findOneFloat("radius", 1);
+    Float inner_radius = params.findOneFloat("innerradius", 0);
+    Float phimax = params.findOneFloat("phimax", 360);
+    return std::make_shared<Disk>(o2w, w2o, reverseOrientation, height, radius, inner_radius, phimax);
 }

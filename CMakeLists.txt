@@ -13,7 +13,7 @@ SET(SOURCES_CORE
     src/core/integrator.cpp src/core/interaction.cpp src/core/spectrum.cpp
     src/core/transform.cpp src/core/parser.cpp src/core/shape.cpp
     src/core/primitive.cpp src/core/parallel.cpp src/core/stats.cpp
-    src/core/camera.cpp src/core/api.cpp src/core/sampler.cpp)
+    src/core/camera.cpp src/core/api.cpp src/core/sampling.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp

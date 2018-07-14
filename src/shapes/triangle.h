@@ -5,6 +5,7 @@
 #include "log.h"
 
 struct TriangleMesh {
+    typedef map<string, shared_ptr<Texture<Float>>> FloatTextureMap;
     TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices, int nVertices,
                  const Point3f *P, const Vector3f *S, const Normal3f *N, const Point2f *UV,
                  const shared_ptr<Texture<Float>> &alphaMask);
@@ -13,6 +14,8 @@ struct TriangleMesh {
                                             bool revOrient, int nTriangles, const int *vertexIndices, int nVertices,
                                             const Point3f *p, const Vector3f *s, const Normal3f *n, const Point2f *uv,
                                             const shared_ptr<Texture<Float>> &alphaMask);
+    static vector<shared_ptr<Shape>> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                            const ParamSet &params, FloatTextureMap *floatTextures);
 
     const int nTriangles, nVertices;
     vector<int> vertexIndices;

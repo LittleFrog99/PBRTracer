@@ -1,5 +1,7 @@
 #include "bvh.h"
 #include "core/parallel.h"
+#include "core/paramset.h"
+#include "log.h"
 
 struct BVH::PrimitiveInfo {
     PrimitiveInfo() {}
@@ -541,4 +543,26 @@ Bounds3f BVH::worldBound() const {
 
 BVH::~BVH() {
     Memory::freeAligned(nodes);
+}
+
+shared_ptr<BVH> BVH::create(vector<shared_ptr<Primitive>> prims, const ParamSet &ps)
+{
+    std::string splitMethodName = ps.findOneString("splitmethod", "sah");
+    SplitMethod splitMethod;
+    if (splitMethodName == "sah")
+        splitMethod = SplitMethod::SAH;
+    else if (splitMethodName == "hlbvh")
+        splitMethod = SplitMethod::HLBVH;
+    else if (splitMethodName == "middle")
+        splitMethod = SplitMethod::Middle;
+    else if (splitMethodName == "equal")
+        splitMethod = SplitMethod::EqualCounts;
+    else {
+        WARNING("BVH split method \"%s\" unknown.  Using \"sah\".",
+                splitMethodName.c_str());
+        splitMethod = SplitMethod::SAH;
+    }
+
+    int maxPrimsInNode = ps.findOneInt("maxnodeprims", 4);
+    return make_shared<BVH>(move(prims), maxPrimsInNode, splitMethod);
 }

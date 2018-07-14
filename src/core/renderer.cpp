@@ -1,19 +1,63 @@
 #include "api.h"
-#include "renderer.h"
-#include "paramset.h"
+#include "core/renderer.h"
+#include "core/paramset.h"
 
-Options Renderer::options;
-APIState Renderer::currentApiState = APIState::Uninitialized;
-uint32_t Renderer::activeTransformBits = TransformSet::ALL_TRANSFORM_BITS;
-TransformSet Renderer::curTransform;
-map<string, TransformSet> Renderer::namedCoordinateSystems;
-unique_ptr<RenderOptions> Renderer::renderOptions;
-GraphicsState Renderer::graphicsState;
-vector<GraphicsState> Renderer::pushedGraphicsStates;
-vector<TransformSet> Renderer::pushedTransforms;
-vector<uint32_t> Renderer::pushedActiveTransformBits;
-TransformCache Renderer::transformCache;
-int Renderer::catIndentCount = 0;
+#include "shapes/triangle.h"
+#include "shapes/sphere.h"
+#include "shapes/cylinder.h"
+#include "shapes/disk.h"
+#include "shapes/curve.h"
+#include "accelerators/bvh.h"
+#include "accelerators/kdtree.h"
+
+namespace Renderer {
+
+vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object2world,
+                                     const Transform *world2object, bool reverseOrientation,
+                                     const ParamSet &paramSet)
+{
+    vector<shared_ptr<Shape>> shapes;
+    shared_ptr<Shape> s;
+
+    if (name == "sphere")
+        s = Sphere::create(object2world, world2object, reverseOrientation,paramSet);
+    // Create remaining single _Shape_ types
+    else if (name == "cylinder")
+        s = Cylinder::create(object2world, world2object, reverseOrientation,
+                             paramSet);
+    else if (name == "disk")
+        s = Disk::create(object2world, world2object, reverseOrientation, paramSet);
+    if (s != nullptr) shapes.push_back(s);
+
+    // Create multiple-_Shape_ types
+    else if (name == "curve")
+        shapes = Curve::create(object2world, world2object,
+                               reverseOrientation, paramSet);
+    else if (name == "trianglemesh") {
+        shapes = TriangleMesh::create(object2world, world2object, reverseOrientation, paramSet,
+                                      &*graphicsState.floatTextures);
+        // TODO: Write to PLY files
+    }
+    else
+        WARNING("Shape \"%s\" unknown.", name.c_str());
+    return shapes;
+}
+
+shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Primitive>> prims,
+                                      const ParamSet &paramSet)
+{
+    shared_ptr<Primitive> accel;
+    if (name == "bvh")
+        accel = BVH::create(move(prims), paramSet);
+    else if (name == "kdtree")
+        accel = KDTree::create(move(prims), paramSet);
+    else
+        WARNING("Accelerator \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return accel;
+}
+
+};
 
 STAT_MEMORY_COUNTER("Memory/TransformCache", transformCacheBytes);
 STAT_PERCENT("Scene/TransformCache hits", nTransformCacheHits, nTransformCacheLookups);

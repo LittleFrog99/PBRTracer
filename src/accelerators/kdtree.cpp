@@ -1,4 +1,5 @@
 #include "kdtree.h"
+#include "core/paramset.h"
 
 struct KDTree::Node {
     void initLeaf(int *primNums, int np, vector<int> *primIndices) {
@@ -327,4 +328,14 @@ bool KDTree::intersectP(const Ray &ray) const {
         }
     }
     return false;
+}
+
+shared_ptr<KDTree> KDTree::create(vector<shared_ptr<Primitive>> prims, const ParamSet &ps)
+{
+    int isectCost = ps.findOneInt("intersectcost", 80);
+    int travCost = ps.findOneInt("traversalcost", 1);
+    Float emptyBonus = ps.findOneFloat("emptybonus", 0.5f);
+    int maxPrims = ps.findOneInt("maxprims", 1);
+    int maxDepth = ps.findOneInt("maxdepth", -1);
+    return make_shared<KDTree>((prims), isectCost, travCost, emptyBonus, maxPrims, maxDepth);
 }

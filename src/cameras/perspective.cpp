@@ -1,5 +1,5 @@
 #include "perspective.h"
-#include "core/sampler.h"
+#include "core/sampling.h"
 
 PerspectiveCamera::PerspectiveCamera(const AnimatedTransform &camToWorld, const Bounds2f &screenWindow,
                                      Float shutterOpen, Float shutterClose, Float lensRadius,
@@ -18,7 +18,7 @@ Float PerspectiveCamera::generateRay(const CameraSample &sample, Ray *ray) const
 
     // Modify ray for depth of field
     if (lensRadius > 0) {
-        auto pLens = lensRadius * Sampler::concentricSampleDisk(sample.pLens);
+        auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
         Float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
@@ -38,7 +38,7 @@ Float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, Ray
 
     // Modify ray for depth of field
     if (lensRadius > 0) {
-        auto pLens = lensRadius * Sampler::concentricSampleDisk(sample.pLens);
+        auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
         Float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
@@ -47,7 +47,7 @@ Float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, Ray
 
     // Compute offset rays for ray differentials
     if (lensRadius > 0) { // accounting for lens
-        Point2f pLens = lensRadius * Sampler::concentricSampleDisk(sample.pLens);
+        Point2f pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
 
         Vector3f dx = normalize(Vector3f(pCam + dxCam));
         Float ft = focalDistance / dx.z;

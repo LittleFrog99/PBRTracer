@@ -31,8 +31,14 @@ class Curve : public Shape { // Bezier basis curve
 public:
     Curve(const Transform *objToWorld, const Transform *worldToObj, bool invOrient,
           const shared_ptr<CurveCommon> &common, Float uMin, Float uMax)
-        : Shape(objToWorld, worldToObj, invOrient), common(common), uMin(uMin), uMax(uMax)
-    {}
+        : Shape(objToWorld, worldToObj, invOrient), common(common), uMin(uMin), uMax(uMax) {}
+
+    static vector<shared_ptr<Shape>> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                            const Point3f *c, Float w0, Float w1, CurveType type,
+                                            const Normal3f *norm, int splitDepth);
+    static vector<shared_ptr<Shape>> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                            const ParamSet &params);
+
 
     Bounds3f objectBound() const;
     bool intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect, bool testAlphaTexture) const;
