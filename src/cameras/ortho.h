@@ -15,6 +15,9 @@ public:
         dyCam = rasterToCamera(Vector3f(0, 1, 0));
     }
 
+    static OrthographicCamera * create(const ParamSet &params, const AnimatedTransform &cam2world,
+                                       Film *film, const Medium *medium);
+
     Float generateRay(const CameraSample &sample, Ray *ray) const;
     Float generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const;
 

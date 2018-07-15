@@ -111,3 +111,7 @@ Point2f GlobalSampler::get2D() {
     dimension += 2;
     return p;
 }
+
+namespace Sampling {
+
+};

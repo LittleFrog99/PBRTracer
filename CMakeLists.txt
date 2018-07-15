@@ -32,9 +32,12 @@ SET(SOURCES_INTEGRATORS
 SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)
 
+SET(SOURCES_SAMPLERS
+    src/samplers/stratified.cpp)
+
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}
-    ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS})
+    ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS})
 
 SET(GTEST_SOURCES
     src/tests/gtest/gtest_main.cc src/tests/gtest/gtest-all.cc)

@@ -90,12 +90,12 @@ void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> valu
     CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
     unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
-    unique_ptr<Float[]> v(new Float[SpectrumBase::nCIESamples]);
+    unique_ptr<Float[]> v(new Float[SpectrumUtil::nCIESamples]);
     for (int i = 0; i < nValues; ++i) {
-        SpectrumBase::blackbodyNormalized(SpectrumBase::CIE_lambda, SpectrumBase::nCIESamples,
+        SpectrumUtil::blackbodyNormalized(SpectrumUtil::CIE_lambda, SpectrumUtil::nCIESamples,
                                           values[2 * i], v.get());
         s[i] = values[2 * i + 1] *
-               Spectrum::fromSampled(SpectrumBase::CIE_lambda, v.get(), SpectrumBase::nCIESamples);
+               Spectrum::fromSampled(SpectrumUtil::CIE_lambda, v.get(), SpectrumUtil::nCIESamples);
     }
     shared_ptr<ParamSetItem<Spectrum>> psi(
         new ParamSetItem<Spectrum>(name, move(s), nValues));

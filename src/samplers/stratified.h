@@ -1,11 +1,23 @@
 #ifndef STRATIFIED_H
 #define STRATIFIED_H
 
-#include "core/sampler.h"
+#include "core/sampling.h"
 
-class StratifiedSampler : public Sampler {
+class StratifiedSampler : public PixelSampler {
 public:
-    StratifiedSampler();
+    StratifiedSampler(int xPixelSamples, int yPixelSamples, bool jitterSamples, int nSampledDimensions)
+        : PixelSampler(xPixelSamples * yPixelSamples, nSampledDimensions),
+          xPixelSamples(xPixelSamples), yPixelSamples(yPixelSamples), jitterSamples(jitterSamples) {}
+
+    void startPixel(const Point2i &p);
+
+private:
+    static void sample1D(Float *samples, int nsamples, Random &rng, bool jitter = true);
+    static void sample2D(Point2f *samples, int nx, int ny, Random &rng, bool jitter = true);
+    static void latinHypercube(Float *samples, int nSamples, int nDim, Random &rng);
+
+    const int xPixelSamples, yPixelSamples;
+    const bool jitterSamples;
 };
 
 #endif // STRATIFIED_H

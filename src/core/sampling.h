@@ -98,9 +98,6 @@ private:
 
 namespace Sampling {
 
-void stratifiedSample1D(Float *samples, int nsamples, Random &rng, bool jitter = true);
-void stratifiedSample2D(Point2f *samples, int nx, int ny, Random &rng, bool jitter = true);
-void latinHypercube(Float *samples, int nSamples, int nDim, Random &rng);
 Point2f rejectionSampleDisk(Random &rng);
 Vector3f uniformSampleHemisphere(const Point2f &u);
 Float uniformHemispherePdf();
@@ -119,7 +116,7 @@ inline void shuffle(T *samp, int count, int nDimensions, Random &rng) {
     for (int i = 0; i < count; ++i) {
         unsigned other = i + rng.uniformUInt32(count - i);
         for (int j = 0; j < nDimensions; ++j)
-            swap(samp[nDimensions * i + j], samp[nDimensions * other + j]);
+            swap(samp[nDimensions * i + j], samp[nDimensions * other + j]); // move entire blocks
     }
 }
 

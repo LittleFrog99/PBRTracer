@@ -6,8 +6,11 @@
 class EnvironmentCamera : public Camera {
 public:
     EnvironmentCamera(const AnimatedTransform &camToWorld, Float shutterOpen, Float shutterClose,
-                      Film *film, Medium *medium)
+                      Film *film, const Medium *medium)
         : Camera(camToWorld, shutterOpen, shutterClose, film, medium) {}
+
+    static EnvironmentCamera * create(const ParamSet &params, const AnimatedTransform &cam2world,
+                                       Film *film, const Medium *medium);
 
     Float generateRay(const CameraSample &sample, Ray *ray) const;
 };

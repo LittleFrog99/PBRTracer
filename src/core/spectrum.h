@@ -8,59 +8,43 @@ enum class SpectrumType {
     Illuminant
 };
 
-class SpectrumBase {
-public:
-    static constexpr int sampledLambdaStart = 400;
-    static constexpr int sampledLambdaEnd = 700;
-    static constexpr int nSpectralSamples = 60;
+namespace SpectrumUtil {
 
-    static constexpr int nCIESamples = 471;
-    static const Float CIE_lambda[nCIESamples];
-    static const Float CIE_X[nCIESamples];
-    static const Float CIE_Y[nCIESamples];
-    static const Float CIE_Z[nCIESamples];
-    static constexpr Float CIE_Y_integral = 106.856895;
+static constexpr int sampledLambdaStart = 400;
+static constexpr int sampledLambdaEnd = 700;
+static constexpr int nSpectralSamples = 60;
 
-    static constexpr int nRGB2SpectSamples = 32;
-    static const Float RGB2SpectLambda[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectWhite[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectCyan[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectMagenta[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectYellow[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectRed[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectGreen[nRGB2SpectSamples];
-    static const Float RGBRefl2SpectBlue[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectWhite[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectCyan[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectMagenta[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectYellow[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectRed[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectGreen[nRGB2SpectSamples];
-    static const Float RGBIllum2SpectBlue[nRGB2SpectSamples];
+static constexpr int nCIESamples = 471;
+extern const Float CIE_lambda[nCIESamples];
+extern const Float CIE_X[nCIESamples];
+extern const Float CIE_Y[nCIESamples];
+extern const Float CIE_Z[nCIESamples];
+static constexpr Float CIE_Y_integral = 106.856895f;
 
-    static bool samplesAreSorted(const Float *lambda, const Float *vals, int n);
-    static void sortSamples(Float *lambda, Float *vals, int n);
-    static Float interpolateSamples(const Float *lambda, const Float *vals, int n, Float l);
-    static Float averageSamples(const Float *lambda, const Float *v, int n, Float lambda0, Float lambda1);
+bool samplesAreSorted(const Float *lambda, const Float *vals, int n);
+void sortSamples(Float *lambda, Float *vals, int n);
+Float interpolateSamples(const Float *lambda, const Float *vals, int n, Float l);
+Float averageSamples(const Float *lambda, const Float *v, int n, Float lambda0, Float lambda1);
 
-    static void blackbody(const Float *lambda, int n, Float T, Float *Le);
-    static void blackbodyNormalized(const Float *lambda, int n, Float T, Float *Le);
+void blackbody(const Float *lambda, int n, Float T, Float *Le);
+void blackbodyNormalized(const Float *lambda, int n, Float T, Float *Le);
 
-    static void XYZToRGB(const Float xyz[3], Float rgb[3]) {
-        rgb[0] = 3.240479f * xyz[0] - 1.537150f * xyz[1] - 0.498535f * xyz[2];
-        rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
-        rgb[2] = 0.055648f * xyz[0] - 0.204043f * xyz[1] + 1.057311f * xyz[2];
-    }
+inline void XYZToRGB(const Float xyz[3], Float rgb[3]) {
+    rgb[0] = 3.240479f * xyz[0] - 1.537150f * xyz[1] - 0.498535f * xyz[2];
+    rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
+    rgb[2] = 0.055648f * xyz[0] - 0.204043f * xyz[1] + 1.057311f * xyz[2];
+}
 
-    static void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
-        xyz[0] = 0.412453f * rgb[0] + 0.357580f * rgb[1] + 0.180423f * rgb[2];
-        xyz[1] = 0.212671f * rgb[0] + 0.715160f * rgb[1] + 0.072169f * rgb[2];
-        xyz[2] = 0.019334f * rgb[0] + 0.119193f * rgb[1] + 0.950227f * rgb[2];
-    }
+inline void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
+    xyz[0] = 0.412453f * rgb[0] + 0.357580f * rgb[1] + 0.180423f * rgb[2];
+    xyz[1] = 0.212671f * rgb[0] + 0.715160f * rgb[1] + 0.072169f * rgb[2];
+    xyz[2] = 0.019334f * rgb[0] + 0.119193f * rgb[1] + 0.950227f * rgb[2];
+}
+
 };
 
 template <int nSpectrumSamples>
-class CoefficientSpectrum : public SpectrumBase {
+class CoefficientSpectrum {
 public:
     CoefficientSpectrum(Float v = 0.f) {
         for (int i = 0; i < nSpectrumSamples; ++i) channels[i] = v;
@@ -245,7 +229,9 @@ protected:
     Float channels[nSpectrumSamples];
 };
 
-class SampledSpectrum : public CoefficientSpectrum<SpectrumBase::nSpectralSamples> {
+using namespace SpectrumUtil;
+
+class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 public:
     SampledSpectrum(Float v = 0.0f) : CoefficientSpectrum(v) {}
     SampledSpectrum(const CoefficientSpectrum<nSpectralSamples> &v)
@@ -295,6 +281,23 @@ private:
     rgbRefl2SpectYellow, rgbRefl2SpectRed, rgbRefl2SpectGreen, rgbRefl2SpectBlue;
     static SampledSpectrum rgbIllum2SpectWhite, rgbIllum2SpectCyan, rgbIllum2SpectMagenta,
     rgbIllum2SpectYellow, rgbIllum2SpectRed, rgbIllum2SpectGreen, rgbIllum2SpectBlue;
+
+    static constexpr int nRGB2SpectSamples = 32;
+    static const Float RGB2SpectLambda[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectWhite[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectCyan[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectMagenta[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectYellow[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectRed[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectGreen[nRGB2SpectSamples];
+    static const Float RGBRefl2SpectBlue[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectWhite[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectCyan[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectMagenta[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectYellow[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectRed[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectGreen[nRGB2SpectSamples];
+    static const Float RGBIllum2SpectBlue[nRGB2SpectSamples];
 };
 
 class RGBSpectrum : public CoefficientSpectrum<3> {

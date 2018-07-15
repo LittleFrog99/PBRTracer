@@ -9,6 +9,9 @@
 #include "shapes/curve.h"
 #include "accelerators/bvh.h"
 #include "accelerators/kdtree.h"
+#include "cameras/environment.h"
+#include "cameras/ortho.h"
+#include "cameras/perspective.h"
 
 namespace Renderer {
 
@@ -55,6 +58,29 @@ shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Prim
         WARNING("Accelerator \"%s\" unknown.", name.c_str());
     paramSet.reportUnused();
     return accel;
+}
+
+Camera * makeCamera(const string &name, const ParamSet &paramSet, const TransformSet &cam2worldSet,
+                    Float transformStart, Float transformEnd, Film *film)
+{
+    Camera *camera = nullptr;
+    MediumInterface mediumInterface = graphicsState.createMediumInterface();
+    static_assert(TransformSet::MAX_TRANSFORMS == 2, "TransformCache assumes only two transforms");
+    Transform *cam2world[2] = {
+        transformCache.lookup(cam2worldSet[0]),
+        transformCache.lookup(cam2worldSet[1])
+    };
+    AnimatedTransform animatedCam2World(cam2world[0], transformStart, cam2world[1], transformEnd);
+    if (name == "perspective")
+        camera = PerspectiveCamera::create(paramSet, animatedCam2World, film, mediumInterface.outside);
+    else if (name == "orthographic")
+        camera = OrthographicCamera::create(paramSet, animatedCam2World, film, mediumInterface.outside);
+    else if (name == "environment")
+        camera = EnvironmentCamera::create(paramSet, animatedCam2World, film, mediumInterface.outside);
+    else
+        WARNING("Camera \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return camera;
 }
 
 };

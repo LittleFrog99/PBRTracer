@@ -10,7 +10,6 @@ inline string to_string(string_view str) {
 }
 }
 
-class ParamSet;
 class MemoryArena;
 class Tokenizer;
 enum class SpectrumType;
