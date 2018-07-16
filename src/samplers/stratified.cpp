@@ -29,6 +29,12 @@ void StratifiedSampler::startPixel(const Point2i &p) {
     PixelSampler::startPixel(p);
 }
 
+unique_ptr<Sampler> StratifiedSampler::clone(int seed) {
+    auto ss = new StratifiedSampler(*this);
+    ss->rng.setSequence(seed);
+    return unique_ptr<Sampler>(ss);
+}
+
 void StratifiedSampler::sample1D(Float *samples, int nSamples, Random &rng, bool jitter) {
     Float invNSamples = 1.0 / nSamples;
     for (int i = 0; i < nSamples; i++) {

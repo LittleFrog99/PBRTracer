@@ -108,7 +108,7 @@ struct RenderOptions {
     ParamSet filterParams;
     string filmName = "image";
     ParamSet filmParams;
-    string samplerName = "stratified";
+    string samplerName = "halton";
     ParamSet samplerParams;
     string acceleratorName = "bvh";
     ParamSet acceleratorParams;

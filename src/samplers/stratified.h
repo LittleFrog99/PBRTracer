@@ -1,5 +1,5 @@
-#ifndef STRATIFIED_H
-#define STRATIFIED_H
+#ifndef SAMPLER_STRATIFIED
+#define SAMPLER_STRATIFIED
 
 #include "core/sampling.h"
 
@@ -10,6 +10,7 @@ public:
           xPixelSamples(xPixelSamples), yPixelSamples(yPixelSamples), jitterSamples(jitterSamples) {}
 
     void startPixel(const Point2i &p);
+    unique_ptr<Sampler> clone(int seed);
 
 private:
     static void sample1D(Float *samples, int nsamples, Random &rng, bool jitter = true);
@@ -20,4 +21,4 @@ private:
     const bool jitterSamples;
 };
 
-#endif // STRATIFIED_H
+#endif // SAMPLER_STRATIFIED

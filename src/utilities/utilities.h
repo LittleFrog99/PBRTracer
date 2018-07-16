@@ -23,7 +23,7 @@ typedef double Float;
 #define SQ(x) (x) * (x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
 
-/* Type Definitions */
+/* Type Declarations */
 class RGBSpectrum;
 class SampledSpectrum;
 typedef RGBSpectrum Spectrum;
