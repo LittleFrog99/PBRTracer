@@ -2,13 +2,13 @@
 #include "log.h"
 #include <libgen.h>
 
-string File::searchDirectory;
+namespace File {
 
-bool File::isAbsolutePath(const string &filename) {
+bool isAbsolutePath(const string &filename) {
     return (filename.size() > 0) && filename[0] == '/';
 }
 
-string File::absolutePath(const string &filename) {
+string absolutePath(const string &filename) {
     char full[PATH_MAX];
     if (realpath(filename.c_str(), full))
         return string(full);
@@ -16,7 +16,7 @@ string File::absolutePath(const string &filename) {
         return filename;
 }
 
-string File::resolveFilename(const string &filename) {
+string resolveFilename(const string &filename) {
     if (searchDirectory.empty() || filename.empty())
         return filename;
     else if (File::isAbsolutePath(filename))
@@ -27,14 +27,14 @@ string File::resolveFilename(const string &filename) {
         return searchDirectory + "/" + filename;
 }
 
-string File::directoryContaining(const string &filename) {
+string directoryContaining(const string &filename) {
     char *t = strdup(filename.c_str());
     string result = dirname(t);
     free(t);
     return result;
 }
 
-bool File::readFloatFile(const char *filename, std::vector<Float> *values) {
+bool readFloatFile(const char *filename, std::vector<Float> *values) {
     FILE *f = fopen(filename, "r");
     if (!f) {
         ERROR("Unable to open file \"%s\"", filename);
@@ -74,3 +74,5 @@ bool File::readFloatFile(const char *filename, std::vector<Float> *values) {
     fclose(f);
     return true;
 }
+
+};

@@ -10,24 +10,23 @@
 
 #define ARENA_ALLOC(arena, Type) new ((arena).alloc(sizeof(Type))) Type
 
-class Memory {
-public:
-    template <typename T>
-    static T * allocAligned(size_t count) {
-        return (T *)allocAligned(count * sizeof(T));
-    }
+namespace Memory {
 
-    static void freeAligned(void *ptr) {
-        if (!ptr) return;
-        free(ptr);
-    }
+inline void * allocAligned(size_t size) {
+    void *ptr;
+    if (posix_memalign(&ptr, L1_CACHE_LINE_SIZE, size) != 0) ptr = nullptr;
+    return ptr;
+}
 
-private:
-    static void * allocAligned(size_t size) {
-        void *ptr;
-        if (posix_memalign(&ptr, L1_CACHE_LINE_SIZE, size) != 0) ptr = nullptr;
-        return ptr;
-    }
+template <typename T>
+inline T * allocAligned(size_t count) {
+    return (T *)allocAligned(count * sizeof(T));
+}
+
+inline void freeAligned(void *ptr) {
+    if (!ptr) return;
+    free(ptr);
+}
 
 };
 
