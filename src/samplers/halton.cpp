@@ -3,26 +3,74 @@
 HaltonSampler::HaltonSampler(int samplePixels, const Bounds2i &sampleBounds)
     : GlobalSampler(samplePixels) {
     // Generate data of prime numbers, if not exist
-    if (INV_PRIMES[0] == 0) {
+    if (invPrimes[0] == 0) {
         int sum = 0;
         for (int i = 0; i < PRIME_TABLE_SIZE; i++) {
-            PRIME_SUMS[i] = sum;
-            INV_PRIMES[i] = 1.0f / Float(PRIMES[i]);
+            primeSums[i] = sum;
+            invPrimes[i] = 1.0f / Float(PRIMES[i]);
             sum += PRIMES[i];
             {
                 int c = PRIMES[i];
                 int k = log2(c) + 64;
                 double f = double(pow(2, k)) / c;
                 uint64_t m = ceil(f);
-                DIV_BITSHIFTS[i] = k;
-                DIV_MAGIC_CONSTS[i] = m;
+                divBitShifts[i] = k;
+                divMagicConsts[i] = m;
             }
         }
     }
+
     // Generate random digit permutations for halton sampler
+    if (radicalInvPerms.size() == 0) {
+        Random rng;
+        radicalInvPerms = computeRadicalInversePermutations(rng);
+    }
+
     // Find radical inverse base scales and exponents that cover sampling area
+    Vector2i res = sampleBounds.pMax - sampleBounds.pMin;
+    for (int i = 0; i < 2; i++) {
+        int base = (i == 0) ? 2 : 3;
+        int scale = 1, exp = 0;
+        while (scale < min(res[i], MAX_RESOLUTION)) {
+            scale *= base;
+            ++exp;
+        }
+        baseScales[i] = scale;
+        baseExponents[i] = exp;
+    }
+
     // Compute stride in samples for visiting each pixel area
+    sampleStride = baseScales[0] * baseScales[1];
+
     // Compute multiplicative inverses for _baseScales_
+    multInv[0] = multiplicativeInverse(baseScales[1], baseScales[0]);
+    multInv[1] = multiplicativeInverse(baseScales[0], baseScales[1]);
+}
+
+int64_t HaltonSampler::getIndexForSample(int64_t sampleNum) const {
+    if (curPixel != pixelForOffset) {
+        // Compute Halton sample offset for _currentPixel_
+        offsetForCurrentPixel = 0;
+        if (sampleStride > 1) {
+            Point2i pm(mod(curPixel[0], MAX_RESOLUTION), mod(curPixel[1], MAX_RESOLUTION));
+            for (int i = 0; i < 2; ++i) {
+                uint64_t dimOffset = inverseRadicalInverse(pm[i], baseExponents[i], i);
+                offsetForCurrentPixel += dimOffset * (sampleStride / baseScales[i]) * multInv[i];
+            }
+            offsetForCurrentPixel %= sampleStride;
+        }
+        pixelForOffset = curPixel;
+    }
+    return offsetForCurrentPixel + sampleNum * sampleStride;
+}
+
+Float HaltonSampler::sampleDimension(int64_t index, int dim) const {
+    if (dim == 0) // discard first two dimensions of sample vector
+        return radicalInverse(dim, index >> baseExponents[0]);
+    else if (dim == 1)
+        return radicalInverse(dim, index / baseScales[1]);
+    else
+        return scrambledRadicalInverse(dim, index, permutationForDimension(dim));
 }
 
 Float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
@@ -31,7 +79,7 @@ Float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
     else if (baseIndex > 0 && baseIndex < PRIME_TABLE_SIZE) {
         // Compute specialized radical inverse
         const int base = PRIMES[baseIndex];
-        const Float invBase = INV_PRIMES[baseIndex];
+        const Float invBase = invPrimes[baseIndex];
         uint64_t reversedDigits = 0;
         Float invBaseN = 1;
         while (a) {
@@ -47,9 +95,71 @@ Float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
     return 0;
 }
 
-Float HaltonSampler::INV_PRIMES[PRIME_TABLE_SIZE] = {0.0};
+uint64_t HaltonSampler::inverseRadicalInverse(uint64_t inverse, int nDigits, int baseIndex) {
+    int base = PRIMES[baseIndex];
+    uint64_t index= 0;
+    for (int i = 0; i < nDigits; i++) {
+        uint64_t digit = inverse % base;
+        inverse = integerDivide(inverse, baseIndex);
+        index = index * base + digit;
+    }
+    return index;
+}
 
-int HaltonSampler::PRIME_SUMS[PRIME_TABLE_SIZE] = {0};
+vector<uint16_t> HaltonSampler::computeRadicalInversePermutations(Random &rng) {
+    vector<uint16_t> perms;
+    // Allocate space in perms
+    int permArraySize = primeSums[PRIME_TABLE_SIZE - 1] + PRIMES[PRIME_TABLE_SIZE - 1];
+    perms.resize(permArraySize);
+
+    uint16_t *p = &perms[0];
+    for (int i = 0; i < PRIME_TABLE_SIZE; i++) {
+        // Generate permutation for ith prime base
+        for (int j = 0; j < PRIMES[i]; j++) p[j] = j;
+        Sampling::shuffle(p, PRIMES[i], 1, rng);
+        p += PRIMES[i];
+    }
+    return perms;
+}
+
+Float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm) {
+    if (baseIndex >= 0 && baseIndex < PRIME_TABLE_SIZE) {
+        int base = PRIMES[baseIndex];
+        const Float invBase = invPrimes[baseIndex];
+        uint64_t reversedDigits = 0;
+        Float invBaseN = 0;
+        while (a) {
+            uint64_t next = integerDivide(a, baseIndex);
+            uint64_t digit = a - next * base;
+            reversedDigits = reversedDigits * base + perm[digit];
+            invBaseN *= invBase;
+            a = next;
+        }
+        return min(invBaseN * (reversedDigits + invBase * perm[0] / (1 - invBase)),
+                Random::ONE_MINUS_EPSILON);
+    } else
+        LOG(FATAL) << STRING_PRINTF("Base %d is >= 1024, the limit of scrambledRadicalInverse", baseIndex);
+}
+
+void HaltonSampler::extendedGCD(uint64_t a, uint64_t b, int64_t *x, int64_t *y) {
+    if (b == 0) {
+        *x = 1;
+        *y = 0;
+        return;
+    }
+    int64_t d = a / b, xp, yp;
+    extendedGCD(b, a % b, &xp, &yp);
+    *x = yp;
+    *y = xp - (d * yp);
+}
+
+Float HaltonSampler::invPrimes[PRIME_TABLE_SIZE] = {0.0};
+
+int HaltonSampler::primeSums[PRIME_TABLE_SIZE] = {0};
+
+uint64_t HaltonSampler::divMagicConsts[PRIME_TABLE_SIZE] = {0};
+
+int HaltonSampler::divBitShifts[PRIME_TABLE_SIZE] = {0};
 
 const int HaltonSampler::PRIMES[PRIME_TABLE_SIZE] = {
     2, 3, 5, 7, 11,

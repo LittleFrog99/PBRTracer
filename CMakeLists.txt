@@ -17,7 +17,8 @@ SET(SOURCES_CORE
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
-    src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp)
+    src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
+    src/utilities/imageio.cpp)
 
 SET(SOURCES_SHAPES
     src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp
@@ -33,11 +34,14 @@ SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)
 
 SET(SOURCES_SAMPLERS
-    src/samplers/stratified.cpp)
+    src/samplers/stratified.cpp src/samplers/halton.cpp)
+
+SET(SOURCES_EXTENSIONS
+    src/ext/lodepng.cpp src/ext/targa.cpp)
 
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}
-    ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS})
+    ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS} ${SOURCES_EXTENSIONS})
 
 SET(GTEST_SOURCES
     src/tests/gtest/gtest_main.cc src/tests/gtest/gtest-all.cc)

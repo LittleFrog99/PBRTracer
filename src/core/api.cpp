@@ -89,7 +89,7 @@ void API::transform(Float tr[16]) {
     VERIFY_INITIALIZED("Transform");
     FOR_ACTIVE_TRANSFORMS(
         curTransform[i] = Transform(Matrix4x4(
-                                                  tr[0], tr[4], tr[8], tr[12],
+            tr[0], tr[4], tr[8], tr[12],
             tr[1], tr[5], tr[9], tr[13],
             tr[2],tr[6], tr[10], tr[14],
             tr[3], tr[7], tr[11], tr[15]));)

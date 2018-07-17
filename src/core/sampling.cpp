@@ -114,4 +114,21 @@ Point2f GlobalSampler::get2D() {
 
 namespace Sampling {
 
+Point2f concentricSampleDisk(const Point2f &u) {
+    // Map uniform random numbers to $[-1,1]^2$
+    Point2f uOffset = 2.f * u - Vector2f(1, 1);
+    // Handle degeneracy at the origin
+    if (uOffset.x == 0 && uOffset.y == 0) return Point2f(0, 0);
+    // Apply concentric mapping to point
+    Float theta, r;
+    if (abs(uOffset.x) > abs(uOffset.y)) {
+        r = uOffset.x;
+        theta = PI_OVER_FOUR * (uOffset.y / uOffset.x);
+    } else {
+        r = uOffset.y;
+        theta = PI_OVER_TWO - PI_OVER_FOUR * (uOffset.x / uOffset.y);
+    }
+    return r * Point2f(cos(theta), sin(theta));
+}
+
 };
