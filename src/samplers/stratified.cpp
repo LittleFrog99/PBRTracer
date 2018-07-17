@@ -1,4 +1,5 @@
 #include "stratified.h"
+#include "core/renderer.h"
 
 using namespace Sampling;
 
@@ -69,4 +70,13 @@ void StratifiedSampler::latinHypercube(Float *samples, int nSamples, int nDim, R
             int other = j + rng.uniformUInt32(nSamples - j);
             swap(samples[nDim * j + i], samples[nDim * other + i]); // permute each dimension's samples independently
         }
+}
+
+StratifiedSampler * StratifiedSampler::create(const ParamSet &params) {
+    bool jitter = params.findOneBool("jitter", true);
+    int xsamp = params.findOneInt("xsamples", 4);
+    int ysamp = params.findOneInt("ysamples", 4);
+    int sd = params.findOneInt("dimensions", 4);
+    if (Renderer::options.quickRender) xsamp = ysamp = 1;
+    return new StratifiedSampler(xsamp, ysamp, jitter, sd);
 }

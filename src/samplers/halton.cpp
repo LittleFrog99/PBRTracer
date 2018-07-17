@@ -1,4 +1,5 @@
 #include "halton.h"
+#include "core/renderer.h"
 
 HaltonSampler::HaltonSampler(int samplePixels, const Bounds2i &sampleBounds)
     : GlobalSampler(samplePixels) {
@@ -153,6 +154,13 @@ void HaltonSampler::extendedGCD(uint64_t a, uint64_t b, int64_t *x, int64_t *y) 
     *y = xp - (d * yp);
 }
 
+HaltonSampler * HaltonSampler::create(const ParamSet &params, const Bounds2i &sampleBounds) {
+    int nsamp = params.findOneInt("pixelsamples", 16);
+    if (Renderer::options.quickRender) nsamp = 1;
+    bool sampleAtCenter = params.findOneBool("samplepixelcenter", false);
+    return new HaltonSampler(nsamp, sampleBounds);
+}
+
 Float HaltonSampler::invPrimes[PRIME_TABLE_SIZE] = {0.0};
 
 int HaltonSampler::primeSums[PRIME_TABLE_SIZE] = {0};
@@ -160,6 +168,8 @@ int HaltonSampler::primeSums[PRIME_TABLE_SIZE] = {0};
 uint64_t HaltonSampler::divMagicConsts[PRIME_TABLE_SIZE] = {0};
 
 int HaltonSampler::divBitShifts[PRIME_TABLE_SIZE] = {0};
+
+vector<uint16_t> HaltonSampler::radicalInvPerms;
 
 const int HaltonSampler::PRIMES[PRIME_TABLE_SIZE] = {
     2, 3, 5, 7, 11,

@@ -4,6 +4,8 @@
 
 using namespace Renderer;
 
+namespace API {
+
 // API Macros
 #define VERIFY_INITIALIZED(func)                           \
     if (!(options.cat || options.toPly) &&           \
@@ -53,11 +55,11 @@ using namespace Renderer;
     } while (false) /* swallow trailing semicolon */
 
 // API Methods
-void API::init(const Options &opt) {
+void init(const Options &opt) {
     options = opt;
     // API Initialization
     if (currentApiState != APIState::Uninitialized)
-        ERROR("API::init() has already been called.");
+        ERROR("init() has already been called.");
     currentApiState = APIState::OptionsBlock;
     renderOptions.reset(new RenderOptions);
     graphicsState = GraphicsState();
@@ -68,7 +70,7 @@ void API::init(const Options &opt) {
     Profiler::init();
 }
 
-void API::cleanup() {
+void cleanup() {
     if (currentApiState == APIState::Uninitialized)
         ERROR("pbrtCleanup() called without pbrtInit().");
     else if (currentApiState == APIState::WorldBlock)
@@ -78,14 +80,14 @@ void API::cleanup() {
     Profiler::cleanup();
 }
 
-void API::identity() {
+void identity() {
     VERIFY_INITIALIZED("Identity");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = Transform();)
     if (options.cat || options.toPly)
         printf("%*sIdentity\n", catIndentCount, "");
 }
 
-void API::transform(Float tr[16]) {
+void transform(Float tr[16]) {
     VERIFY_INITIALIZED("Transform");
     FOR_ACTIVE_TRANSFORMS(
         curTransform[i] = Transform(Matrix4x4(
@@ -100,7 +102,7 @@ void API::transform(Float tr[16]) {
     }
 }
 
-void API::concatTransform(Float tr[16]) {
+void concatTransform(Float tr[16]) {
     VERIFY_INITIALIZED("ConcatTransform");
     FOR_ACTIVE_TRANSFORMS(
         curTransform[i] =
@@ -115,7 +117,7 @@ void API::concatTransform(Float tr[16]) {
     }
 }
 
-void API::translate(Float dx, Float dy, Float dz) {
+void translate(Float dx, Float dy, Float dz) {
     VERIFY_INITIALIZED("Translate");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] *
                                             Transform::translate(Vector3f(dx, dy, dz));)
@@ -123,7 +125,7 @@ void API::translate(Float dx, Float dy, Float dz) {
         printf("%*sTranslate %.9g %.9g %.9g\n", catIndentCount, "", dx, dy, dz);
 }
 
-void API::rotate(Float angle, Float dx, Float dy, Float dz) {
+void rotate(Float angle, Float dx, Float dy, Float dz) {
     VERIFY_INITIALIZED("Rotate");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] *
                                                       Transform::rotate(angle, Vector3f(dx, dy, dz));)
@@ -132,7 +134,7 @@ void API::rotate(Float angle, Float dx, Float dy, Float dz) {
                dx, dy, dz);
 }
 
-void API::scale(Float sx, Float sy, Float sz) {
+void scale(Float sx, Float sy, Float sz) {
     VERIFY_INITIALIZED("Scale");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] *
                                                       Transform::scale(sx, sy, sz);)
@@ -140,7 +142,7 @@ void API::scale(Float sx, Float sy, Float sz) {
         printf("%*sScale %.9g %.9g %.9g\n", catIndentCount, "", sx, sy, sz);
 }
 
-void API::lookAt(Float ex, Float ey, Float ez, Float lx, Float ly, Float lz,
+void lookAt(Float ex, Float ey, Float ez, Float lx, Float ly, Float lz,
                 Float ux, Float uy, Float uz) {
     VERIFY_INITIALIZED("LookAt");
     auto lookAt = Transform::lookAt(Point3f(ex, ey, ez), Point3f(lx, ly, lz), Vector3f(ux, uy, uz));
@@ -153,7 +155,7 @@ void API::lookAt(Float ex, Float ey, Float ez, Float lx, Float ly, Float lz,
             catIndentCount + 8, "", ux, uy, uz);
 }
 
-void API::coordinateSystem(const string &name) {
+void coordinateSystem(const string &name) {
     VERIFY_INITIALIZED("CoordinateSystem");
     namedCoordinateSystems[name] = curTransform;
     if (options.cat || options.toPly)
@@ -161,7 +163,7 @@ void API::coordinateSystem(const string &name) {
                name.c_str());
 }
 
-void API::coordSysTransform(const string &name) {
+void coordSysTransform(const string &name) {
     VERIFY_INITIALIZED("CoordSysTransform");
     if (namedCoordinateSystems.find(name) != namedCoordinateSystems.end())
         curTransform = namedCoordinateSystems[name];
@@ -172,25 +174,25 @@ void API::coordSysTransform(const string &name) {
                name.c_str());
 }
 
-void API::activeTransformAll() {
+void activeTransformAll() {
     activeTransformBits = TransformSet::ALL_TRANSFORM_BITS;
     if (options.cat || options.toPly)
         printf("%*sActiveTransform All\n", catIndentCount, "");
 }
 
-void API::activeTransformEndTime() {
+void activeTransformEndTime() {
     activeTransformBits = TransformSet::END_TRANSFORM_BITS;
     if (options.cat || options.toPly)
         printf("%*sActiveTransform EndTime\n", catIndentCount, "");
 }
 
-void API::activeTransformStartTime() {
+void activeTransformStartTime() {
     activeTransformBits = TransformSet::START_TRANSFORM_BITS;
     if (options.cat || options.toPly)
         printf("%*sActiveTransform StartTime\n", catIndentCount, "");
 }
 
-void API::transformTimes(Float start, Float end) {
+void transformTimes(Float start, Float end) {
     VERIFY_OPTIONS("TransformTimes");
     renderOptions->transformStartTime = start;
     renderOptions->transformEndTime = end;
@@ -199,7 +201,7 @@ void API::transformTimes(Float start, Float end) {
                end);
 }
 
-void API::pixelFilter(const string &name, const ParamSet &params) {
+void pixelFilter(const string &name, const ParamSet &params) {
     VERIFY_OPTIONS("PixelFilter");
     renderOptions->filterName = name;
     renderOptions->filterParams = params;
@@ -210,7 +212,7 @@ void API::pixelFilter(const string &name, const ParamSet &params) {
     }
 }
 
-void API::film(const string &type, const ParamSet &params) {
+void film(const string &type, const ParamSet &params) {
     VERIFY_OPTIONS("Film");
     renderOptions->filmParams = params;
     renderOptions->filmName = type;
@@ -221,7 +223,7 @@ void API::film(const string &type, const ParamSet &params) {
     }
 }
 
-void API::sampler(const string &name, const ParamSet &params) {
+void sampler(const string &name, const ParamSet &params) {
     VERIFY_OPTIONS("Sampler");
     renderOptions->samplerName = name;
     renderOptions->samplerParams = params;
@@ -232,7 +234,7 @@ void API::sampler(const string &name, const ParamSet &params) {
     }
 }
 
-void API::accelerator(const string &name, const ParamSet &params) {
+void accelerator(const string &name, const ParamSet &params) {
     VERIFY_OPTIONS("Accelerator");
     renderOptions->acceleratorName = name;
     renderOptions->acceleratorParams = params;
@@ -243,7 +245,7 @@ void API::accelerator(const string &name, const ParamSet &params) {
     }
 }
 
-void API::integrator(const string &name, const ParamSet &params) {
+void integrator(const string &name, const ParamSet &params) {
     VERIFY_OPTIONS("Integrator");
     renderOptions->integratorName = name;
     renderOptions->integratorParams = params;
@@ -254,7 +256,7 @@ void API::integrator(const string &name, const ParamSet &params) {
     }
 }
 
-void API::camera(const string &name, const ParamSet &params) {
+void camera(const string &name, const ParamSet &params) {
     VERIFY_OPTIONS("Camera");
     renderOptions->cameraName = name;
     renderOptions->cameraParams = params;
@@ -267,7 +269,7 @@ void API::camera(const string &name, const ParamSet &params) {
     }
 }
 
-void API::makeNamedMedium(const string &name, const ParamSet &params) {
+void makeNamedMedium(const string &name, const ParamSet &params) {
     VERIFY_INITIALIZED("MakeNamedMedium");
     WARN_IF_ANIMATED_TRANSFORM("MakeNamedMedium");
     string type = params.findOneString("type", "");
@@ -285,7 +287,7 @@ void API::makeNamedMedium(const string &name, const ParamSet &params) {
     }
 }
 
-void API::mediumInterface(const string &insideName, const string &outsideName) {
+void mediumInterface(const string &insideName, const string &outsideName) {
     VERIFY_INITIALIZED("MediumInterface");
     graphicsState.currentInsideMedium = insideName;
     graphicsState.currentOutsideMedium = outsideName;
@@ -295,7 +297,7 @@ void API::mediumInterface(const string &insideName, const string &outsideName) {
                insideName.c_str(), outsideName.c_str());
 }
 
-void API::worldBegin() {
+void worldBegin() {
     VERIFY_OPTIONS("WorldBegin");
     currentApiState = APIState::WorldBlock;
     for (int i = 0; i < TransformSet::MAX_TRANSFORMS; ++i)
@@ -306,7 +308,7 @@ void API::worldBegin() {
         printf("\n\nWorldBegin\n\n");
 }
 
-void API::attributeBegin() {
+void attributeBegin() {
     VERIFY_WORLD("AttributeBegin");
     pushedGraphicsStates.push_back(graphicsState);
     graphicsState.floatTexturesShared = graphicsState.spectrumTexturesShared =
@@ -319,7 +321,7 @@ void API::attributeBegin() {
     }
 }
 
-void API::attributeEnd() {
+void attributeEnd() {
     VERIFY_WORLD("AttributeEnd");
     if (!pushedGraphicsStates.size()) {
         ERROR(
@@ -339,7 +341,7 @@ void API::attributeEnd() {
     }
 }
 
-void API::transformBegin() {
+void transformBegin() {
     VERIFY_WORLD("TransformBegin");
     pushedTransforms.push_back(curTransform);
     pushedActiveTransformBits.push_back(activeTransformBits);
@@ -349,7 +351,7 @@ void API::transformBegin() {
     }
 }
 
-void API::transformEnd() {
+void transformEnd() {
     VERIFY_WORLD("TransformEnd");
     if (!pushedTransforms.size()) {
         ERROR(
@@ -367,7 +369,7 @@ void API::transformEnd() {
     }
 }
 
-void API::texture(const string &name, const string &type,
+void texture(const string &name, const string &type,
                  const string &texname, const ParamSet &params) {
     VERIFY_WORLD("Texture");
     if (options.cat || options.toPly) {
@@ -418,7 +420,7 @@ void API::texture(const string &name, const string &type,
         ERROR("Texture type \"%s\" unknown.", type.c_str());
 }
 
-void API::material(const string &name, const ParamSet &params) {
+void material(const string &name, const ParamSet &params) {
     VERIFY_WORLD("Material");
     ParamSet emptyParams;
     TextureParams mp(params, emptyParams, *graphicsState.floatTextures,
@@ -433,7 +435,7 @@ void API::material(const string &name, const ParamSet &params) {
     }
 }
 
-void API::makeNamedMaterial(const string &name, const ParamSet &params) {
+void makeNamedMaterial(const string &name, const ParamSet &params) {
     VERIFY_WORLD("MakeNamedMaterial");
     // error checking, warning if replace, what to use for transform?
     ParamSet emptyParams;
@@ -464,7 +466,7 @@ void API::makeNamedMaterial(const string &name, const ParamSet &params) {
     }
 }
 
-void API::namedMaterial(const string &name) {
+void namedMaterial(const string &name) {
     VERIFY_WORLD("NamedMaterial");
     if (options.cat || options.toPly) {
         printf("%*sNamedMaterial \"%s\"\n", catIndentCount, "", name.c_str());
@@ -479,7 +481,7 @@ void API::namedMaterial(const string &name) {
     graphicsState.currentMaterial = iter->second;
 }
 
-void API::lightSource(const string &name, const ParamSet &params) {
+void lightSource(const string &name, const ParamSet &params) {
     VERIFY_WORLD("LightSource");
     WARN_IF_ANIMATED_TRANSFORM("LightSource");
     MediumInterface mi = graphicsState.createMediumInterface();
@@ -495,7 +497,7 @@ void API::lightSource(const string &name, const ParamSet &params) {
     }
 }
 
-void API::areaLightSource(const string &name, const ParamSet &params) {
+void areaLightSource(const string &name, const ParamSet &params) {
     VERIFY_WORLD("AreaLightSource");
     graphicsState.areaLight = name;
     graphicsState.areaLightParams = params;
@@ -506,7 +508,7 @@ void API::areaLightSource(const string &name, const ParamSet &params) {
     }
 }
 
-void API::shape(const string &name, const ParamSet &params) {
+void shape(const string &name, const ParamSet &params) {
     VERIFY_WORLD("Shape");
     vector<shared_ptr<Primitive>> prims;
     vector<shared_ptr<AreaLight>> areaLights;
@@ -595,14 +597,14 @@ void API::shape(const string &name, const ParamSet &params) {
     }
 }
 
-void API::reverseOrientation() {
+void reverseOrientation() {
     VERIFY_WORLD("ReverseOrientation");
     graphicsState.reverseOrientation = !graphicsState.reverseOrientation;
     if (options.cat || options.toPly)
         printf("%*sReverseOrientation\n", catIndentCount, "");
 }
 
-void API::objectBegin(const string &name) {
+void objectBegin(const string &name) {
     VERIFY_WORLD("ObjectBegin");
     attributeBegin();
     if (renderOptions->currentInstance)
@@ -615,7 +617,7 @@ void API::objectBegin(const string &name) {
 
 STAT_COUNTER("Scene/Object instances created", nObjectInstancesCreated);
 
-void API::objectEnd() {
+void objectEnd() {
     VERIFY_WORLD("ObjectEnd");
     if (!renderOptions->currentInstance)
         ERROR("ObjectEnd called outside of instance definition");
@@ -628,7 +630,7 @@ void API::objectEnd() {
 
 STAT_COUNTER("Scene/Object instances used", nObjectInstancesUsed);
 
-void API::objectInstance(const string &name) {
+void objectInstance(const string &name) {
     VERIFY_WORLD("ObjectInstance");
     if (options.cat || options.toPly) {
         printf("%*sObjectInstance \"%s\"\n", catIndentCount, "", name.c_str());
@@ -672,7 +674,7 @@ void API::objectInstance(const string &name) {
     renderOptions->primitives.push_back(prim);
 }
 
-void API::worldEnd() {
+void worldEnd() {
     VERIFY_WORLD("WorldEnd");
     // Ensure there are no pushed graphics states
     while (pushedGraphicsStates.size()) {
@@ -727,3 +729,5 @@ void API::worldEnd() {
     namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
                                            namedCoordinateSystems.end());
 }
+
+};

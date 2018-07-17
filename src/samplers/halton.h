@@ -11,6 +11,8 @@ typedef unsigned int uint128_t __attribute__((mode(TI)));
 class HaltonSampler : public GlobalSampler {
 public:
     HaltonSampler(int samplePixels, const Bounds2i &sampleBounds);
+    static HaltonSampler * create(const ParamSet &params, const Bounds2i &sampleBounds);
+
     int64_t getIndexForSample(int64_t sampleNum) const;
     Float sampleDimension(int64_t index, int dim) const;
 
@@ -66,13 +68,13 @@ private:
     mutable int64_t offsetForCurrentPixel;
 
     static constexpr int PRIME_TABLE_SIZE = 1024;
+    static constexpr int MAX_RESOLUTION = 128;
     static const int PRIMES[PRIME_TABLE_SIZE];
     static int primeSums[PRIME_TABLE_SIZE]; // sums of preceeding primes
     static Float invPrimes[PRIME_TABLE_SIZE];
     static uint64_t divMagicConsts[PRIME_TABLE_SIZE];
     static int divBitShifts[PRIME_TABLE_SIZE];
     static vector<uint16_t> radicalInvPerms;
-    static constexpr int MAX_RESOLUTION = 128;
 };
 
 #endif // SAMPLER_HALTON

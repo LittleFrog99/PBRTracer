@@ -12,6 +12,8 @@
 #include "cameras/environment.h"
 #include "cameras/ortho.h"
 #include "cameras/perspective.h"
+#include "samplers/stratified.h"
+#include "samplers/halton.h"
 
 namespace Renderer {
 
@@ -81,6 +83,18 @@ Camera * makeCamera(const string &name, const ParamSet &paramSet, const Transfor
         WARNING("Camera \"%s\" unknown.", name.c_str());
     paramSet.reportUnused();
     return camera;
+}
+
+shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, const Film *film) {
+    Sampler *sampler = nullptr;
+    if (name == "halton")
+        sampler = HaltonSampler::create(paramSet, film->getSampleBounds());
+    else if (name == "stratified")
+        sampler = StratifiedSampler::create(paramSet);
+    else
+        WARNING("Sampler \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return shared_ptr<Sampler>(sampler);
 }
 
 };
@@ -176,3 +190,29 @@ uint64_t TransformCache::hash(const Transform &t) {
     }
     return hash;
 }
+
+Scene * RenderOptions::makeScene() {
+    shared_ptr<Primitive> accelerator =
+            Renderer::makeAccelerator(acceleratorName, move(primitives), acceleratorParams);
+    if (!accelerator) accelerator = make_shared<BVH>(primitives);
+    Scene *scene = new Scene(accelerator, lights);
+    // Erase primitives and lights from _RenderOptions_
+    primitives.clear();
+    lights.clear();
+    return scene;
+}
+
+Camera * RenderOptions::makeCamera() const {
+    unique_ptr<Filter> filter = Renderer::makeFilter(filterName, filterParams);
+    Film *film = Renderer::makeFilm(filmName, filmParams, move(filter));
+    if (!film) {
+        ERROR("Unable to create film.");
+        return nullptr;
+    }
+    Camera *camera = Renderer::makeCamera(cameraName, cameraParams, cameraToWorld,
+                                          Renderer::renderOptions->transformStartTime,
+                                          Renderer::renderOptions->transformEndTime, film);
+    return camera;
+}
+
+

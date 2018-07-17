@@ -9,6 +9,8 @@ public:
         : PixelSampler(xPixelSamples * yPixelSamples, nSampledDimensions),
           xPixelSamples(xPixelSamples), yPixelSamples(yPixelSamples), jitterSamples(jitterSamples) {}
 
+    static StratifiedSampler * create(const ParamSet &params);
+
     void startPixel(const Point2i &p);
     unique_ptr<Sampler> clone(int seed);
 

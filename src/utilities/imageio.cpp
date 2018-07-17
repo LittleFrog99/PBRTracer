@@ -122,8 +122,7 @@ RGBSpectrum *readImageEXR(const string &name, int *width, int *height,
             Float frgb[3] = {pixels[i].r, pixels[i].g, pixels[i].b};
             ret[i] = RGBSpectrum::fromRGB(frgb);
         }
-        LOG(INFO) << STRING_PRINTF("Read EXR image %s (%d x %d)",
-                                  name.c_str(), *width, *height);
+        LOG(INFO) << STRING_PRINTF("Read EXR image %s (%d x %d)", name.c_str(), *width, *height);
         return ret;
     } catch (const exception &e) {
         ERROR("Unable to read image file \"%s\": %s", name.c_str(), e.what());
