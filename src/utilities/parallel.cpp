@@ -1,5 +1,5 @@
-#include "core/parallel.h"
-#include "core/stats.h"
+#include "parallel.h"
+#include "stats.h"
 #include "core/renderer.h"
 
 vector<thread> Parallel::threads;
@@ -125,7 +125,7 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
     unique_lock<mutex> lock(workListMutex);
     while (!shutdownThreads) {
         if (reportWorkerStats) {
-            Statistics::reportThread();
+            Stats::reportThread();
             if (--reporterCount == 0)
                 // Once all worker threads have merged their stats, wake up
                 // the main thread.

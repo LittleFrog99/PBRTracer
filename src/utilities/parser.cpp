@@ -1,10 +1,10 @@
 #include "parser.h"
 #include "file.h"
-#include "core/stats.h"
+#include "stats.h"
 #include "memory.h"
 #include "core/api.h"
 #include "core/renderer.h"
-#include "core/paramset.h"
+#include "paramset.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>

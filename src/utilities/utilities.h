@@ -21,6 +21,7 @@ typedef double Float;
 #endif
 
 #define SQ(x) (x) * (x)
+#define CUB(x) (x) * (x) * (x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
 
 /* Type Declarations */

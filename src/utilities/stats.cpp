@@ -1,4 +1,4 @@
-#include "core/stats.h"
+#include "stats.h"
 #include "stringprint.h"
 #include "core/renderer.h"
 #include <signal.h>
@@ -17,7 +17,7 @@ const char * Profiler::stageNames[] = {
     "SPPM Camera Pass",
     "SPPM Grid Construction",
     "SPPM Photon Pass",
-    "SPPM Photon Statistics Update",
+    "SPPM Photon Stats Update",
     "BDPT Subpath Generation",
     "BDPT Subpath Connections",
     "SpatialLightmap Lookup",
@@ -65,7 +65,7 @@ static_assert(int(Profiler::Stage::NumProfCategories) ==
 vector<function<void(StatsAccumulator &)>> * StatsRegisterer::funcs = nullptr;
 
 void StatsAccumulator::print(FILE *dest) {
-    fprintf(dest, "Statistics:\n");
+    fprintf(dest, "Stats:\n");
     map<string, vector<string>> toPrint;
 
     for (auto &counter : counters) {
@@ -175,13 +175,21 @@ void StatsAccumulator::getCategoryAndTitle(const string &str, string *category, 
     }
 }
 
-StatsAccumulator Statistics::statsAccum;
+namespace Stats {
 
-void Statistics::reportThread() {
+static StatsAccumulator statsAccum;
+
+void print(FILE *dest) { statsAccum.print(dest); }
+
+void clear() { statsAccum.clear(); }
+
+void reportThread() {
     static mutex mut;
     lock_guard<mutex> lock(mut);
     StatsRegisterer::callCallbacks(statsAccum);
 }
+
+};
 
 thread_local uint64_t Profiler::state;
 chrono::system_clock::time_point Profiler::startTime;

@@ -1,6 +1,6 @@
 #include "cylinder.h"
-#include "core/stats.h"
-#include "core/paramset.h"
+#include "stats.h"
+#include "paramset.h"
 #include "efloat.h"
 
 bool Cylinder::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect,

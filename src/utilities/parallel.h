@@ -1,5 +1,5 @@
-#ifndef CORE_PARALLEL
-#define CORE_PARALLEL
+#ifndef UTILITY_PARALLEL
+#define UTILITY_PARALLEL
 
 #include "vector.h"
 #include <thread>
@@ -97,4 +97,4 @@ private:
 
 
 
-#endif // CORE_PARALLEL
+#endif // UTILITY_PARALLEL

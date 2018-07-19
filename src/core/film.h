@@ -4,8 +4,8 @@
 #include "spectrum.h"
 #include "bounds.h"
 #include "filter.h"
-#include "core/stats.h"
-#include "core/parallel.h"
+#include "stats.h"
+#include "parallel.h"
 #include "paramset.h"
 
 struct FilmTilePixel {
@@ -70,7 +70,7 @@ public:
     Film * create(const ParamSet &params, unique_ptr<Filter> filter);
 
     const Point2i fullResolution;
-    const Float diagonal;
+    const Float diagonal; // NDC space, in meters
     unique_ptr<Filter> filter;
     const string filename;
     Bounds2i croppedPixelBounds;
@@ -81,7 +81,7 @@ private:
         Float xyz[3];
         Float filterWeightSum;
         AtomicFloat splatXYZ[3];
-        Float pad;
+        Float pad; // padding to ensure 32 bytes for float or 64 bytes for double
     };
 
     unique_ptr<Pixel[]> pixels;

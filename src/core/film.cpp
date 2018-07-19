@@ -35,3 +35,18 @@ void FilmTile::addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight) {
         }
     }
 }
+
+Film::Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
+           Float diagonal, const string &filename, Float scale, Float maxSampleLuminance)
+    : fullResolution(resolution), diagonal(diagonal * 0.001f), filter(move(filter)),
+      filename(filename), scale(scale), maxSampleLuminance(maxSampleLuminance)
+{
+    // Compute film image bounds
+    croppedPixelBounds = Bounds2i(Point2i(ceil(fullResolution.x * cropWindow.pMin.x),
+                                          ceil(fullResolution.y * cropWindow.pMin.y)),
+                                  Point2i(ceil(fullResolution.x * cropWindow.pMax.x),
+                                          ceil(fullResolution.y * cropWindow.pMax.y)));
+    // Allocate image storage
+    pixels = unique_ptr<Pixel[]>(new Pixel[croppedPixelBounds.area()]);
+    // Procompute filter weight table
+}

@@ -1,6 +1,6 @@
 #include "triangle.h"
-#include "core/stats.h"
-#include "core/paramset.h"
+#include "stats.h"
+#include "paramset.h"
 #include <set>
 
 TriangleMesh::TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices,

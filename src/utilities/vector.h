@@ -356,6 +356,16 @@ inline Vector3<T> cross(const Normal3<T> &v1, const Vector3<T> &v2) {
 }
 
 template <class T>
+inline Vector3<T> vecFunc(const Vector3<T> &v, function<T(T)> func) {
+    return Vector3<T>(func(v.x), func(v.y), func(v.z));
+}
+
+template <class T>
+inline Vector3<T> vecFunc(const Vector3<T> &v1, const Vector3<T> &v2, function<T(T, T)> func) {
+    return Vector3<T>(func(v1.x, v2.x), func(v1.y, v2.y), func(v1.z, v2.z));
+}
+
+template <class T>
 inline Vector3<T> abs(const Vector3<T> &v) {
     return Vector3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
 }

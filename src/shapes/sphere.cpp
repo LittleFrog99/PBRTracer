@@ -1,6 +1,6 @@
 #include "sphere.h"
-#include "core/stats.h"
-#include "core/paramset.h"
+#include "stats.h"
+#include "paramset.h"
 #include "efloat.h"
 
 bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isect,

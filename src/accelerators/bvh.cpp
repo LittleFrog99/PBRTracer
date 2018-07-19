@@ -1,6 +1,6 @@
 #include "bvh.h"
-#include "core/parallel.h"
-#include "core/paramset.h"
+#include "parallel.h"
+#include "paramset.h"
 #include "log.h"
 
 struct BVH::PrimitiveInfo {

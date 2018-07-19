@@ -1,12 +1,10 @@
-#ifndef CORE_PARAMSET
-#define CORE_PARAMSET
-
+#ifndef UTILITY_PARAMSET
+#define UTILITY_PARAMSET
 
 #include "vector.h"
 #include "log.h"
-#include "spectrum.h"
+#include "core/spectrum.h"
 #include "core/texture.h"
-
 
 template <typename T>
 struct ParamSetItem {
@@ -228,8 +226,7 @@ private:
         const vector<shared_ptr<ParamSetItem<T>>> &mtl,
         const vector<shared_ptr<ParamSetItem<T>>> &geom) {
         for (const auto &param : mtl) {
-            if (param->lookedUp)
-                continue;
+            if (param->lookedUp) continue;
 
             // Don't complain about any unused material parameters if their
             // values were provided by a shape parameter.
@@ -242,4 +239,4 @@ private:
     }
 };
 
-#endif // CORE_PARAMSET
+#endif // UTILITY_PARAMSET

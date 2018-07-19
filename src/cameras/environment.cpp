@@ -1,5 +1,5 @@
 #include "environment.h"
-#include "core/paramset.h"
+#include "paramset.h"
 
 Float EnvironmentCamera::generateRay(const CameraSample &sample, Ray *ray) const {
     Float theta = PI * sample.pFilm.y / film->fullResolution.y;

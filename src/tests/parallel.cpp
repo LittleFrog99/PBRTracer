@@ -1,6 +1,6 @@
 #include "tests/gtest/gtest.h"
 #include "utilities.h"
-#include "core/parallel.h"
+#include "parallel.h"
 #include <atomic>
 
 

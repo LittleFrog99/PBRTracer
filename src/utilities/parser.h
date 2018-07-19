@@ -1,5 +1,5 @@
-#ifndef CORE_PARSER
-#define CORE_PARSER
+#ifndef UTILITY_PARSER
+#define UTILITY_PARSER
 
 #include "utilities.h"
 #include <string_view>
@@ -114,4 +114,4 @@ private:
     string sEscaped;
 };
 
-#endif // CORE_PARSER
+#endif // UTILITY_PARSER

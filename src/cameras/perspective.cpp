@@ -1,6 +1,6 @@
 #include "perspective.h"
 #include "core/sampling.h"
-#include "core/paramset.h"
+#include "paramset.h"
 
 PerspectiveCamera::PerspectiveCamera(const AnimatedTransform &camToWorld, const Bounds2f &screenWindow,
                                      Float shutterOpen, Float shutterClose, Float lensRadius,

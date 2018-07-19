@@ -1,5 +1,5 @@
 #include "kdtree.h"
-#include "core/paramset.h"
+#include "paramset.h"
 
 struct KDTree::Node {
     void initLeaf(int *primNums, int np, vector<int> *primIndices) {

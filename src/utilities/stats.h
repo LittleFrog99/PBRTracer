@@ -1,9 +1,19 @@
-#ifndef CORE_STATS
-#define CORE_STATS
+#ifndef UTILITY_STATS
+#define UTILITY_STATS
 
 #include "utilities.h"
 #include <array>
 #include <thread>
+
+namespace Stats {
+
+void print(FILE *dest);
+void clear();
+void reportThread();
+
+};
+
+using namespace Stats;
 
 class StatsAccumulator;
 
@@ -91,16 +101,6 @@ private:
     static void getCategoryAndTitle(const string &str, string *category, string *title);
 };
 
-class Statistics {
-public:
-    static void print(FILE *dest) { statsAccum.print(dest); }
-    static void clear() { statsAccum.clear(); }
-    static void reportThread();
-
-private:
-    static StatsAccumulator statsAccum;
-};
-
 class Profiler {
 public:
     enum class Stage;
@@ -183,22 +183,26 @@ private:
     thread updateThread;
 };
 
-// Statistics Macros
+// Stats Macros
 #define STAT_COUNTER(title, var)                           \
+namespace Stats {                                     \
     static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
         accum.reportCounter(title, var);                   \
         var = 0;                                           \
     }                                                      \
-    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var); \
+};
 
 #define STAT_MEMORY_COUNTER(title, var)                    \
+namespace Stats {                                     \
     static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
         accum.reportMemoryCounter(title, var);             \
         var = 0;                                           \
     }                                                      \
-    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var); \
+};
 
 #define STATS_INT64_T_MIN numeric_limits<int64_t>::max()
 #define STATS_INT64_T_MAX numeric_limits<int64_t>::lowest()
@@ -206,6 +210,7 @@ private:
 #define STATS_DBL_T_MAX numeric_limits<double>::lowest()
 
 #define STAT_INT_DISTRIB(title, var)                                  \
+namespace Stats {                                                 \
     static thread_local int64_t var##sum;                             \
     static thread_local int64_t var##count;                           \
     static thread_local int64_t var##min = (STATS_INT64_T_MIN);       \
@@ -218,9 +223,11 @@ private:
         var##min = numeric_limits<int64_t>::max();                    \
         var##max = numeric_limits<int64_t>::lowest();                 \
     }                                                                      \
-    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var);            \
+};
 
 #define STAT_FLOAT_DISTRIB(title, var)                                  \
+namespace Stats {                                                  \
     static thread_local double var##sum;                                \
     static thread_local int64_t var##count;                             \
     static thread_local double var##min = (STATS_DBL_T_MIN);            \
@@ -233,7 +240,8 @@ private:
         var##min = numeric_limits<double>::max();                       \
         var##max = numeric_limits<double>::lowest();                    \
     }                                                                        \
-    static StatsRegisterer STATS_REG##var(STATS_FUNC##var)
+    static StatsRegisterer STATS_REG##var(STATS_FUNC##var);              \
+};
 
 #define REPORT_VALUE(var, value)                                   \
     do {                                                          \
@@ -244,20 +252,24 @@ private:
     } while (0)
 
 #define STAT_PERCENT(title, numVar, denomVar)                 \
-    static thread_local int64_t numVar, denomVar;        \
+namespace Stats {                                       \
+    static thread_local int64_t numVar, denomVar;            \
     static void STATS_FUNC##numVar(StatsAccumulator &accum) { \
         accum.reportPercentage(title, numVar, denomVar);      \
         numVar = denomVar = 0;                                \
     }                                                         \
-    static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
+    static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar); \
+};
 
 #define STAT_RATIO(title, numVar, denomVar)                   \
+namespace Stats {                                        \
     static thread_local int64_t numVar, denomVar;        \
     static void STATS_FUNC##numVar(StatsAccumulator &accum) { \
         accum.reportRatio(title, numVar, denomVar);           \
         numVar = denomVar = 0;                                \
     }                                                         \
-    static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
+    static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar); \
+};
 
 enum class Profiler::Stage {
     SceneConstruction,
@@ -308,4 +320,4 @@ enum class Profiler::Stage {
     NumProfCategories
 };
 
-#endif // CORE_STATS
+#endif // UTILITY_STATS

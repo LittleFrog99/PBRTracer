@@ -8,16 +8,16 @@ INCLUDE_DIRECTORIES(src/utilities)
 PROJECT(PBRTracer)
 
 SET(SOURCES_CORE
-    src/core/renderer.cpp src/core/paramset.cpp src/core/texture.cpp
-    src/core/integrator.cpp src/core/interaction.cpp src/core/spectrum.cpp
-    src/core/transform.cpp src/core/parser.cpp src/core/shape.cpp
-    src/core/primitive.cpp src/core/parallel.cpp src/core/stats.cpp
-    src/core/camera.cpp src/core/api.cpp src/core/sampling.cpp)
+    src/core/renderer.cpp  src/core/texture.cpp src/core/integrator.cpp
+    src/core/interaction.cpp src/core/spectrum.cpp src/core/transform.cpp
+    src/core/shape.cpp src/core/primitive.cpp src/core/camera.cpp
+    src/core/api.cpp src/core/sampling.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
-    src/utilities/imageio.cpp)
+    src/utilities/imageio.cpp src/utilities/parallel.cpp src/utilities/stats.cpp
+    src/utilities/paramset.cpp src/utilities/parser.cpp)
 
 SET(SOURCES_SHAPES
     src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp

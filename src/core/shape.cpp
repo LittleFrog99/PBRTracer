@@ -1,5 +1,5 @@
 #include "shape.h"
-#include "core/stats.h"
+#include "stats.h"
 
 STAT_COUNTER("Scene/Shapes created", nShapesCreated);
 

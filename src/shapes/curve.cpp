@@ -1,6 +1,6 @@
 #include "curve.h"
-#include "core/stats.h"
-#include "core/paramset.h"
+#include "stats.h"
+#include "paramset.h"
 
 Bounds3f Curve::objectBound() const {
     Point3f ctrlPts[4];

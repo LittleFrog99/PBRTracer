@@ -7,8 +7,6 @@
 #include "transform.h"
 #include "integrator.h"
 
-enum class APIState { Uninitialized, OptionsBlock, WorldBlock };
-
 class TransformSet {
 public:
     Transform & operator [] (int i) {
@@ -149,19 +147,18 @@ namespace Renderer {
                                         const MediumInterface &mediumInterface,
                                         const ParamSet &paramSet, const shared_ptr<Shape> &shape);
 
-    static Options options;
-    static int catIndentCount = 0;
+    extern Options options;
+    extern int catIndentCount;
 
-    static APIState currentApiState = APIState::Uninitialized;
-    static TransformSet curTransform;
-    static uint32_t activeTransformBits = TransformSet::ALL_TRANSFORM_BITS;
-    static map<string, TransformSet> namedCoordinateSystems;
-    static unique_ptr<RenderOptions> renderOptions;
-    static GraphicsState graphicsState;
-    static vector<GraphicsState> pushedGraphicsStates;
-    static vector<TransformSet> pushedTransforms;
-    static vector<uint32_t> pushedActiveTransformBits;
-    static TransformCache transformCache;
+    extern TransformSet curTransform;
+    extern uint32_t activeTransformBits;
+    extern map<string, TransformSet> namedCoordinateSystems;
+    extern unique_ptr<RenderOptions> renderOptions;
+    extern GraphicsState graphicsState;
+    extern vector<GraphicsState> pushedGraphicsStates;
+    extern vector<TransformSet> pushedTransforms;
+    extern vector<uint32_t> pushedActiveTransformBits;
+    extern TransformCache transformCache;
 };
 
 

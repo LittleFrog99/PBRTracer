@@ -1,6 +1,6 @@
 #include "ortho.h"
 #include "core/sampling.h"
-#include "core/paramset.h"
+#include "paramset.h"
 
 Float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) const {
     auto pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);

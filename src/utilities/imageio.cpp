@@ -81,10 +81,10 @@ void writeImage(const string &name, const Float *rgb,
                           totalResolution.x, totalResolution.y,
                           outputBounds.pMin.x, outputBounds.pMin.y);
         else {
-            unsigned int error = lodepng_encode24_file(
+            unsigned int error = LodePNG::lodepng_encode24_file(
                 name.c_str(), rgb8.get(), resolution.x, resolution.y);
             if (error != 0)
-                ERROR("Error writing PNG \"%s\": %s", name.c_str(), lodepng_error_text(error));
+                ERROR("Error writing PNG \"%s\": %s", name.c_str(), LodePNG::lodepng_error_text(error));
         }
     } else {
         ERROR("Can't determine image file type from suffix of filename \"%s\"",
@@ -176,6 +176,7 @@ void writeImageTGA(const string &name, const uint8_t *pixels, int xRes,
         }
     }
 
+    using namespace Targa;
     tga_result result;
     if ((result = tga_write_bgr(name.c_str(), outBuf.get(), xRes, yRes, 24)) !=
         TGA_NOERR)
@@ -185,6 +186,7 @@ void writeImageTGA(const string &name, const uint8_t *pixels, int xRes,
 
 static RGBSpectrum *readImageTGA(const string &name, int *width,
                                  int *height) {
+    using namespace Targa;
     tga_image img;
     tga_result result;
     if ((result = tga_read(&img, name.c_str())) != TGA_NOERR) {
@@ -228,10 +230,10 @@ static RGBSpectrum *readImagePNG(const string &name, int *width,
                                  int *height) {
     unsigned char *rgb;
     unsigned w, h;
-    unsigned int error = lodepng_decode24_file(&rgb, &w, &h, name.c_str());
+    unsigned int error = LodePNG::lodepng_decode24_file(&rgb, &w, &h, name.c_str());
     if (error != 0) {
         ERROR("Error reading PNG \"%s\": %s", name.c_str(),
-              lodepng_error_text(error));
+              LodePNG::lodepng_error_text(error));
         return nullptr;
     }
     *width = w;

@@ -1,6 +1,6 @@
 #include "api.h"
 #include "core/renderer.h"
-#include "core/paramset.h"
+#include "paramset.h"
 
 #include "shapes/triangle.h"
 #include "shapes/sphere.h"
@@ -14,8 +14,21 @@
 #include "cameras/perspective.h"
 #include "samplers/stratified.h"
 #include "samplers/halton.h"
+#include "core/filter.h"
 
 namespace Renderer {
+
+Options options;
+int catIndentCount = 0;
+TransformSet curTransform;
+uint32_t activeTransformBits = TransformSet::ALL_TRANSFORM_BITS;
+map<string, TransformSet> namedCoordinateSystems;
+unique_ptr<RenderOptions> renderOptions;
+GraphicsState graphicsState;
+vector<GraphicsState> pushedGraphicsStates;
+vector<TransformSet> pushedTransforms;
+vector<uint32_t> pushedActiveTransformBits;
+TransformCache transformCache;
 
 vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object2world,
                                      const Transform *world2object, bool reverseOrientation,
@@ -95,6 +108,26 @@ shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, co
         WARNING("Sampler \"%s\" unknown.", name.c_str());
     paramSet.reportUnused();
     return shared_ptr<Sampler>(sampler);
+}
+
+unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet) {
+    Filter *filter = nullptr;
+    if (name == "box")
+        filter = BoxFilter::create(paramSet);
+    else if (name == "gaussian")
+        filter = GaussianFilter::create(paramSet);
+    else if (name == "mitchell")
+        filter = MitchellFilter::create(paramSet);
+    else if (name == "sinc")
+        filter = LanczosSincFilter::create(paramSet);
+    else if (name == "triangle")
+        filter = TriangleFilter::create(paramSet);
+    else {
+        ERROR("Filter \"%s\" unknown.", name.c_str());
+        exit(1);
+    }
+    paramSet.reportUnused();
+    return std::unique_ptr<Filter>(filter);
 }
 
 };
