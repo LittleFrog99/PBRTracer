@@ -10,16 +10,16 @@ enum class SpectrumType {
 
 namespace SpectrumUtil {
 
-static constexpr int sampledLambdaStart = 400;
-static constexpr int sampledLambdaEnd = 700;
-static constexpr int nSpectralSamples = 60;
+constexpr int sampledLambdaStart = 400;
+constexpr int sampledLambdaEnd = 700;
+constexpr int nSpectralSamples = 60;
 
-static constexpr int nCIESamples = 471;
+constexpr int nCIESamples = 471;
 extern const Float CIE_lambda[nCIESamples];
 extern const Float CIE_X[nCIESamples];
 extern const Float CIE_Y[nCIESamples];
 extern const Float CIE_Z[nCIESamples];
-static constexpr Float CIE_Y_integral = 106.856895f;
+constexpr Float CIE_Y_integral = 106.856895f;
 
 bool samplesAreSorted(const Float *lambda, const Float *vals, int n);
 void sortSamples(Float *lambda, Float *vals, int n);

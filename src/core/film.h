@@ -1,4 +1,4 @@
-#ifndef CORE_FILM
+ #ifndef CORE_FILM
 #define CORE_FILM
 
 #include "spectrum.h"
@@ -51,13 +51,14 @@ private:
     vector<FilmTilePixel> pixels;
     const Float maxSampleLuminance;
     friend class Film;
-
 };
 
 class Film {
 public:
     Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
          Float diagonal, const string &filename, Float scale, Float maxSampleLuminance = INFINITY);
+    static Film * create(const ParamSet &params, unique_ptr<Filter> filter);
+
     Bounds2i getSampleBounds() const;
     Bounds2f getPhysicalExtent() const;
     unique_ptr<FilmTile> getFilmTile(const Bounds2i &sampleBounds);
@@ -67,8 +68,6 @@ public:
     void writeImage(Float splatScale = 1);
     void clear();
 
-    Film * create(const ParamSet &params, unique_ptr<Filter> filter);
-
     const Point2i fullResolution;
     const Float diagonal; // NDC space, in meters
     unique_ptr<Filter> filter;
@@ -77,7 +76,12 @@ public:
 
 private:
     struct Pixel {
-        Pixel() { xyz[0] = xyz[1] = xyz[2] = filterWeightSum = 0; }
+        Pixel() {
+            xyz[0] = xyz[1] = xyz[2] = 0;
+            splatXYZ[0] = splatXYZ[1] = splatXYZ[2] = 0;
+            filterWeightSum = 0;
+        }
+
         Float xyz[3];
         Float filterWeightSum;
         AtomicFloat splatXYZ[3];

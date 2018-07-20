@@ -15,6 +15,7 @@
 #include "samplers/stratified.h"
 #include "samplers/halton.h"
 #include "core/filter.h"
+#include "core/film.h"
 
 namespace Renderer {
 
@@ -128,6 +129,16 @@ unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet) {
     }
     paramSet.reportUnused();
     return std::unique_ptr<Filter>(filter);
+}
+
+Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter> filter) {
+    Film *film = nullptr;
+    if (name == "image")
+        film = Film::create(paramSet, move(filter));
+    else
+        WARNING("Film \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return film;
 }
 
 };

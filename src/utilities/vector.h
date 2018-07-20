@@ -22,6 +22,7 @@ public:
     // Vector2 Public Methods
     Vector2() { x = y = 0; }
     bool hasNaNs() const { return isnan(x) || isnan(y); }
+    Vector2(T x) : x(x), y(x) { DCHECK(!hasNaNs()); }
     Vector2(T xx, T yy) : x(xx), y(yy) { DCHECK(!hasNaNs()); }
     explicit Vector2(const Point2<T> &p);
     explicit Vector2(const Point3<T> &p);
@@ -75,6 +76,7 @@ class Vector3 {
 public:
     Vector3() { x = y = z = 0; }
     bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
+    Vector3(T x) : x(x), y(x), z(x) { DCHECK(!hasNaNs()); }
     Vector3(T x, T y, T z) : x(x), y(y), z(z) { DCHECK(!hasNaNs()); }
     Vector3(const Vector3<T> &v) { x = v.x; y = v.y; z = v.z; DCHECK(!hasNaNs()); }
     explicit Vector3(const Point3<T> &p);
@@ -489,12 +491,12 @@ inline Float distanceSq(const Point2<T> &p1, const Point2<T> &p2) {
 
 template <class T>
 inline Point2<T> floor(const Point2<T> &p) {
-    return Point2<T>(floor(p.x), floor(p.y));
+    return Point2<T>(std::floor(p.x), std::floor(p.y));
 }
 
 template <class T>
 inline Point2<T> ceil(const Point2<T> &p) {
-    return Point2<T>(ceil(p.x), ceil(p.y));
+    return Point2<T>(std::ceil(p.x), std::ceil(p.y));
 }
 
 template <class T>
@@ -504,12 +506,12 @@ inline Point2<T> lerp(Float t, const Point2<T> &v0, const Point2<T> &v1) {
 
 template <class T>
 inline Point2<T> min(const Point2<T> &pa, const Point2<T> &pb) {
-    return Point2<T>(min(pa.x, pb.x), min(pa.y, pb.y));
+    return Point2<T>(std::min(pa.x, pb.x), std::min(pa.y, pb.y));
 }
 
 template <class T>
 inline Point2<T> max(const Point2<T> &pa, const Point2<T> &pb) {
-    return Point2<T>(max(pa.x, pb.x), max(pa.y, pb.y));
+    return Point2<T>(std::max(pa.x, pb.x), std::max(pa.y, pb.y));
 }
 
 template <class T>
