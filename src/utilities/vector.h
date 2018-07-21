@@ -612,13 +612,37 @@ inline Vector3f sphericalDirection(Float sinTheta, Float cosTheta, Float phi,
     return sinTheta * cos(phi) * x + sinTheta * sin(phi) * y + cosTheta * z;
 }
 
-inline Float sphericalTheta(const Vector3f &v) {
-    return acos(clamp(v.z, -1, 1));
-}
+inline Float sphericalTheta(const Vector3f &v) { return acos(clamp(v.z, -1, 1)); }
 
 inline Float sphericalPhi(const Vector3f &v) {
     Float p = atan2(v.y, v.x);
     return (p < 0) ? (p + 2 * PI) : p;
+}
+
+// Trigonometric functions for polar angle and azimuth
+inline Float cosTheta(const Vector3f &w) { return w.z; }
+inline Float cos2Theta(const Vector3f &w) { return SQ(w.z); }
+inline Float absCosTheta(const Vector3f &w) { return std::abs(w.z); }
+inline Float sin2Thetha(const Vector3f &w) { return std::max(0.0f, 1 - cos2Theta(w)); }
+inline Float sinTheta(const Vector3f &w) { return sqrt(sin2Thetha(w)); }
+inline Float tanTheta(const Vector3f &w) { return sinTheta(w) / cosTheta(w); }
+inline Float tan2Theta(const Vector3f &w) { return sin2Thetha(w) / cos2Theta(w); }
+
+inline Float cosPhi(const Vector3f &w) {
+    Float sin = sinTheta(w);
+    return (sin == 0) ? 1 : clamp(w.x / sin, -1, 1);
+}
+
+inline Float sinPhi(const Vector3f &w) {
+    Float sin = sinTheta(w);
+    return (sin == 0) ? 0 : clamp(w.y / sin, -1, 1);
+}
+
+inline Float cos2Phi(const Vector3f &w) { return SQ(cosPhi(w)); }
+inline Float sin2Phi(const Vector3f &w) { return SQ(sinPhi(w)); }
+
+inline Float cosDeltaPhi(const Vector3f &wa, const Vector3f &wb) {
+    return clamp((wa.x * wb.x + wa.y * wb.y) / sqrt( (SQ(wa.x) + SQ(wa.y)) * (SQ(wb.x) + SQ(wb.y)) ), -1, 1);
 }
 
 }

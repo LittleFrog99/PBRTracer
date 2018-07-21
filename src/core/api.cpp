@@ -281,8 +281,7 @@ void API::makeNamedMedium(const string &name, const ParamSet &params) {
     if (type == "")
         ERROR("No parameter string \"type\" found in MakeNamedMedium");
     else {
-        shared_ptr<Medium> medium =
-            makeMedium(type, params, curTransform[0]);
+        shared_ptr<Medium> medium = makeMedium(type, params, curTransform[0]);
         if (medium) renderOptions->namedMedia[name] = medium;
     }
     if (options.cat || options.toPly) {
@@ -530,8 +529,7 @@ void API::shape(const string &name, const ParamSet &params) {
         Transform *ObjToWorld = transformCache.lookup(curTransform[0]);
         Transform *WorldToObj = transformCache.lookup(curTransform[0].inverse());
         vector<shared_ptr<Shape>> shapes = makeShapes(name, ObjToWorld, WorldToObj,
-                                                                graphicsState.reverseOrientation,
-                                                                params);
+                                                      graphicsState.reverseOrientation, params);
         if (shapes.empty()) return;
         shared_ptr<Material> mtl = graphicsState.getMaterialForShape(params);
         params.reportUnused();
@@ -696,13 +694,13 @@ void API::worldEnd() {
         unique_ptr<Integrator> integrator(renderOptions->makeIntegrator());
         unique_ptr<Scene> scene(renderOptions->makeScene());
 
-        CHECK_EQ(Profiler::state, Profiler::profToBits(Profiler::Stage::SceneConstruction));
-        Profiler::state = Profiler::profToBits(Profiler::Stage::IntegratorRender);
+        CHECK_EQ(Profiler::state, Profiler::stageToBits(Profiler::Stage::SceneConstruction));
+        Profiler::state = Profiler::stageToBits(Profiler::Stage::IntegratorRender);
 
         if (scene && integrator) integrator->render(*scene);
 
-        CHECK_EQ(Profiler::state, Profiler::profToBits(Profiler::Stage::IntegratorRender));
-        Profiler::state = Profiler::profToBits(Profiler::Stage::SceneConstruction);
+        CHECK_EQ(Profiler::state, Profiler::stageToBits(Profiler::Stage::IntegratorRender));
+        Profiler::state = Profiler::stageToBits(Profiler::Stage::SceneConstruction);
     }
 
     // Clean up after rendering. Do this before reporting stats so that

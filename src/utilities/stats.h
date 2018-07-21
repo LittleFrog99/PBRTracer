@@ -115,7 +115,7 @@ public:
     static void suspend() { suspendCount++; }
     static void resume() { suspendCount--; }
 
-    static uint64_t profToBits(Stage p) { return 1ull << int(p); }
+    static uint64_t stageToBits(Stage p) { return 1ull << int(p); }
 
     thread_local static uint64_t state;
     static atomic<bool> isRunning;
@@ -139,7 +139,7 @@ private:
 class ProfilePhase {
 public:
     ProfilePhase(Profiler::Stage p) {
-        categoryBit = Profiler::profToBits(p);
+        categoryBit = Profiler::stageToBits(p);
         reset = (Profiler::state & categoryBit) == 0;
         Profiler::state |= categoryBit;
     }

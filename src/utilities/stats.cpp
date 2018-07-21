@@ -199,7 +199,7 @@ atomic<int> Profiler::suspendCount;
 
 void Profiler::init() {
     CHECK(!Profiler::isRunning);
-    state = profToBits(Stage::SceneConstruction);
+    state = stageToBits(Stage::SceneConstruction);
     clear();
 
     startTime = std::chrono::system_clock::now();
@@ -223,7 +223,7 @@ void Profiler::init() {
 
 void Profiler::workerThreadInit() {
     CHECK(!Profiler::isRunning || Profiler::suspendCount > 0);
-    state = profToBits(Stage::SceneConstruction);
+    state = stageToBits(Stage::SceneConstruction);
 }
 
 void Profiler::clear() {
