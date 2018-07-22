@@ -10,9 +10,6 @@ public:
 #else
     static constexpr Float ONE_MINUS_EPSILON = 0x1.fffffffffffffp-1;
 #endif
-    static constexpr uint64_t PCG32_DEFAULT_STATE = 0x853c49e6748fea9bULL;
-    static constexpr uint64_t PCG32_DEFAULT_STREAM = 0xda3e39cb94b95bdbULL;
-    static constexpr uint64_t PCG32_MULT = 0x5851f42d4c957f2dULL;
 
     Random() : state(PCG32_DEFAULT_STATE), inc(PCG32_DEFAULT_STREAM) {}
     Random(uint32_t sequence) { setSequence(sequence); }
@@ -34,6 +31,10 @@ public:
 
 private:
     uint64_t state, inc;
+
+    static constexpr uint64_t PCG32_DEFAULT_STATE = 0x853c49e6748fea9bULL;
+    static constexpr uint64_t PCG32_DEFAULT_STREAM = 0xda3e39cb94b95bdbULL;
+    static constexpr uint64_t PCG32_MULT = 0x5851f42d4c957f2dULL;
 };
 
 #endif // UTILITY_RANDOM

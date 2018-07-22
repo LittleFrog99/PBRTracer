@@ -30,11 +30,6 @@ public:
                             MediumInteraction *mi) const = 0;
 
     static bool getMediumScatteringProperties(const string &name, Spectrum *sigma_a, Spectrum *sigma_s);
-
-    inline Float phaseHG(Float cosTheta, Float g) {
-        Float denom = 1 + g * g + 2 * g * cosTheta;
-        return INV_PI * (1 - g * g) / (denom * sqrt(denom));
-    }
 };
 
 class HenyeyGreenstein : public PhaseFunction {
@@ -44,6 +39,11 @@ public:
     Float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
     string toString() const {
         return STRING_PRINTF("[ HenyeyGreenstein g: %f ]", g);
+    }
+
+    inline static Float phase(Float cosTheta, Float g) {
+        Float denom = 1 + g * g + 2 * g * cosTheta;
+        return INV_PI * (1 - g * g) / (denom * sqrt(denom));
     }
 
 private:

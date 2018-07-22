@@ -35,12 +35,16 @@ SET(SOURCES_CAMERAS
 SET(SOURCES_SAMPLERS
     src/samplers/stratified.cpp src/samplers/halton.cpp)
 
+SET(SOURCES_BSDFS
+    src/bsdfs/fresnel.cpp)
+
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)
 
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}
-    ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS} ${SOURCES_EXTENSIONS})
+    ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS} ${SOURCES_BSDFS}
+    ${SOURCES_EXTENSIONS})
 
 SET(GTEST_SOURCES
     src/tests/gtest/gtest_main.cc src/tests/gtest/gtest-all.cc)

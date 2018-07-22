@@ -9,20 +9,19 @@ enum BxDFType {
     BSDF_DIFFUSE = 1 << 2,
     BSDF_GLOSSY = 1 << 3,
     BSDF_SPECULAR = 1 << 4,
-    BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR | BSDF_REFLECTION |
-               BSDF_TRANSMISSION,
+    BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION,
 };
 
 class BxDF {
 public:
     BxDF(BxDFType type) : type(type) {}
     virtual ~BxDF() {}
+
     virtual Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const = 0;
     virtual Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
                                  BxDFType *sampledType = nullptr) const;
-    virtual Spectrum compute_rho(const Vector3f &wo, int nSamples, const Point2f *samples) const;
-    virtual Spectrum compute_rho(int nSamples, const Point2f *samples1,
-                                    const Point2f *samples2) const;
+    virtual Spectrum rho_hd(const Vector3f &wo, int nSamples, const Point2f *samples) const;
+    virtual Spectrum rho_hh(int nSamples, const Point2f *samples1, const Point2f *samples2) const;
     virtual Float pdf(const Vector3f &wo, const Vector3f &wi) const;
     virtual string toString() const = 0;
 
@@ -35,6 +34,25 @@ inline ostream & operator << (ostream &os, const BxDF &bxdf) {
     os << bxdf.toString();
     return os;
 }
+
+class ScaledBxDF : public BxDF {
+public:
+    ScaledBxDF(BxDF *bxdf, const Spectrum &scale)
+        : BxDF(bxdf->type), bxdf(bxdf), scale(scale) {}
+
+    Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const {
+        return scale * bxdf->compute_f(wo, wi);
+    }
+
+    string toString() const {
+        return string("[ ScaledBxDF bxdf: ") + bxdf->toString() + string(" scale: ")
+                + scale.toString() + string(" ]");
+    }
+
+private:
+    BxDF *bxdf;
+    Spectrum scale;
+};
 
 class BSDF {
 public:

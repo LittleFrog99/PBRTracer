@@ -15,11 +15,9 @@ class Point2;
 template <class T>
 class Normal3;
 
-// Vector Declarations
 template <class T>
 class Vector2 {
 public:
-    // Vector2 Public Methods
     Vector2() { x = y = 0; }
     bool hasNaNs() const { return isnan(x) || isnan(y); }
     Vector2(T x) : x(x), y(x) { DCHECK(!hasNaNs()); }
@@ -260,7 +258,7 @@ typedef Point2<int> Point2i;
 typedef Point3<Float> Point3f;
 typedef Point3<int> Point3i;
 
-// Normal Declarations
+
 template <class T>
 class Normal3 {
 public:
@@ -587,7 +585,7 @@ inline Normal3<T> abs(const Normal3<T> &v) {
 inline Point3f offsetRayOrigin(const Point3f &p, const Vector3f &pError,
                                const Normal3f &n, const Vector3f &w) {
     Float d = dot(abs(n), pError);
-#ifdef PBRT_FLOAT_AS_DOUBLE
+#ifdef DOUBLE_AS_FLOAT
     d *= 1024.;
 #endif
     Vector3f offset = d * Vector3f(n);
@@ -643,6 +641,20 @@ inline Float sin2Phi(const Vector3f &w) { return SQ(sinPhi(w)); }
 
 inline Float cosDeltaPhi(const Vector3f &wa, const Vector3f &wb) {
     return clamp((wa.x * wb.x + wa.y * wb.y) / sqrt( (SQ(wa.x) + SQ(wa.y)) * (SQ(wb.x) + SQ(wb.y)) ), -1, 1);
+}
+
+inline Vector3f reflect(const Vector3f &wo, const Normal3f &n) {
+    return -wo + 2 * dot(wo, n) * Vector3f(n);
+}
+
+inline bool refract(const Vector3f &wi, const Normal3f &n, Float eta, Vector3f *wt) {
+    Float cosThetaI = dot(n, wi);
+    Float sin2ThetaI = std::max(0.0f, 1.0f - SQ(cosThetaI));
+    Float sin2ThetaT = eta * eta * sin2ThetaI;
+    if (sin2ThetaT >= 1) return false;
+    Float cosThetaT = sqrt(1 - sin2ThetaT);
+    *wt = -wi * eta + (eta * cosThetaI - cosThetaT) * Vector3f(n);
+    return true;
 }
 
 }
