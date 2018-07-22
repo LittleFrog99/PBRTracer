@@ -14,7 +14,7 @@ public:
     virtual void computeScatteringFuncs(SurfaceInteraction *si, MemoryArena &arena,
                                         TransportMode mode, bool allowMultipleLobes) const = 0;
     virtual ~Material();
-    static void bump(const shared_ptr<Texture<Float>> &d, SurfaceInteraction *si);
+    static void bump(const shared_ptr<Texture<float>> &d, SurfaceInteraction *si);
 };
 
 #endif // CORE_MATERIAL

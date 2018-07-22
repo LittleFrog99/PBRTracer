@@ -34,7 +34,7 @@ string directoryContaining(const string &filename) {
     return result;
 }
 
-bool readFloatFile(const char *filename, std::vector<Float> *values) {
+bool readFloatFile(const char *filename, std::vector<float> *values) {
     FILE *f = fopen(filename, "r");
     if (!f) {
         ERROR("Unable to open file \"%s\"", filename);

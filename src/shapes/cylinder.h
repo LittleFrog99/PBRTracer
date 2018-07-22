@@ -5,8 +5,8 @@
 
 class Cylinder : public Shape {
 public:
-    Cylinder(const Transform *objToWorld, const Transform *worldToObj, bool revOrient, Float radius,
-             Float zMin, Float zMax, Float phiMax)
+    Cylinder(const Transform *objToWorld, const Transform *worldToObj, bool revOrient, float radius,
+             float zMin, float zMax, float phiMax)
         : Shape(objToWorld, worldToObj, revOrient), radius(radius),
           zMin(min(zMin, zMax)), zMax(max(zMin, zMax)), phiMax(radians(clamp(phiMax, 0, 360))) {}
 
@@ -17,13 +17,13 @@ public:
            return Bounds3f(Point3f(-radius, -radius, zMin), Point3f( radius,  radius, zMax));
     }
 
-    bool intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect, bool testAlphaTexture = true) const;
+    bool intersect(const Ray &r, float *tHit, SurfaceInteraction *isect, bool testAlphaTexture = true) const;
     bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
 
-    Float area() const { return phiMax * radius * (zMax - zMin); }
+    float area() const { return phiMax * radius * (zMax - zMin); }
 
 private:
-    Float radius, zMin, zMax, phiMax;
+    float radius, zMin, zMax, phiMax;
 };
 
 #endif // SHAPE_CYLINDER

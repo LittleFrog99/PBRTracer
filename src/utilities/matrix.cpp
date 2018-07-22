@@ -4,18 +4,18 @@
 Matrix4x4 Matrix4x4::inverse() const {
     int indxc[4], indxr[4];
     int ipiv[4] = {0, 0, 0, 0};
-    Float minv[4][4];
-    memcpy(minv, m, 4 * 4 * sizeof(Float));
+    float minv[4][4];
+    memcpy(minv, m, 4 * 4 * sizeof(float));
     for (int i = 0; i < 4; i++) {
         int irow = 0, icol = 0;
-        Float big = 0.f;
+        float big = 0.f;
         // Choose pivot
         for (int j = 0; j < 4; j++) {
             if (ipiv[j] != 1) {
                 for (int k = 0; k < 4; k++) {
                     if (ipiv[k] == 0) {
                         if (abs(minv[j][k]) >= big) {
-                            big = Float(abs(minv[j][k]));
+                            big = float(abs(minv[j][k]));
                             irow = j;
                             icol = k;
                         }
@@ -34,14 +34,14 @@ Matrix4x4 Matrix4x4::inverse() const {
         if (minv[icol][icol] == 0.f) ERROR("Singular matrix in MatrixInvert");
 
         // Set m[icol][icol] to one by scaling row icol appropriately
-        Float pivinv = 1.0 / minv[icol][icol];
+        float pivinv = 1.0 / minv[icol][icol];
         minv[icol][icol] = 1.;
         for (int j = 0; j < 4; j++) minv[icol][j] *= pivinv;
 
         // Subtract this row from others to zero out their columns
         for (int j = 0; j < 4; j++) {
             if (j != icol) {
-                Float save = minv[j][icol];
+                float save = minv[j][icol];
                 minv[j][icol] = 0;
                 for (int k = 0; k < 4; k++) minv[j][k] -= minv[icol][k] * save;
             }

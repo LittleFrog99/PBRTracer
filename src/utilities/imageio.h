@@ -11,7 +11,7 @@ unique_ptr<RGBSpectrum[]> readImage(const string &name, Point2i *resolution);
 RGBSpectrum *readImageEXR(const string &name, int *width, int *height,
                           Bounds2i *dataWindow = nullptr, Bounds2i *displayWindow = nullptr);
 
-void writeImage(const string &name, const Float *rgb, const Bounds2i &outputBounds,
+void writeImage(const string &name, const float *rgb, const Bounds2i &outputBounds,
                 const Point2i &totalResolution);
 
 };

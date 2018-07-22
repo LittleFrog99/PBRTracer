@@ -42,18 +42,18 @@ public:
 
     template <class U>
     Vector2<T> operator / (U f) const {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         return Vector2<T>(x * inv, y * inv);
     }
 
     template <class U>
-    Vector2<T> & operator /= (U f) { Float inv = 1.0 / f; x *= inv; y *= inv; return *this; }
+    Vector2<T> & operator /= (U f) { float inv = 1.0 / f; x *= inv; y *= inv; return *this; }
 
     Vector2<T> operator - () const { return Vector2<T>(-x, -y); }
     T operator [] (int i) const { if (i == 0) return x; return y; }
     T & operator [] (int i) { if (i == 0) return x; return y; }
-    Float lengthSq() const { return x * x + y * y; }
-    Float length() const { return sqrt(lengthSq()); }
+    float lengthSq() const { return x * x + y * y; }
+    float length() const { return sqrt(lengthSq()); }
 
     T x, y;
 };
@@ -100,21 +100,21 @@ public:
 
     template <class U>
     Vector3<T> operator / (U f) const {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         return Vector3<T>(x * inv, y * inv, z * inv);
     }
 
     template <class U>
     Vector3<T> &operator /= (U f) {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         x *= inv; y *= inv; z *= inv;
         return *this;
     }
 
     T operator [] (int i) const { if (i == 0) return x; if (i == 1) return y; return z; }
     T & operator [] (int i) { if (i == 0) return x; if (i == 1) return y; return z; }
-    Float lengthSq() const { return x * x + y * y + z * z; }
-    Float length() const { return std::sqrt(lengthSq()); }
+    float lengthSq() const { return x * x + y * y + z * z; }
+    float length() const { return std::sqrt(lengthSq()); }
 
     T x, y, z;
 };
@@ -125,9 +125,9 @@ ostream & operator << (ostream &os, const Vector3<T> &v) {
     return os;
 }
 
-typedef Vector2<Float> Vector2f;
+typedef Vector2<float> Vector2f;
 typedef Vector2<int> Vector2i;
-typedef Vector3<Float> Vector3f;
+typedef Vector3<float> Vector3f;
 typedef Vector3<int> Vector3i;
 
 // Point Declarations
@@ -166,11 +166,11 @@ public:
     Point2<T> & operator *= (U f) { x *= f; y *= f; return *this; }
 
     template <class U>
-    Point2<T> operator / (U f) const { Float inv = 1.0 / f; return Point2<T>(inv * x, inv * y); }
+    Point2<T> operator / (U f) const { float inv = 1.0 / f; return Point2<T>(inv * x, inv * y); }
 
     template <class U>
     Point2<T> & operator /= (U f) {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         x *= inv; y *= inv;
         return *this;
     }
@@ -225,11 +225,11 @@ public:
     Point3<T> & operator *= (U f) { x *= f; y *= f; z *= f; return *this; }
 
     template <class U>
-    Point3<T> operator / (U f) const { Float inv = 1.0 / f; return Point3<T>(inv * x, inv * y, inv * z); }
+    Point3<T> operator / (U f) const { float inv = 1.0 / f; return Point3<T>(inv * x, inv * y, inv * z); }
 
     template <class U>
     Point3<T> & operator /= (U f) {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         x *= inv; y *= inv; z *= inv;
         return *this;
     }
@@ -253,9 +253,9 @@ ostream & operator << (ostream &os, const Point3<T> &v) {
     return os;
 }
 
-typedef Point2<Float> Point2f;
+typedef Point2<float> Point2f;
 typedef Point2<int> Point2i;
-typedef Point3<Float> Point3f;
+typedef Point3<float> Point3f;
 typedef Point3<int> Point3i;
 
 
@@ -283,19 +283,19 @@ public:
 
     template <class U>
     Normal3<T> operator / (U f) const {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         return Normal3<T>(x * inv, y * inv, z * inv);
     }
 
     template <class U>
     Normal3<T> & operator /= (U f) {
-        Float inv = 1.0 / f;
+        float inv = 1.0 / f;
         x *= inv; y *= inv; z *= inv;
         return *this;
     }
 
-    Float lengthSq() const { return x * x + y * y + z * z; }
-    Float length() const { return std::sqrt(lengthSq()); }
+    float lengthSq() const { return x * x + y * y + z * z; }
+    float length() const { return std::sqrt(lengthSq()); }
 
     bool operator == (const Normal3<T> &n) const { return x == n.x && y == n.y && z == n.z; }
     bool operator != (const Normal3<T> &n) const { return x != n.x || y != n.y || z != n.z; }
@@ -316,7 +316,7 @@ inline ostream & operator << (ostream &os, const Normal3<T> &v) {
     return os;
 }
 
-typedef Normal3<Float> Normal3f;
+typedef Normal3<float> Normal3f;
 
 template<class T>
 inline Vector2<T>::Vector2(const Point2<T> &p) : x(p.x), y(p.y) {}
@@ -416,12 +416,12 @@ inline void coordSystem(const Vector3<T> &v1, Vector3<T> *v2,
 }
 
 template <class T>
-inline Float dot(const Vector2<T> &v1, const Vector2<T> &v2) {
+inline float dot(const Vector2<T> &v1, const Vector2<T> &v2) {
     return v1.x * v2.x + v1.y * v2.y;
 }
 
 template <class T>
-inline Float absDot(const Vector2<T> &v1, const Vector2<T> &v2) {
+inline float absDot(const Vector2<T> &v1, const Vector2<T> &v2) {
     return abs(dot(v1, v2));
 }
 
@@ -436,17 +436,17 @@ inline Vector2<T> abs(const Vector2<T> &v) {
 }
 
 template <class T>
-inline Float distance(const Point3<T> &p1, const Point3<T> &p2) {
+inline float distance(const Point3<T> &p1, const Point3<T> &p2) {
     return (p1 - p2).length();
 }
 
 template <class T>
-inline Float distanceSq(const Point3<T> &p1, const Point3<T> &p2) {
+inline float distanceSq(const Point3<T> &p1, const Point3<T> &p2) {
     return (p1 - p2).lengthSq();
 }
 
 template <class T>
-inline Point3<T> lerp(Float t, const Point3<T> &p0, const Point3<T> &p1) {
+inline Point3<T> lerp(float t, const Point3<T> &p0, const Point3<T> &p1) {
     return (1 - t) * p0 + t * p1;
 }
 
@@ -478,12 +478,12 @@ inline Point3<T> abs(const Point3<T> &p) {
 }
 
 template <class T>
-inline Float distance(const Point2<T> &p1, const Point2<T> &p2) {
+inline float distance(const Point2<T> &p1, const Point2<T> &p2) {
     return (p1 - p2).length();
 }
 
 template <class T>
-inline Float distanceSq(const Point2<T> &p1, const Point2<T> &p2) {
+inline float distanceSq(const Point2<T> &p1, const Point2<T> &p2) {
     return (p1 - p2).lengthSq();
 }
 
@@ -498,7 +498,7 @@ inline Point2<T> ceil(const Point2<T> &p) {
 }
 
 template <class T>
-inline Point2<T> lerp(Float t, const Point2<T> &v0, const Point2<T> &v1) {
+inline Point2<T> lerp(float t, const Point2<T> &v0, const Point2<T> &v1) {
     return (1 - t) * v0 + t * v1;
 }
 
@@ -584,10 +584,8 @@ inline Normal3<T> abs(const Normal3<T> &v) {
 
 inline Point3f offsetRayOrigin(const Point3f &p, const Vector3f &pError,
                                const Normal3f &n, const Vector3f &w) {
-    Float d = dot(abs(n), pError);
-#ifdef DOUBLE_AS_FLOAT
-    d *= 1024.;
-#endif
+    float d = dot(abs(n), pError);
+
     Vector3f offset = d * Vector3f(n);
     if (dot(w, n) < 0) offset = -offset;
     Point3f po = p + offset;
@@ -601,45 +599,45 @@ inline Point3f offsetRayOrigin(const Point3f &p, const Vector3f &pError,
     return po;
 }
 
-inline Vector3f sphericalDirection(Float sinTheta, Float cosTheta, Float phi) {
+inline Vector3f sphericalDirection(float sinTheta, float cosTheta, float phi) {
     return Vector3f(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
 
-inline Vector3f sphericalDirection(Float sinTheta, Float cosTheta, Float phi,
+inline Vector3f sphericalDirection(float sinTheta, float cosTheta, float phi,
                                    const Vector3f &x, const Vector3f &y, const Vector3f &z) {
     return sinTheta * cos(phi) * x + sinTheta * sin(phi) * y + cosTheta * z;
 }
 
-inline Float sphericalTheta(const Vector3f &v) { return acos(clamp(v.z, -1, 1)); }
+inline float sphericalTheta(const Vector3f &v) { return acos(clamp(v.z, -1, 1)); }
 
-inline Float sphericalPhi(const Vector3f &v) {
-    Float p = atan2(v.y, v.x);
+inline float sphericalPhi(const Vector3f &v) {
+    float p = atan2(v.y, v.x);
     return (p < 0) ? (p + 2 * PI) : p;
 }
 
 // Trigonometric functions for polar angle and azimuth
-inline Float cosTheta(const Vector3f &w) { return w.z; }
-inline Float cos2Theta(const Vector3f &w) { return SQ(w.z); }
-inline Float absCosTheta(const Vector3f &w) { return std::abs(w.z); }
-inline Float sin2Thetha(const Vector3f &w) { return std::max(0.0f, 1 - cos2Theta(w)); }
-inline Float sinTheta(const Vector3f &w) { return sqrt(sin2Thetha(w)); }
-inline Float tanTheta(const Vector3f &w) { return sinTheta(w) / cosTheta(w); }
-inline Float tan2Theta(const Vector3f &w) { return sin2Thetha(w) / cos2Theta(w); }
+inline float cosTheta(const Vector3f &w) { return w.z; }
+inline float cos2Theta(const Vector3f &w) { return SQ(w.z); }
+inline float absCosTheta(const Vector3f &w) { return std::abs(w.z); }
+inline float sin2Thetha(const Vector3f &w) { return std::max(0.0f, 1 - cos2Theta(w)); }
+inline float sinTheta(const Vector3f &w) { return sqrt(sin2Thetha(w)); }
+inline float tanTheta(const Vector3f &w) { return sinTheta(w) / cosTheta(w); }
+inline float tan2Theta(const Vector3f &w) { return sin2Thetha(w) / cos2Theta(w); }
 
-inline Float cosPhi(const Vector3f &w) {
-    Float sin = sinTheta(w);
+inline float cosPhi(const Vector3f &w) {
+    float sin = sinTheta(w);
     return (sin == 0) ? 1 : clamp(w.x / sin, -1, 1);
 }
 
-inline Float sinPhi(const Vector3f &w) {
-    Float sin = sinTheta(w);
+inline float sinPhi(const Vector3f &w) {
+    float sin = sinTheta(w);
     return (sin == 0) ? 0 : clamp(w.y / sin, -1, 1);
 }
 
-inline Float cos2Phi(const Vector3f &w) { return SQ(cosPhi(w)); }
-inline Float sin2Phi(const Vector3f &w) { return SQ(sinPhi(w)); }
+inline float cos2Phi(const Vector3f &w) { return SQ(cosPhi(w)); }
+inline float sin2Phi(const Vector3f &w) { return SQ(sinPhi(w)); }
 
-inline Float cosDeltaPhi(const Vector3f &wa, const Vector3f &wb) {
+inline float cosDeltaPhi(const Vector3f &wa, const Vector3f &wb) {
     return clamp((wa.x * wb.x + wa.y * wb.y) / sqrt( (SQ(wa.x) + SQ(wa.y)) * (SQ(wb.x) + SQ(wb.y)) ), -1, 1);
 }
 
@@ -647,12 +645,12 @@ inline Vector3f reflect(const Vector3f &wo, const Normal3f &n) {
     return -wo + 2 * dot(wo, n) * Vector3f(n);
 }
 
-inline bool refract(const Vector3f &wi, const Normal3f &n, Float eta, Vector3f *wt) {
-    Float cosThetaI = dot(n, wi);
-    Float sin2ThetaI = std::max(0.0f, 1.0f - SQ(cosThetaI));
-    Float sin2ThetaT = eta * eta * sin2ThetaI;
+inline bool refract(const Vector3f &wi, const Normal3f &n, float eta, Vector3f *wt) {
+    float cosThetaI = dot(n, wi);
+    float sin2ThetaI = std::max(0.0f, 1.0f - SQ(cosThetaI));
+    float sin2ThetaT = eta * eta * sin2ThetaI;
     if (sin2ThetaT >= 1) return false;
-    Float cosThetaT = sqrt(1 - sin2ThetaT);
+    float cosThetaT = sqrt(1 - sin2ThetaT);
     *wt = -wi * eta + (eta * cosThetaI - cosThetaT) * Vector3f(n);
     return true;
 }

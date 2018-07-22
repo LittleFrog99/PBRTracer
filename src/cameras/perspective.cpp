@@ -3,8 +3,8 @@
 #include "paramset.h"
 
 PerspectiveCamera::PerspectiveCamera(const AnimatedTransform &camToWorld, const Bounds2f &screenWindow,
-                                     Float shutterOpen, Float shutterClose, Float lensRadius,
-                                     Float focalDist, Float fov, Film *film, const Medium *medium)
+                                     float shutterOpen, float shutterClose, float lensRadius,
+                                     float focalDist, float fov, Film *film, const Medium *medium)
     : ProjectiveCamera(camToWorld, Transform::perspective(fov, 1e-2f, 1e3f), screenWindow,
                        shutterOpen, shutterClose, lensRadius, focalDist, film, medium)
 {
@@ -12,7 +12,7 @@ PerspectiveCamera::PerspectiveCamera(const AnimatedTransform &camToWorld, const 
     dyCam = rasterToCamera(Point3f(0, 1, 0)) - rasterToCamera(Point3f());
 }
 
-Float PerspectiveCamera::generateRay(const CameraSample &sample, Ray *ray) const {
+float PerspectiveCamera::generateRay(const CameraSample &sample, Ray *ray) const {
     auto pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
     auto pCamera = rasterToCamera(pFilm);
     *ray = Ray(Point3f(), normalize(Vector3f(pCamera)));
@@ -20,7 +20,7 @@ Float PerspectiveCamera::generateRay(const CameraSample &sample, Ray *ray) const
     // Modify ray for depth of field
     if (lensRadius > 0) {
         auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
-        Float ft = focalDistance / ray->d.z;
+        float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
         ray->d = normalize(pFocus - ray->o);
@@ -32,7 +32,7 @@ Float PerspectiveCamera::generateRay(const CameraSample &sample, Ray *ray) const
     return 1;
 }
 
-Float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const {
+float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const {
     auto pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
     auto pCam = rasterToCamera(pFilm);
     *ray = Ray(Point3f(), normalize(Vector3f(pCam)));
@@ -40,7 +40,7 @@ Float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, Ray
     // Modify ray for depth of field
     if (lensRadius > 0) {
         auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
-        Float ft = focalDistance / ray->d.z;
+        float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
         ray->d = normalize(pFocus - ray->o);
@@ -51,7 +51,7 @@ Float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, Ray
         Point2f pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
 
         Vector3f dx = normalize(Vector3f(pCam + dxCam));
-        Float ft = focalDistance / dx.z;
+        float ft = focalDistance / dx.z;
         Point3f pFocus = Point3f(0, 0, 0) + (ft * dx);
         ray->rxOrigin = Point3f(pLens.x, pLens.y, 0);
         ray->rxDirection = normalize(pFocus - ray->rxOrigin);
@@ -76,18 +76,18 @@ Float PerspectiveCamera::generateRayDifferential(const CameraSample &sample, Ray
 PerspectiveCamera * PerspectiveCamera::create(const ParamSet &params, const AnimatedTransform &cam2world,
                                               Film *film, const Medium *medium)
 {
-    Float shutteropen = params.findOneFloat("shutteropen", 0.f);
-    Float shutterclose = params.findOneFloat("shutterclose", 1.f);
+    float shutteropen = params.findOneFloat("shutteropen", 0.f);
+    float shutterclose = params.findOneFloat("shutterclose", 1.f);
     if (shutterclose < shutteropen) {
         WARNING("Shutter close time [%f] < shutter open [%f].  Swapping them.",
                 shutterclose, shutteropen);
         swap(shutterclose, shutteropen);
     }
-    Float lensradius = params.findOneFloat("lensradius", 0.f);
-    Float focaldistance = params.findOneFloat("focaldistance", 1e6);
-    Float frame = params.findOneFloat(
+    float lensradius = params.findOneFloat("lensradius", 0.f);
+    float focaldistance = params.findOneFloat("focaldistance", 1e6);
+    float frame = params.findOneFloat(
         "frameaspectratio",
-        Float(film->fullResolution.x) / Float(film->fullResolution.y));
+        float(film->fullResolution.x) / float(film->fullResolution.y));
     Bounds2f screen;
     if (frame > 1.f) {
         screen.pMin.x = -frame;
@@ -101,7 +101,7 @@ PerspectiveCamera * PerspectiveCamera::create(const ParamSet &params, const Anim
         screen.pMax.y = 1.f / frame;
     }
     int swi;
-    const Float *sw = params.findFloat("screenwindow", &swi);
+    const float *sw = params.findFloat("screenwindow", &swi);
     if (sw) {
         if (swi == 4) {
             screen.pMin.x = sw[0];
@@ -111,8 +111,8 @@ PerspectiveCamera * PerspectiveCamera::create(const ParamSet &params, const Anim
         } else
             ERROR("\"screenwindow\" should have four values");
     }
-    Float fov = params.findOneFloat("fov", 90.);
-    Float halffov = params.findOneFloat("halffov", -1.f);
+    float fov = params.findOneFloat("fov", 90.);
+    float halffov = params.findOneFloat("halffov", -1.f);
     if (halffov > 0.f)
         // hack for structure synth, which exports half of the full fov
         fov = 2.f * halffov;

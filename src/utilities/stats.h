@@ -163,10 +163,10 @@ public:
 
     void update(int64_t num = 1);
 
-    Float elapsedMS() const {
+    float elapsedMS() const {
         chrono::system_clock::time_point now = chrono::system_clock::now();
         int64_t elapsedMS = chrono::duration_cast<chrono::milliseconds>(now - startTime).count();
-        return Float(elapsedMS);
+        return float(elapsedMS);
     }
 
     void done();

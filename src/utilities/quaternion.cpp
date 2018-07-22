@@ -3,11 +3,11 @@
 
 Quaternion::Quaternion(const Transform &t) {
     const Matrix4x4 &m = t.m;
-    Float trace = m.m[0][0] + m.m[1][1] + m.m[2][2];
+    float trace = m.m[0][0] + m.m[1][1] + m.m[2][2];
     if (trace > 0.f) {
         // Compute w from matrix trace, then xyz
         // 4w^2 = m[0][0] + m[1][1] + m[2][2] + m[3][3] (but m[3][3] == 1)
-        Float s = std::sqrt(trace + 1.0f);
+        float s = std::sqrt(trace + 1.0f);
         w = s / 2.0f;
         s = 0.5f / s;
         v.x = (m.m[2][1] - m.m[1][2]) * s;
@@ -16,13 +16,13 @@ Quaternion::Quaternion(const Transform &t) {
     } else {
         // Compute largest of $x$, $y$, or $z$, then remaining components
         const int nxt[3] = {1, 2, 0};
-        Float q[3];
+        float q[3];
         int i = 0;
         if (m.m[1][1] > m.m[0][0]) i = 1;
         if (m.m[2][2] > m.m[i][i]) i = 2;
         int j = nxt[i];
         int k = nxt[j];
-        Float s = sqrt((m.m[i][i] - (m.m[j][j] + m.m[k][k])) + 1.0f);
+        float s = sqrt((m.m[i][i] - (m.m[j][j] + m.m[k][k])) + 1.0f);
         q[i] = s * 0.5f;
         if (s != 0.f) s = 0.5f / s;
         w = (m.m[k][j] - m.m[j][k]) * s;
@@ -35,9 +35,9 @@ Quaternion::Quaternion(const Transform &t) {
 }
 
 Transform Quaternion::toTransform() const {
-    Float xx = v.x * v.x, yy = v.y * v.y, zz = v.z * v.z;
-    Float xy = v.x * v.y, xz = v.x * v.z, yz = v.y * v.z;
-    Float wx = v.x * w, wy = v.y * w, wz = v.z * w;
+    float xx = v.x * v.x, yy = v.y * v.y, zz = v.z * v.z;
+    float xy = v.x * v.y, xz = v.x * v.z, yz = v.y * v.z;
+    float wx = v.x * w, wy = v.y * w, wz = v.z * w;
 
     Matrix4x4 m;
     m.m[0][0] = 1 - 2 * (yy + zz);

@@ -10,7 +10,7 @@ class SurfaceInteraction;
 class Transform {
 public:
     Transform() {}
-    Transform(const Float mat[4][4]) {
+    Transform(const float mat[4][4]) {
         m = Matrix4x4(mat[0][0], mat[0][1], mat[0][2], mat[0][3], mat[1][0],
                       mat[1][1], mat[1][2], mat[1][3], mat[2][0], mat[2][1],
                       mat[2][2], mat[2][3], mat[3][0], mat[3][1], mat[3][2],
@@ -22,14 +22,14 @@ public:
     Transform(const Matrix4x4 &m, const Matrix4x4 &mInv) : m(m), mInv(mInv) {}
 
     static Transform translate(const Vector3f &delta);
-    static Transform scale(Float x, Float y, Float z);
-    static Transform rotateX(Float theta);
-    static Transform rotateY(Float theta);
-    static Transform rotateZ(Float theta);
-    static Transform rotate(Float theta, const Vector3f &axis);
+    static Transform scale(float x, float y, float z);
+    static Transform rotateX(float theta);
+    static Transform rotateY(float theta);
+    static Transform rotateZ(float theta);
+    static Transform rotate(float theta, const Vector3f &axis);
     static Transform lookAt(const Point3f &pos, const Point3f &look, const Vector3f &up);
-    static Transform orthographic(Float znear, Float zfar);
-    static Transform perspective(Float fov, Float znear, Float zfar);
+    static Transform orthographic(float znear, float zfar);
+    static Transform perspective(float fov, float znear, float zfar);
 
     Transform inverse() const { return Transform(mInv, m); }
     Transform transpose() const { return Transform(m.transpose(), mInv.transpose()); }
@@ -91,9 +91,9 @@ public:
     const Matrix4x4 & getInverseMatrix() const { return mInv; }
 
     bool hasScale() const {
-        Float la2 = (*this)(Vector3f(1, 0, 0)).lengthSq();
-        Float lb2 = (*this)(Vector3f(0, 1, 0)).lengthSq();
-        Float lc2 = (*this)(Vector3f(0, 0, 1)).lengthSq();
+        float la2 = (*this)(Vector3f(1, 0, 0)).lengthSq();
+        float lb2 = (*this)(Vector3f(0, 1, 0)).lengthSq();
+        float lc2 = (*this)(Vector3f(0, 0, 1)).lengthSq();
 #define NOT_ONE(x) ((x) < .999f || (x) > 1.001f)
         return (NOT_ONE(la2) || NOT_ONE(lb2) || NOT_ONE(lc2));
 #undef NOT_ONE
@@ -142,10 +142,10 @@ inline Ray Transform::operator()(const Ray &r) const {
     Point3f o = (*this)(r.o, &oError);
     Vector3f d = (*this)(r.d);
     // Offset ray origin to edge of error bounds and compute _tMax_
-    Float lengthSquared = d.lengthSq();
-    Float tMax = r.tMax;
+    float lengthSquared = d.lengthSq();
+    float tMax = r.tMax;
     if (lengthSquared > 0) {
-        Float dt = Math::dot(Math::abs(d), oError) / lengthSquared;
+        float dt = Math::dot(Math::abs(d), oError) / lengthSquared;
         o += d * dt;
         tMax -= dt;
     }
@@ -267,10 +267,10 @@ inline Vector3<T> Transform::operator()(const Vector3<T> &v, const Vector3<T> &v
 inline Ray Transform::operator()(const Ray &r, Vector3f *oError, Vector3f *dError) const {
     Point3f o = (*this)(r.o, oError);
     Vector3f d = (*this)(r.d, dError);
-    Float tMax = r.tMax;
-    Float lengthSquared = d.lengthSq();
+    float tMax = r.tMax;
+    float lengthSquared = d.lengthSq();
     if (lengthSquared > 0) {
-        Float dt = dot(abs(d), *oError) / lengthSquared;
+        float dt = dot(abs(d), *oError) / lengthSquared;
         o += d * dt;
         //        tMax -= dt;
     }
@@ -281,10 +281,10 @@ inline Ray Transform::operator()(const Ray &r, const Vector3f &oErrorIn, const V
                                  Vector3f *oErrorOut, Vector3f *dErrorOut) const {
     Point3f o = (*this)(r.o, oErrorIn, oErrorOut);
     Vector3f d = (*this)(r.d, dErrorIn, dErrorOut);
-    Float tMax = r.tMax;
-    Float lengthSquared = d.lengthSq();
+    float tMax = r.tMax;
+    float lengthSquared = d.lengthSq();
     if (lengthSquared > 0) {
-        Float dt = dot(abs(d), *oErrorOut) / lengthSquared;
+        float dt = dot(abs(d), *oErrorOut) / lengthSquared;
         o += d * dt;
         //        tMax -= dt;
     }
@@ -293,8 +293,8 @@ inline Ray Transform::operator()(const Ray &r, const Vector3f &oErrorIn, const V
 
 class Interval {
 public:
-    Interval(Float v) : low(v), high(v) {}
-    Interval(Float v0, Float v1) : low(min(v0, v1)), high(max(v0, v1)) {}
+    Interval(float v) : low(v), high(v) {}
+    Interval(float v0, float v1) : low(min(v0, v1)), high(max(v0, v1)) {}
 
     Interval operator + (const Interval &i) const { return Interval(low + i.low, high + i.high); }
     Interval operator - (const Interval &i) const { return Interval(low - i.high, high - i.low); }
@@ -303,17 +303,17 @@ public:
                         max(max(low * i.low, high * i.low), max(low * i.high, high * i.high)));
     }
 
-    static void findZeros(Float c1, Float c2, Float c3, Float c4, Float c5, Float theta,
-                          Interval tInterval, Float *zeros, int *zeroCount, int depth = 8);
+    static void findZeros(float c1, float c2, float c3, float c4, float c5, float theta,
+                          Interval tInterval, float *zeros, int *zeroCount, int depth = 8);
 
-    Float low, high;
+    float low, high;
 };
 
 namespace Math {
 inline Interval sin(const Interval &i) {
     CHECK_GE(i.low, 0);
     CHECK_LE(i.high, 2.0001 * PI);
-    Float sinLow = std::sin(i.low), sinHigh = std::sin(i.high);
+    float sinLow = std::sin(i.low), sinHigh = std::sin(i.high);
     if (sinLow > sinHigh) swap(sinLow, sinHigh);
     if (i.low < PI / 2 && i.high > PI / 2) sinHigh = 1.;
     if (i.low < (3.f / 2.f) * PI && i.high > (3.f / 2.f) * PI) sinLow = -1.;
@@ -323,7 +323,7 @@ inline Interval sin(const Interval &i) {
 inline Interval cos(const Interval &i) {
     CHECK_GE(i.low, 0);
     CHECK_LE(i.high, 2.0001 * PI);
-    Float cosLow = std::cos(i.low), cosHigh = std::cos(i.high);
+    float cosLow = std::cos(i.low), cosHigh = std::cos(i.high);
     if (cosLow > cosHigh) swap(cosLow, cosHigh);
     if (i.low < PI && i.high > PI) cosLow = -1.;
     return Interval(cosLow, cosHigh);
@@ -333,17 +333,17 @@ inline Interval cos(const Interval &i) {
 
 class AnimatedTransform {
 public:
-    AnimatedTransform(const Transform *startTransform, Float startTime,
-                      const Transform *endTransform, Float endTime);
+    AnimatedTransform(const Transform *startTransform, float startTime,
+                      const Transform *endTransform, float endTime);
 
-    void interpolate(Float time, Transform *t) const;
+    void interpolate(float time, Transform *t) const;
     Bounds3f motionBounds(const Bounds3f &b) const;
     Bounds3f boundPointMotion(const Point3f &p) const;
 
     Ray operator()(const Ray &r) const;
     RayDifferential operator()(const RayDifferential &r) const;
-    Point3f operator()(Float time, const Point3f &p) const;
-    Vector3f operator()(Float time, const Vector3f &v) const;
+    Point3f operator()(float time, const Point3f &p) const;
+    Vector3f operator()(float time, const Vector3f &v) const;
 
     bool hasScale() const {
         return startTransform->hasScale() || endTransform->hasScale();
@@ -354,16 +354,16 @@ public:
 private:
     struct DerivativeTerm {
         DerivativeTerm() {}
-        DerivativeTerm(Float c, Float x, Float y, Float z)
+        DerivativeTerm(float c, float x, float y, float z)
             : kc(c), kx(x), ky(y), kz(z) {}
-        Float kc, kx, ky, kz;
-        Float evaluate(const Point3f &p) const {
+        float kc, kx, ky, kz;
+        float evaluate(const Point3f &p) const {
             return kc + kx * p.x + ky * p.y + kz * p.z;
         }
     };
 
     const Transform *startTransform, *endTransform;
-    const Float startTime, endTime;
+    const float startTime, endTime;
     const bool actuallyAnimated;
     Vector3f T[2];
     Quaternion R[2];

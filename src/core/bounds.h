@@ -45,7 +45,7 @@ public:
         return o;
     }
 
-    inline void boundingSphere(Point2<T> *c, Float *rad) const;
+    inline void boundingSphere(Point2<T> *c, float *rad) const;
 
     friend ostream & operator << (ostream &os, const Bounds2<T> &b) {
         os << "[ " << b.pMin << " - " << b.pMax << " ]";
@@ -119,14 +119,14 @@ class Bounds3 {
         return o;
     }
 
-    inline void boundingSphere(Point3<T> *center, Float *radius) const;
+    inline void boundingSphere(Point3<T> *center, float *radius) const;
 
     template <typename U>
     explicit operator Bounds3<U>() const {
         return Bounds3<U>(Point3<U>(pMin), Point3<U>(pMax));
     }
 
-    bool intersectP(const Ray &ray, Float *hitt0 = nullptr, Float *hitt1 = nullptr) const;
+    bool intersectP(const Ray &ray, float *hitt0 = nullptr, float *hitt1 = nullptr) const;
     inline bool intersectP(const Ray &ray, const Vector3f &invDir, const int dirIsNeg[3]) const;
 
     friend ostream & operator << (ostream &os, const Bounds3<T> &b) {
@@ -137,9 +137,9 @@ class Bounds3 {
     Point3<T> pMin, pMax;
 };
 
-typedef Bounds2<Float> Bounds2f;
+typedef Bounds2<float> Bounds2f;
 typedef Bounds2<int> Bounds2i;
-typedef Bounds3<Float> Bounds3f;
+typedef Bounds3<float> Bounds3f;
 typedef Bounds3<int> Bounds3i;
 
 class Bounds2iIterator : public forward_iterator_tag {
@@ -173,13 +173,13 @@ private:
 };
 
 template <typename T>
-bool Bounds3<T>::intersectP(const Ray &ray, Float *hitt0, Float *hitt1) const {
-    Float t0 = 0, t1 = ray.tMax;
+bool Bounds3<T>::intersectP(const Ray &ray, float *hitt0, float *hitt1) const {
+    float t0 = 0, t1 = ray.tMax;
     for (int i = 0; i < 3; ++i) {
         // Update interval for i_th bounding box slab
-        Float invRayDir = 1 / ray.d[i];
-        Float tNear = (pMin[i] - ray.o[i]) * invRayDir;
-        Float tFar = (pMax[i] - ray.o[i]) * invRayDir;
+        float invRayDir = 1 / ray.d[i];
+        float tNear = (pMin[i] - ray.o[i]) * invRayDir;
+        float tFar = (pMax[i] - ray.o[i]) * invRayDir;
         // Update parametric interval from slab intersection t values
         if (tNear > tFar) swap(tNear, tFar);
         // Update _tFar_ to ensure robust ray--bounds intersection
@@ -198,10 +198,10 @@ inline bool Bounds3<T>::intersectP(const Ray &ray, const Vector3f &invDir,
                                    const int dirIsNeg[3]) const {
     const Bounds3f &bounds = *this;
     // Check for ray intersection against $x$ and $y$ slabs
-    Float tMin = (bounds[dirIsNeg[0]].x - ray.o.x) * invDir.x;
-    Float tMax = (bounds[1 - dirIsNeg[0]].x - ray.o.x) * invDir.x;
-    Float tyMin = (bounds[dirIsNeg[1]].y - ray.o.y) * invDir.y;
-    Float tyMax = (bounds[1 - dirIsNeg[1]].y - ray.o.y) * invDir.y;
+    float tMin = (bounds[dirIsNeg[0]].x - ray.o.x) * invDir.x;
+    float tMax = (bounds[1 - dirIsNeg[0]].x - ray.o.x) * invDir.x;
+    float tyMin = (bounds[dirIsNeg[1]].y - ray.o.y) * invDir.y;
+    float tyMax = (bounds[1 - dirIsNeg[1]].y - ray.o.y) * invDir.y;
 
     // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
     tMax *= 1 + 2 * Math::gamma(3);
@@ -211,8 +211,8 @@ inline bool Bounds3<T>::intersectP(const Ray &ray, const Vector3f &invDir,
     if (tyMax < tMax) tMax = tyMax;
 
     // Check for ray intersection against $z$ slab
-    Float tzMin = (bounds[dirIsNeg[2]].z - ray.o.z) * invDir.z;
-    Float tzMax = (bounds[1 - dirIsNeg[2]].z - ray.o.z) * invDir.z;
+    float tzMin = (bounds[dirIsNeg[2]].z - ray.o.z) * invDir.z;
+    float tzMax = (bounds[1 - dirIsNeg[2]].z - ray.o.z) * invDir.z;
 
     // Update _tzMax_ to ensure robust bounds intersection
     tzMax *= 1 + 2 * Math::gamma(3);
@@ -277,15 +277,15 @@ inline Bounds3<T> expand(const Bounds3<T> &b, U delta) {
 // Minimum squared distance from point to box; returns zero if point is
 // inside.
 template <typename T, typename U>
-inline Float distanceSq(const Point3<T> &p, const Bounds3<U> &b) {
-    Float dx = std::max({Float(0), b.pMin.x - p.x, p.x - b.pMax.x});
-    Float dy = std::max({Float(0), b.pMin.y - p.y, p.y - b.pMax.y});
-    Float dz = std::max({Float(0), b.pMin.z - p.z, p.z - b.pMax.z});
+inline float distanceSq(const Point3<T> &p, const Bounds3<U> &b) {
+    float dx = std::max({float(0), b.pMin.x - p.x, p.x - b.pMax.x});
+    float dy = std::max({float(0), b.pMin.y - p.y, p.y - b.pMax.y});
+    float dz = std::max({float(0), b.pMin.z - p.z, p.z - b.pMax.z});
     return dx * dx + dy * dy + dz * dz;
 }
 
 template <typename T, typename U>
-inline Float distance(const Point3<T> &p, const Bounds3<U> &b) {
+inline float distance(const Point3<T> &p, const Bounds3<U> &b) {
     return sqrt(distanceSq(p, b));
 }
 
@@ -342,13 +342,13 @@ inline Bounds2<T> expand(const Bounds2<T> &b, U delta) {
 }
 
 template<class T>
-inline void Bounds2<T>::boundingSphere(Point2<T> *c, Float *rad) const {
+inline void Bounds2<T>::boundingSphere(Point2<T> *c, float *rad) const {
     *c = (pMin + pMax) / 2;
     *rad = Math::inside(*c, *this) ? Math::distance(*c, pMax) : 0;
 }
 
 template<class T>
-inline void Bounds3<T>::boundingSphere(Point3<T> *center, Float *radius) const {
+inline void Bounds3<T>::boundingSphere(Point3<T> *center, float *radius) const {
     *center = (pMin + pMax) / 2;
     *radius = Math::inside(*center, *this) ? Math::distance(*center, pMax) : 0;
 }

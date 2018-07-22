@@ -3,7 +3,7 @@
 #include "paramset.h"
 #include "efloat.h"
 
-bool Disk::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect,
+bool Disk::intersect(const Ray &worldRay, float *tHit, SurfaceInteraction *isect,
                      bool testAlphaTexture) const
 {
     ProfilePhase p(Profiler::Stage::ShapeIntersect);
@@ -14,21 +14,21 @@ bool Disk::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect
 
     // Compute plane intersection for disk
     if (ray.d.z == 0) return false;
-    Float tShapeHit = (height - ray.o.z) / ray.d.z;
+    float tShapeHit = (height - ray.o.z) / ray.d.z;
     if (tShapeHit <= 0 || tShapeHit >= ray.tMax) return false;
 
     // See if hit point is in inside disk radii and phiMax
     Point3f pHit = ray(tShapeHit);
-    Float distSq = SQ(pHit.x) + SQ(pHit.y);
+    float distSq = SQ(pHit.x) + SQ(pHit.y);
     if (distSq > SQ(radius) || distSq < SQ(innerRadius)) return false;
-    Float phi = atan2(pHit.y, pHit.x);
+    float phi = atan2(pHit.y, pHit.x);
     if (phi < 0) phi += 2 * PI;
     if (phi > phiMax) return false;
 
     // Find parametric representation of disk hit
-    Float u = phi / phiMax;
-    Float rHit = sqrt(distSq);
-    Float v = (radius - rHit) / (radius - innerRadius);
+    float u = phi / phiMax;
+    float rHit = sqrt(distSq);
+    float v = (radius - rHit) / (radius - innerRadius);
 
     Vector3f dpdu(-phiMax * pHit.y, phiMax * pHit.x, 0);
     Vector3f dpdv = Vector3f(pHit.x, pHit.y, 0) * (innerRadius - radius) / rHit;
@@ -42,7 +42,7 @@ bool Disk::intersect(const Ray &worldRay, Float *tHit, SurfaceInteraction *isect
                                                  dpdu, dpdv, dndu, dndv, ray.time, this));
 
     // Update $tHit for quadratic intersection
-    *tHit = Float(tShapeHit);
+    *tHit = float(tShapeHit);
 
     return true;
 }
@@ -56,14 +56,14 @@ bool Disk::intersectP(const Ray &worldRay, bool testAlphaTexture) const  {
 
     // Compute plane intersection for disk
     if (ray.d.z == 0) return false;
-    Float tShapeHit = (height - ray.o.z) / ray.d.z;
+    float tShapeHit = (height - ray.o.z) / ray.d.z;
     if (tShapeHit <= 0 || tShapeHit >= ray.tMax) return false;
 
     // See if hit point is in inside disk radii and phiMax
     Point3f pHit = ray(tShapeHit);
-    Float distSq = SQ(pHit.x) + SQ(pHit.y);
+    float distSq = SQ(pHit.x) + SQ(pHit.y);
     if (distSq > SQ(radius) || distSq < SQ(innerRadius)) return false;
-    Float phi = atan2(pHit.y, pHit.x);
+    float phi = atan2(pHit.y, pHit.x);
     if (phi < 0) phi += 2 * PI;
     if (phi > phiMax) return false;
 
@@ -73,9 +73,9 @@ bool Disk::intersectP(const Ray &worldRay, bool testAlphaTexture) const  {
 shared_ptr<Shape> Disk::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
                                const ParamSet &params)
 {
-    Float height = params.findOneFloat("height", 0.);
-    Float radius = params.findOneFloat("radius", 1);
-    Float inner_radius = params.findOneFloat("innerradius", 0);
-    Float phimax = params.findOneFloat("phimax", 360);
+    float height = params.findOneFloat("height", 0.);
+    float radius = params.findOneFloat("radius", 1);
+    float inner_radius = params.findOneFloat("innerradius", 0);
+    float phimax = params.findOneFloat("phimax", 360);
     return std::make_shared<Disk>(o2w, w2o, reverseOrientation, height, radius, inner_radius, phimax);
 }

@@ -10,23 +10,23 @@ namespace ImageIO {
 
 using namespace File;
 
-static void writeImageEXR(const string &name, const Float *pixels, int xRes, int yRes,
+static void writeImageEXR(const string &name, const float *pixels, int xRes, int yRes,
                           int totalXRes, int totalYRes, int xOffset, int yOffset);
 static void writeImageTGA(const string &name, const uint8_t *pixels, int xRes, int yRes,
                           int totalXRes, int totalYRes, int xOffset, int yOffset);
 static RGBSpectrum *readImageTGA(const string &name, int *w, int *h);
 static RGBSpectrum *readImagePNG(const string &name, int *w, int *h);
-static bool writeImagePFM(const string &filename, const Float *rgb, int xres, int yres);
+static bool writeImagePFM(const string &filename, const float *rgb, int xres, int yres);
 static RGBSpectrum *readImagePFM(const string &filename, int *xres, int *yres);
 
-inline Float gammaCorrect(Float value) {
+inline float gammaCorrect(float value) {
     if (value <= 0.0031308f) return 12.92f * value;
-    return 1.055f * std::pow(value, (Float)(1.f / 2.4f)) - 0.055f;
+    return 1.055f * std::pow(value, (float)(1.f / 2.4f)) - 0.055f;
 }
 
-inline Float inverseGammaCorrect(Float value) {
+inline float inverseGammaCorrect(float value) {
     if (value <= 0.04045f) return value * 1.f / 12.92f;
-    return std::pow((value + 0.055f) * 1.f / 1.055f, (Float)2.4f);
+    return std::pow((value + 0.055f) * 1.f / 1.055f, (float)2.4f);
 }
 
 // ImageIO Function Definitions
@@ -51,7 +51,7 @@ unique_ptr<RGBSpectrum[]> readImage(const string &name,
     return nullptr;
 }
 
-void writeImage(const string &name, const Float *rgb,
+void writeImage(const string &name, const float *rgb,
                 const Bounds2i &outputBounds, const Point2i &totalResolution) {
     Vector2i resolution = outputBounds.diagonal();
     if (hasExtension(name, ".exr")) {
@@ -119,7 +119,7 @@ RGBSpectrum *readImageEXR(const string &name, int *width, int *height,
 
         RGBSpectrum *ret = new RGBSpectrum[*width * *height];
         for (int i = 0; i < *width * *height; ++i) {
-            Float frgb[3] = {pixels[i].r, pixels[i].g, pixels[i].b};
+            float frgb[3] = {pixels[i].r, pixels[i].g, pixels[i].b};
             ret[i] = RGBSpectrum::fromRGB(frgb);
         }
         LOG(INFO) << STRING_PRINTF("Read EXR image %s (%d x %d)", name.c_str(), *width, *height);
@@ -131,7 +131,7 @@ RGBSpectrum *readImageEXR(const string &name, int *width, int *height,
     return nullptr;
 }
 
-static void writeImageEXR(const string &name, const Float *pixels,
+static void writeImageEXR(const string &name, const float *pixels,
                           int xRes, int yRes, int totalXRes, int totalYRes,
                           int xOffset, int yOffset) {
     using namespace Imf;
@@ -212,7 +212,7 @@ static RGBSpectrum *readImageTGA(const string &name, int *width,
             if (tga_is_mono(&img))
                 *dst++ = RGBSpectrum(*src / 255.f);
             else {
-                Float c[3];
+                float c[3];
                 c[2] = src[0] / 255.f;
                 c[1] = src[1] / 255.f;
                 c[0] = src[2] / 255.f;
@@ -243,7 +243,7 @@ static RGBSpectrum *readImagePNG(const string &name, int *width,
     unsigned char *src = rgb;
     for (unsigned int y = 0; y < h; ++y) {
         for (unsigned int x = 0; x < w; ++x, src += 3) {
-            Float c[3];
+            float c[3];
             c[0] = src[0] / 255.f;
             c[1] = src[1] / 255.f;
             c[2] = src[2] / 255.f;
@@ -384,7 +384,7 @@ static RGBSpectrum *readImagePFM(const string &filename, int *xres, int *yres) {
         for (int i = 0; i < width * height; ++i) rgb[i] = RGBSpectrum(data[i]);
     } else {
         for (int i = 0; i < width * height; ++i) {
-            Float frgb[3] = {data[3 * i], data[3 * i + 1], data[3 * i + 2]};
+            float frgb[3] = {data[3 * i], data[3 * i + 1], data[3 * i + 2]};
             rgb[i] = RGBSpectrum::fromRGB(frgb);
         }
     }
@@ -403,7 +403,7 @@ fail:
     return nullptr;
 }
 
-static bool writeImagePFM(const string &filename, const Float *rgb,
+static bool writeImagePFM(const string &filename, const float *rgb,
                           int width, int height) {
     FILE *fp;
     float scale;
@@ -432,7 +432,7 @@ static bool writeImagePFM(const string &filename, const Float *rgb,
     // delimiters of any kind. They are grouped by row, with the pixels in each
     // row ordered left to right and the rows ordered bottom to top.
     for (int y = height - 1; y >= 0; y--) {
-        // in case Float is 'double', copy into a staging buffer that's
+        // in case float is 'double', copy into a staging buffer that's
         // definitely a 32-bit float...
         for (int x = 0; x < 3 * width; ++x)
             scanline[x] = rgb[y * width * 3 + x];

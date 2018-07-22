@@ -222,7 +222,7 @@ double Parser::parseNumber(string_view str) {
     double val;
     if (isInteger(str))
         val = double(strtol(bufp, &endptr, 10));
-    else if (sizeof(Float) == sizeof(float))
+    else if (sizeof(float) == sizeof(float))
         val = strtof(bufp, &endptr);
     else
         val = strtod(bufp, &endptr);
@@ -397,7 +397,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
             }
             ps.addBool(name, move(bdata), nItems);
         } else if (type == PARAM_TYPE_FLOAT) {
-            unique_ptr<Float[]> floats(new Float[nItems]);
+            unique_ptr<float[]> floats(new float[nItems]);
             for (int i = 0; i < nItems; ++i) floats[i] = item.doubleValues[i];
             ps.addFloat(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_POINT2) {
@@ -471,7 +471,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                     item.name.c_str(), nItems % 3);
                 nItems -= nItems % 3;
             }
-            unique_ptr<Float[]> floats(new Float[nItems]);
+            unique_ptr<float[]> floats(new float[nItems]);
             for (int j = 0; j < nItems; ++j) floats[j] = item.doubleValues[j];
             ps.addRGBSpectrum(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_XYZ) {
@@ -482,7 +482,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                     item.name.c_str(), nItems % 3);
                 nItems -= nItems % 3;
             }
-            unique_ptr<Float[]> floats(new Float[nItems]);
+            unique_ptr<float[]> floats(new float[nItems]);
             for (int j = 0; j < nItems; ++j) floats[j] = item.doubleValues[j];
             ps.addXYZSpectrum(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_BLACKBODY) {
@@ -493,7 +493,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                     item.name.c_str());
                 nItems -= nItems % 2;
             }
-            unique_ptr<Float[]> floats(new Float[nItems]);
+            unique_ptr<float[]> floats(new float[nItems]);
             for (int j = 0; j < nItems; ++j) floats[j] = item.doubleValues[j];
             ps.addBlackbodySpectrum(name, move(floats), nItems);
         } else if (type == PARAM_TYPE_SPECTRUM) {
@@ -508,7 +508,7 @@ void Parser::addParam(ParamSet &ps, const ParamListItem &item, SpectrumType spec
                         item.name.c_str());
                     nItems -= nItems % 2;
                 }
-                unique_ptr<Float[]> floats(new Float[nItems]);
+                unique_ptr<float[]> floats(new float[nItems]);
                 for (int j = 0; j < nItems; ++j)
                     floats[j] = item.doubleValues[j];
                 ps.addSampledSpectrum(name, move(floats), nItems);
@@ -719,7 +719,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
         case 'C':
             if (tok == "ConcatTransform") {
                 if (nextToken(TOKEN_REQUIRED) != "[") syntaxError(tok);
-                Float m[16];
+                float m[16];
                 for (int i = 0; i < 16; ++i)
                     m[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 if (nextToken(TOKEN_REQUIRED) != "]") syntaxError(tok);
@@ -756,7 +756,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
             if (tok == "LightSource")
                 basicParamListEntrypoint(SpectrumType::Illuminant, API::lightSource);
             else if (tok == "LookAt") {
-                Float v[9];
+                float v[9];
                 for (int i = 0; i < 9; ++i)
                     v[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 API::lookAt(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8]);
@@ -825,7 +825,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
             if (tok == "ReverseOrientation")
                 API::reverseOrientation();
             else if (tok == "Rotate") {
-                Float v[4];
+                float v[4];
                 for (int i = 0; i < 4; ++i)
                     v[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 API::rotate(v[0], v[1], v[2], v[3]);
@@ -839,7 +839,7 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
             else if (tok == "Sampler")
                 basicParamListEntrypoint(SpectrumType::Reflectance, API::sampler);
             else if (tok == "Scale") {
-                Float v[3];
+                float v[3];
                 for (int i = 0; i < 3; ++i)
                     v[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 API::scale(v[0], v[1], v[2]);
@@ -854,18 +854,18 @@ void Parser::parse(unique_ptr<Tokenizer> t) {
                 API::transformEnd();
             else if (tok == "Transform") {
                 if (nextToken(TOKEN_REQUIRED) != "[") syntaxError(tok);
-                Float m[16];
+                float m[16];
                 for (int i = 0; i < 16; ++i)
                     m[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 if (nextToken(TOKEN_REQUIRED) != "]") syntaxError(tok);
                 API::transform(m);
             } else if (tok == "Translate") {
-                Float v[3];
+                float v[3];
                 for (int i = 0; i < 3; ++i)
                     v[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 API::translate(v[0], v[1], v[2]);
             } else if (tok == "TransformTimes") {
-                Float v[2];
+                float v[2];
                 for (int i = 0; i < 2; ++i)
                     v[i] = parseNumber(nextToken(TOKEN_REQUIRED));
                 API::transformTimes(v[0], v[1]);

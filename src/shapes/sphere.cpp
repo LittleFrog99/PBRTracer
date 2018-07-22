@@ -3,7 +3,7 @@
 #include "paramset.h"
 #include "efloat.h"
 
-bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isect,
+bool Sphere::intersect(const Ray &worldRay, float *tHit,SurfaceInteraction *isect,
                        bool testAlphaTexture) const
 {
     ProfilePhase p(Profiler::Stage::ShapeIntersect);
@@ -31,10 +31,10 @@ bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isec
     }
 
     // Compute sphere hit position and phi(azimuth)
-    Point3f pHit = ray(Float(tShapeHit));
+    Point3f pHit = ray(float(tShapeHit));
     pHit *= radius / distance(pHit, Point3f(0, 0, 0));
     if (pHit.x == 0 && pHit.y == 0) pHit.x = 1e-5f * radius; // why this?
-    Float phi = atan2(pHit.y, pHit.x);
+    float phi = atan2(pHit.y, pHit.x);
     if (phi < 0) phi += 2 * PI;
 
     // Test sphere intersection against clipping paramaters
@@ -44,10 +44,10 @@ bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isec
         if (t1.upperBound() > ray.tMax) return false;
         tShapeHit = t1;
 
-        Point3f pHit = ray(Float(tShapeHit));
+        Point3f pHit = ray(float(tShapeHit));
         pHit *= radius / distance(pHit, Point3f(0, 0, 0));
         if (pHit.x == 0 && pHit.y == 0) pHit.x = 1e-5f * radius;
-        Float phi = atan2(pHit.y, pHit.x);
+        float phi = atan2(pHit.y, pHit.x);
         if (phi < 0) phi += 2 * PI;
 
         if ((zMin > -radius && pHit.z < zMin) || (zMax < radius && pHit.z > zMax) // again with t1
@@ -56,23 +56,23 @@ bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isec
     }
 
     // Find parametric representation of sphere hit
-    Float u = phi / phiMax;
-    Float theta = acos(clamp(pHit.z / radius, -1.0, 1.0));
-    Float v = (theta - thetaMin) / (thetaMax - thetaMin);
-    Float zRadius = sqrt(SQ(pHit.x) + SQ(pHit.y));
-    Float invZRadius = 1.0 / zRadius;
-    Float cosPhi = pHit.x * invZRadius;
-    Float sinPhi = pHit.y * invZRadius;
+    float u = phi / phiMax;
+    float theta = acos(clamp(pHit.z / radius, -1.0, 1.0));
+    float v = (theta - thetaMin) / (thetaMax - thetaMin);
+    float zRadius = sqrt(SQ(pHit.x) + SQ(pHit.y));
+    float invZRadius = 1.0 / zRadius;
+    float cosPhi = pHit.x * invZRadius;
+    float sinPhi = pHit.y * invZRadius;
 
     auto dpdu = Vector3f(-phiMax * pHit.y, phiMax * pHit.x, 0);
     auto dpdv = (thetaMax - thetaMin) * Vector3f(pHit.z * cosPhi, pHit.z * sinPhi, -radius * sin(theta));
     auto d2pduu = -SQ(phiMax) * Vector3f(pHit.x, pHit.y, 0);
     auto d2pduv = (thetaMax - thetaMin) * pHit.z * phiMax * Vector3f(-sinPhi, cosPhi, 0);
     auto d2pdvv = -SQ(thetaMax - thetaMin) * Vector3f(pHit);
-    Float E = dot(dpdu, dpdu), F = dot(dpdu, dpdv), G = dot(dpdv, dpdv);
+    float E = dot(dpdu, dpdu), F = dot(dpdu, dpdv), G = dot(dpdv, dpdv);
     Vector3f N = normalize(cross(dpdu, dpdv));
-    Float e = dot(N, d2pduu), f = dot(N, d2pduv), g = dot(N, d2pdvv);
-    Float invEGF2 = 1.0 / (E * G - F * F);
+    float e = dot(N, d2pduu), f = dot(N, d2pduv), g = dot(N, d2pdvv);
+    float invEGF2 = 1.0 / (E * G - F * F);
     auto dndu = Normal3f((f * F - e * G) * invEGF2 * dpdu + (e * F - f * E) * invEGF2 * dpdv);
     auto dndv = Normal3f((g * F - f * G) * invEGF2 * dpdu + (f * F - g * E) * invEGF2 * dpdv);
 
@@ -84,7 +84,7 @@ bool Sphere::intersect(const Ray &worldRay, Float *tHit,SurfaceInteraction *isec
                                                  dpdu, dpdv, dndu, dndv, ray.time, this));
 
     // Update $tHit for quadratic intersection
-    *tHit = Float(tShapeHit);
+    *tHit = float(tShapeHit);
 
     return true;
 }
@@ -115,10 +115,10 @@ bool Sphere::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
     }
 
     // Compute sphere hit position and phi(azimuth)
-    Point3f pHit = ray(Float(tShapeHit));
+    Point3f pHit = ray(float(tShapeHit));
     pHit *= radius / distance(pHit, Point3f(0, 0, 0));
     if (pHit.x == 0 && pHit.y == 0) pHit.x = 1e-5f * radius; // why this?
-    Float phi = atan2(pHit.y, pHit.x);
+    float phi = atan2(pHit.y, pHit.x);
     if (phi < 0) phi += 2 * PI;
 
     // Test sphere intersection against clipping paramaters
@@ -128,10 +128,10 @@ bool Sphere::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
         if (t1.upperBound() > ray.tMax) return false;
         tShapeHit = t1;
 
-        Point3f pHit = ray(Float(tShapeHit));
+        Point3f pHit = ray(float(tShapeHit));
         pHit *= radius / distance(pHit, Point3f(0, 0, 0));
         if (pHit.x == 0 && pHit.y == 0) pHit.x = 1e-5f * radius;
-        Float phi = atan2(pHit.y, pHit.x);
+        float phi = atan2(pHit.y, pHit.x);
         if (phi < 0) phi += 2 * PI;
 
         if ((zMin > -radius && pHit.z < zMin) || (zMax < radius && pHit.z > zMax) // again with t1
@@ -145,9 +145,9 @@ bool Sphere::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
 shared_ptr<Shape> Sphere::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
                                  const ParamSet &params)
 {
-    Float radius = params.findOneFloat("radius", 1.f);
-    Float zmin = params.findOneFloat("zmin", -radius);
-    Float zmax = params.findOneFloat("zmax", radius);
-    Float phimax = params.findOneFloat("phimax", 360.f);
+    float radius = params.findOneFloat("radius", 1.f);
+    float zmin = params.findOneFloat("zmin", -radius);
+    float zmax = params.findOneFloat("zmax", radius);
+    float phimax = params.findOneFloat("phimax", 360.f);
     return make_shared<Sphere>(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
 }

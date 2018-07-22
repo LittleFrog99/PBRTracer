@@ -23,9 +23,9 @@
     return d
 
 
-void ParamSet::addFloat(const string &name, unique_ptr<Float[]> values, int nValues) {
+void ParamSet::addFloat(const string &name, unique_ptr<float[]> values, int nValues) {
     eraseFloat(name);
-    ADD_PARAM_TYPE(Float, floats);
+    ADD_PARAM_TYPE(float, floats);
 }
 
 void ParamSet::addInt(const string &name, unique_ptr<int[]> values, int nValues) {
@@ -63,7 +63,7 @@ void ParamSet::addNormal3f(const string &name, unique_ptr<Normal3f[]> values, in
     ADD_PARAM_TYPE(Normal3f, normals);
 }
 
-void ParamSet::addRGBSpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
+void ParamSet::addRGBSpectrum(const string &name, unique_ptr<float[]> values, int nValues) {
     eraseSpectrum(name);
     CHECK_EQ(nValues % 3, 0);
     nValues /= 3;
@@ -74,7 +74,7 @@ void ParamSet::addRGBSpectrum(const string &name, unique_ptr<Float[]> values, in
     spectra.push_back(psi);
 }
 
-void ParamSet::addXYZSpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
+void ParamSet::addXYZSpectrum(const string &name, unique_ptr<float[]> values, int nValues) {
     eraseSpectrum(name);
     CHECK_EQ(nValues % 3, 0);
     nValues /= 3;
@@ -85,12 +85,12 @@ void ParamSet::addXYZSpectrum(const string &name, unique_ptr<Float[]> values, in
     spectra.push_back(psi);
 }
 
-void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
+void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<float[]> values, int nValues) {
     eraseSpectrum(name);
     CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
     unique_ptr<Spectrum[]> s(new Spectrum[nValues]);
-    unique_ptr<Float[]> v(new Float[SpectrumUtil::nCIESamples]);
+    unique_ptr<float[]> v(new float[SpectrumUtil::nCIESamples]);
     for (int i = 0; i < nValues; ++i) {
         SpectrumUtil::blackbodyNormalized(SpectrumUtil::CIE_lambda, SpectrumUtil::nCIESamples,
                                           values[2 * i], v.get());
@@ -102,12 +102,12 @@ void ParamSet::addBlackbodySpectrum(const string &name, unique_ptr<Float[]> valu
     spectra.push_back(psi);
 }
 
-void ParamSet::addSampledSpectrum(const string &name, unique_ptr<Float[]> values, int nValues) {
+void ParamSet::addSampledSpectrum(const string &name, unique_ptr<float[]> values, int nValues) {
     eraseSpectrum(name);
     CHECK_EQ(nValues % 2, 0);
     nValues /= 2;
-    unique_ptr<Float[]> wl(new Float[nValues]);
-    unique_ptr<Float[]> v(new Float[nValues]);
+    unique_ptr<float[]> wl(new float[nValues]);
+    unique_ptr<float[]> v(new float[nValues]);
     for (int i = 0; i < nValues; ++i) {
         wl[i] = values[2 * i];
         v[i] = values[2 * i + 1];
@@ -129,7 +129,7 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
             continue;
         }
 
-        vector<Float> vals;
+        vector<float> vals;
         if (!File::readFloatFile(fn.c_str(), &vals)) {
             WARNING(
                 "Unable to read SPD file \"%s\".  Using black distribution.",
@@ -142,7 +142,7 @@ void ParamSet::addSampledSpectrumFiles(const string &name, const char **names, i
                     "Ignoring it.",
                     fn.c_str());
             }
-            vector<Float> wls, v;
+            vector<float> wls, v;
             for (size_t j = 0; j < vals.size() / 2; ++j) {
                 wls.push_back(vals[2 * j]);
                 v.push_back(vals[2 * j + 1]);
@@ -273,7 +273,7 @@ bool ParamSet::eraseTexture(const string &n) {
     return false;
 }
 
-Float ParamSet::findOneFloat(const string &name, Float d) const {
+float ParamSet::findOneFloat(const string &name, float d) const {
     for (const auto &f : floats)
         if (f->name == name && f->nValues == 1) {
             f->lookedUp = true;
@@ -282,7 +282,7 @@ Float ParamSet::findOneFloat(const string &name, Float d) const {
     return d;
 }
 
-const Float *ParamSet::findFloat(const string &name, int *n) const {
+const float *ParamSet::findFloat(const string &name, int *n) const {
     for (const auto &f : floats)
         if (f->name == name) {
             *n = f->nValues;
@@ -445,7 +445,7 @@ string ParamSet::toString() const {
         ret += string("] ");
     }
     for (i = 0; i < floats.size(); ++i) {
-        const shared_ptr<ParamSetItem<Float>> &item = floats[i];
+        const shared_ptr<ParamSetItem<float>> &item = floats[i];
         typeString = "float ";
         // Print _ParamSetItem_ declaration, determine how many to print
         int nPrint = item->nValues;
@@ -572,7 +572,7 @@ string ParamSet::toString() const {
         ret += string("\"");
         ret += string(" [");
         for (j = 0; j < nPrint; ++j) {
-            Float rgb[3];
+            float rgb[3];
             item->values[j].toRGB(rgb);
             ret += STRING_PRINTF("%.8g %.8g %.8g ", rgb[0], rgb[1], rgb[2]);
         }
@@ -644,34 +644,34 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(const stri
     }
 }
 
-shared_ptr<Texture<Float>> TextureParams::getFloatTexture(const string &n, Float def) const {
-    shared_ptr<Texture<Float>> tex = getFloatTextureOrNull(n);
+shared_ptr<Texture<float>> TextureParams::getFloatTexture(const string &n, float def) const {
+    shared_ptr<Texture<float>> tex = getFloatTextureOrNull(n);
     if (tex)
         return tex;
     else
-        return make_shared<ConstantTexture<Float>>(def);
+        return make_shared<ConstantTexture<float>>(def);
 }
 
-shared_ptr<Texture<Float>> TextureParams::getFloatTextureOrNull(const string &n) const {
+shared_ptr<Texture<float>> TextureParams::getFloatTextureOrNull(const string &n) const {
     // Check the shape parameters first.
     string name = geomParams.findTexture(n);
     if (name.empty()) {
         int count;
-        const Float *s = geomParams.findFloat(n, &count);
+        const float *s = geomParams.findFloat(n, &count);
         if (s) {
             if (count > 1)
                 WARNING("Ignoring excess values provided with parameter \"%s\"", n.c_str());
-            return make_shared<ConstantTexture<Float>>(*s);
+            return make_shared<ConstantTexture<float>>(*s);
         }
 
         name = materialParams.findTexture(n);
         if (name.empty()) {
             int count;
-            const Float *s = materialParams.findFloat(n, &count);
+            const float *s = materialParams.findFloat(n, &count);
             if (s) {
                 if (count > 1)
                     WARNING("Ignoring excess values provided with parameter \"%s\"", n.c_str());
-                return make_shared<ConstantTexture<Float>>(*s);
+                return make_shared<ConstantTexture<float>>(*s);
             }
         }
 

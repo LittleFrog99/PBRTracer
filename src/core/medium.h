@@ -12,8 +12,8 @@ class Sampler;
 class PhaseFunction {
 public:
     virtual ~PhaseFunction();
-    virtual Float compute_p(const Vector3f &wo, const Vector3f &wi) const = 0;
-    virtual Float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
+    virtual float compute_p(const Vector3f &wo, const Vector3f &wi) const = 0;
+    virtual float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
     virtual string toString() const = 0;
 };
 
@@ -34,20 +34,20 @@ public:
 
 class HenyeyGreenstein : public PhaseFunction {
 public:
-    HenyeyGreenstein(Float g) : g(g) {}
-    Float compute_p(const Vector3f &wo, const Vector3f &wi) const;
-    Float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
+    HenyeyGreenstein(float g) : g(g) {}
+    float compute_p(const Vector3f &wo, const Vector3f &wi) const;
+    float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
     string toString() const {
         return STRING_PRINTF("[ HenyeyGreenstein g: %f ]", g);
     }
 
-    inline static Float phase(Float cosTheta, Float g) {
-        Float denom = 1 + g * g + 2 * g * cosTheta;
+    inline static float phase(float cosTheta, float g) {
+        float denom = 1 + g * g + 2 * g * cosTheta;
         return INV_PI * (1 - g * g) / (denom * sqrt(denom));
     }
 
 private:
-    const Float g;
+    const float g;
 };
 
 struct MediumInterface {

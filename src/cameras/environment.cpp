@@ -1,9 +1,9 @@
 #include "environment.h"
 #include "paramset.h"
 
-Float EnvironmentCamera::generateRay(const CameraSample &sample, Ray *ray) const {
-    Float theta = PI * sample.pFilm.y / film->fullResolution.y;
-    Float phi = 2 * PI * sample.pFilm.x / film->fullResolution.x;
+float EnvironmentCamera::generateRay(const CameraSample &sample, Ray *ray) const {
+    float theta = PI * sample.pFilm.y / film->fullResolution.y;
+    float phi = 2 * PI * sample.pFilm.x / film->fullResolution.x;
     Vector3f dir(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi));
     *ray = Ray(Point3f(), dir, INFINITY, lerp(sample.time, shutterOpen, shutterClose));
     ray->medium = medium;
@@ -14,18 +14,18 @@ Float EnvironmentCamera::generateRay(const CameraSample &sample, Ray *ray) const
 EnvironmentCamera * EnvironmentCamera::create(const ParamSet &params, const AnimatedTransform &cam2world, Film *film,
                                               const Medium *medium)
 {
-    Float shutteropen = params.findOneFloat("shutteropen", 0.f);
-    Float shutterclose = params.findOneFloat("shutterclose", 1.f);
+    float shutteropen = params.findOneFloat("shutteropen", 0.f);
+    float shutterclose = params.findOneFloat("shutterclose", 1.f);
     if (shutterclose < shutteropen) {
         WARNING("Shutter close time [%f] < shutter open [%f].  Swapping them.",
                 shutterclose, shutteropen);
         std::swap(shutterclose, shutteropen);
     }
-    Float lensradius = params.findOneFloat("lensradius", 0.f);
-    Float focaldistance = params.findOneFloat("focaldistance", 1e30f);
-    Float frame = params.findOneFloat(
+    float lensradius = params.findOneFloat("lensradius", 0.f);
+    float focaldistance = params.findOneFloat("focaldistance", 1e30f);
+    float frame = params.findOneFloat(
         "frameaspectratio",
-        Float(film->fullResolution.x) / Float(film->fullResolution.y));
+        float(film->fullResolution.x) / float(film->fullResolution.y));
     Bounds2f screen;
     if (frame > 1.f) {
         screen.pMin.x = -frame;
@@ -39,7 +39,7 @@ EnvironmentCamera * EnvironmentCamera::create(const ParamSet &params, const Anim
         screen.pMax.y = 1.f / frame;
     }
     int swi;
-    const Float *sw = params.findFloat("screenwindow", &swi);
+    const float *sw = params.findFloat("screenwindow", &swi);
     if (sw) {
         if (swi == 4) {
             screen.pMin.x = sw[0];

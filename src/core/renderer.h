@@ -77,7 +77,7 @@ struct GraphicsState {
 
     string currentInsideMedium, currentOutsideMedium;
 
-    typedef map<string, shared_ptr<Texture<Float>>> FloatTextureMap;
+    typedef map<string, shared_ptr<Texture<float>>> FloatTextureMap;
     shared_ptr<FloatTextureMap> floatTextures;
     bool floatTexturesShared = false;
 
@@ -101,7 +101,7 @@ struct RenderOptions {
     Scene *makeScene();
     Camera *makeCamera() const;
 
-    Float transformStartTime = 0, transformEndTime = 1;
+    float transformStartTime = 0, transformEndTime = 1;
     string filterName = "box";
     ParamSet filterParams;
     string filmName = "image";
@@ -130,14 +130,14 @@ namespace Renderer {
     shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Primitive>> prims,
                                           const ParamSet &paramSet);
     Camera * makeCamera(const string &name, const ParamSet &paramSet, const TransformSet &cam2worldSet,
-                        Float transformStart, Float transformEnd, Film *film);
+                        float transformStart, float transformEnd, Film *film);
     shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, const Film *film);
     unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet);
     Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter> filter);
     shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
                                   const Transform &medium2world);
     shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
-    shared_ptr<Texture<Float>> makeFloatTexture(const string &name, const Transform &tex2world,
+    shared_ptr<Texture<float>> makeFloatTexture(const string &name, const Transform &tex2world,
                                                 const TextureParams &tp);
     shared_ptr<Texture<Spectrum>> makeSpectrumTexture(const string &name,  const Transform &tex2world,
                                                       const TextureParams &tp);

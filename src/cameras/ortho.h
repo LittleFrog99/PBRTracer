@@ -6,7 +6,7 @@
 class OrthographicCamera : public ProjectiveCamera {
 public:
     OrthographicCamera(const AnimatedTransform &camToWorld, const Bounds2f &screenWindow,
-                       Float shutterOpen, Float shutterClose, Float lensRadius, Float focalDist,
+                       float shutterOpen, float shutterClose, float lensRadius, float focalDist,
                        Film *film, const Medium *medium)
         : ProjectiveCamera(camToWorld, Transform::orthographic(0, 1), screenWindow, shutterOpen,
                            shutterClose, lensRadius, focalDist, film, medium)
@@ -18,8 +18,8 @@ public:
     static OrthographicCamera * create(const ParamSet &params, const AnimatedTransform &cam2world,
                                        Film *film, const Medium *medium);
 
-    Float generateRay(const CameraSample &sample, Ray *ray) const;
-    Float generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const;
+    float generateRay(const CameraSample &sample, Ray *ray) const;
+    float generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const;
 
 private:
     Vector3f dxCam, dyCam;

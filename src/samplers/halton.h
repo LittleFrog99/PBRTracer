@@ -14,17 +14,17 @@ public:
     static HaltonSampler * create(const ParamSet &params, const Bounds2i &sampleBounds);
 
     int64_t getIndexForSample(int64_t sampleNum) const;
-    Float sampleDimension(int64_t index, int dim) const;
+    float sampleDimension(int64_t index, int dim) const;
 
     unique_ptr<Sampler> clone(int seed) {
         return unique_ptr<Sampler>(new HaltonSampler(*this));
     }
 
 private:
-    static Float radicalInverse(int baseIndex, uint64_t a);
+    static float radicalInverse(int baseIndex, uint64_t a);
     static uint64_t inverseRadicalInverse(uint64_t inverse, int nDigits, int baseIndex);
     static vector<uint16_t> computeRadicalInversePermutations(Random &rng);
-    static Float scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm);
+    static float scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm);
     static void extendedGCD(uint64_t a, uint64_t b, int64_t *x, int64_t *y);
 
     inline static uint32_t reverseBits32(uint32_t n) {
@@ -71,7 +71,7 @@ private:
     static constexpr int MAX_RESOLUTION = 128;
     static const int PRIMES[PRIME_TABLE_SIZE];
     static int primeSums[PRIME_TABLE_SIZE]; // sums of preceeding primes
-    static Float invPrimes[PRIME_TABLE_SIZE];
+    static float invPrimes[PRIME_TABLE_SIZE];
     static uint64_t divMagicConsts[PRIME_TABLE_SIZE];
     static int divBitShifts[PRIME_TABLE_SIZE];
     static vector<uint16_t> radicalInvPerms;

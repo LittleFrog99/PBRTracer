@@ -8,7 +8,7 @@ HaltonSampler::HaltonSampler(int samplePixels, const Bounds2i &sampleBounds)
         int sum = 0;
         for (int i = 0; i < PRIME_TABLE_SIZE; i++) {
             primeSums[i] = sum;
-            invPrimes[i] = 1.0f / Float(PRIMES[i]);
+            invPrimes[i] = 1.0f / float(PRIMES[i]);
             sum += PRIMES[i];
             {
                 int c = PRIMES[i];
@@ -65,7 +65,7 @@ int64_t HaltonSampler::getIndexForSample(int64_t sampleNum) const {
     return offsetForCurrentPixel + sampleNum * sampleStride;
 }
 
-Float HaltonSampler::sampleDimension(int64_t index, int dim) const {
+float HaltonSampler::sampleDimension(int64_t index, int dim) const {
     if (dim == 0) // discard first two dimensions of sample vector
         return radicalInverse(dim, index >> baseExponents[0]);
     else if (dim == 1)
@@ -74,15 +74,15 @@ Float HaltonSampler::sampleDimension(int64_t index, int dim) const {
         return scrambledRadicalInverse(dim, index, permutationForDimension(dim));
 }
 
-Float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
+float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
     if (baseIndex == 0) // radix == 2
         return reverseBits64(a) * 0x1p-64;
     else if (baseIndex > 0 && baseIndex < PRIME_TABLE_SIZE) {
         // Compute specialized radical inverse
         const int base = PRIMES[baseIndex];
-        const Float invBase = invPrimes[baseIndex];
+        const float invBase = invPrimes[baseIndex];
         uint64_t reversedDigits = 0;
-        Float invBaseN = 1;
+        float invBaseN = 1;
         while (a) {
             uint64_t next = integerDivide(a, baseIndex);
             uint64_t digit = a - next * base;
@@ -123,12 +123,12 @@ vector<uint16_t> HaltonSampler::computeRadicalInversePermutations(Random &rng) {
     return perms;
 }
 
-Float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm) {
+float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm) {
     if (baseIndex >= 0 && baseIndex < PRIME_TABLE_SIZE) {
         int base = PRIMES[baseIndex];
-        const Float invBase = invPrimes[baseIndex];
+        const float invBase = invPrimes[baseIndex];
         uint64_t reversedDigits = 0;
-        Float invBaseN = 0;
+        float invBaseN = 0;
         while (a) {
             uint64_t next = integerDivide(a, baseIndex);
             uint64_t digit = a - next * base;
@@ -161,7 +161,7 @@ HaltonSampler * HaltonSampler::create(const ParamSet &params, const Bounds2i &sa
     return new HaltonSampler(nsamp, sampleBounds);
 }
 
-Float HaltonSampler::invPrimes[PRIME_TABLE_SIZE] = {0.0};
+float HaltonSampler::invPrimes[PRIME_TABLE_SIZE] = {0.0};
 
 int HaltonSampler::primeSums[PRIME_TABLE_SIZE] = {0};
 

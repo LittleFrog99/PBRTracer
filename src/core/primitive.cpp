@@ -1,7 +1,7 @@
 #include "primitive.h"
 
 bool GeometricPrimitive::intersect(const Ray &r, SurfaceInteraction *isect) const {
-    Float tHit;
+    float tHit;
     if (!shape->intersect(r, &tHit, isect)) return false;
     r.tMax = tHit;
     isect->primitive = this;

@@ -5,11 +5,11 @@
 
 class Fresnel {
 public:
-    virtual Spectrum evaluate(Float cosThetaI) const = 0;
+    virtual Spectrum evaluate(float cosThetaI) const = 0;
     virtual string toString() const = 0;
 
-    static Float dielectric_Fr(Float cosThetaI, Float etaI, Float etaT);
-    static Spectrum conductor_Fr(Float cosThetaI, const Spectrum &etaI, const Spectrum &etaT,
+    static float dielectric_Fr(float cosThetaI, float etaI, float etaT);
+    static Spectrum conductor_Fr(float cosThetaI, const Spectrum &etaI, const Spectrum &etaT,
                                  const Spectrum &k);
 };
 
@@ -18,7 +18,7 @@ public:
     FresnelConductor(const Spectrum &etaI, const Spectrum &etaT, const Spectrum &k)
         : etaI(etaI), etaT(etaT), k(k) {}
 
-    Spectrum evaluate(Float cosThetaI) const {
+    Spectrum evaluate(float cosThetaI) const {
         return conductor_Fr(cosThetaI, etaI, etaT, k);
     }
 
@@ -33,9 +33,9 @@ private:
 
 class FresnelDielectric : public Fresnel {
 public:
-    FresnelDielectric(Float etaI, Float etaT) : etaI(etaI), etaT(etaT) {}
+    FresnelDielectric(float etaI, float etaT) : etaI(etaI), etaT(etaT) {}
 
-    Spectrum evaluate(Float cosThetaI) const {
+    Spectrum evaluate(float cosThetaI) const {
         return dielectric_Fr(cosThetaI, etaI, etaT);
     }
 
@@ -44,12 +44,12 @@ public:
     }
 
 private:
-    Float etaI, etaT;
+    float etaI, etaT;
 };
 
 class FresnelNoOp : public Fresnel {
 public:
-    Spectrum evaluate(Float) const { return 1.0f; }
+    Spectrum evaluate(float) const { return 1.0f; }
 
     string toString() const {
         return "[ FresnelNoOp ]";
@@ -63,7 +63,7 @@ public:
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
 
-    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
                       BxDFType *sampledType = nullptr) const {
         *wi = Vector3f(-wo.x, -wo.y, wo.z);
         *pdf = 1;
@@ -81,13 +81,13 @@ private:
 
 class SpecularTransmission : public BxDF {
 public:
-    SpecularTransmission(const Spectrum &T, Float etaA, Float etaB, TransportMode mode)
+    SpecularTransmission(const Spectrum &T, float etaA, float etaB, TransportMode mode)
         : BxDF(BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR)), T(T), etaA(etaA), etaB(etaB),
           fresnel(etaA, etaB), mode(mode) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
 
-    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
                       BxDFType *sampledType = nullptr) const;
 
     string toString() const {
@@ -99,20 +99,20 @@ public:
 
 private:
     const Spectrum T;
-    const Float etaA, etaB;
+    const float etaA, etaB;
     const FresnelDielectric fresnel; // a conductor doesn't transmit light
     const TransportMode mode;
 };
 
 class FresnelSpecular : public BxDF {
 public:
-    FresnelSpecular(const Spectrum &R, const Spectrum &T, Float etaA, Float etaB, TransportMode mode)
+    FresnelSpecular(const Spectrum &R, const Spectrum &T, float etaA, float etaB, TransportMode mode)
         : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)),
           R(R), T(T), etaA(etaA), etaB(etaB), fresnel(etaA, etaB), mode(mode) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
 
-    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
                       BxDFType *sampledType = nullptr) const;
 
     string toString() const {
@@ -123,7 +123,7 @@ public:
 
 private:
     const Spectrum R, T;
-    const Float etaA, etaB;
+    const float etaA, etaB;
     const FresnelDielectric fresnel;
     const TransportMode mode;
 };

@@ -2,7 +2,7 @@
 #include "core/sampling.h"
 #include "paramset.h"
 
-Float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) const {
+float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) const {
     auto pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
     auto pCam = rasterToCamera(pFilm);
     *ray = Ray(pCam, Vector3f(0, 0, 1));
@@ -10,7 +10,7 @@ Float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) cons
     // Modify ray for depth of field
     if (lensRadius > 0) {
         auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
-        Float ft = focalDistance / ray->d.z;
+        float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
         ray->d = normalize(pFocus - ray->o);
@@ -22,7 +22,7 @@ Float OrthographicCamera::generateRay(const CameraSample &sample, Ray *ray) cons
     return 1.0;
 }
 
-Float OrthographicCamera::generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const
+float OrthographicCamera::generateRayDifferential(const CameraSample &sample, RayDifferential *ray) const
 {
     auto pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
     auto pCam = rasterToCamera(pFilm);
@@ -30,7 +30,7 @@ Float OrthographicCamera::generateRayDifferential(const CameraSample &sample, Ra
 
     if (lensRadius > 0) {
         auto pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
-        Float ft = focalDistance / ray->d.z;
+        float ft = focalDistance / ray->d.z;
         auto pFocus = (*ray)(ft);
         ray->o = Point3f(pLens.x, pLens.y, 0);
         ray->d = normalize(pFocus - ray->o);
@@ -38,7 +38,7 @@ Float OrthographicCamera::generateRayDifferential(const CameraSample &sample, Ra
 
     if (lensRadius > 0) { // accounting for lens
         Point2f pLens = lensRadius * Sampling::concentricSampleDisk(sample.pLens);
-        Float ft = focalDistance / ray->d.z;
+        float ft = focalDistance / ray->d.z;
 
         Point3f pFocus = pCam + dxCam + (ft * Vector3f(0, 0, 1));
         ray->rxOrigin = Point3f(pLens.x, pLens.y, 0);
@@ -62,16 +62,16 @@ Float OrthographicCamera::generateRayDifferential(const CameraSample &sample, Ra
 OrthographicCamera * OrthographicCamera::create(const ParamSet &params, const AnimatedTransform &cam2world,
                                                 Film *film, const Medium *medium)
 {
-    Float shutteropen = params.findOneFloat("shutteropen", 0.f);
-    Float shutterclose = params.findOneFloat("shutterclose", 1.f);
+    float shutteropen = params.findOneFloat("shutteropen", 0.f);
+    float shutterclose = params.findOneFloat("shutterclose", 1.f);
     if (shutterclose < shutteropen) {
         WARNING("Shutter close time [%f] < shutter open [%f].  Swapping them.", shutterclose, shutteropen);
         swap(shutterclose, shutteropen);
     }
-    Float lensradius = params.findOneFloat("lensradius", 0.f);
-    Float focaldistance = params.findOneFloat("focaldistance", 1e6f);
-    Float frame = params.findOneFloat("frameaspectratio",
-                                      Float(film->fullResolution.x) / Float(film->fullResolution.y));
+    float lensradius = params.findOneFloat("lensradius", 0.f);
+    float focaldistance = params.findOneFloat("focaldistance", 1e6f);
+    float frame = params.findOneFloat("frameaspectratio",
+                                      float(film->fullResolution.x) / float(film->fullResolution.y));
     Bounds2f screen;
     if (frame > 1.f) {
         screen.pMin.x = -frame;
@@ -85,7 +85,7 @@ OrthographicCamera * OrthographicCamera::create(const ParamSet &params, const An
         screen.pMax.y = 1.f / frame;
     }
     int swi;
-    const Float *sw = params.findFloat("screenwindow", &swi);
+    const float *sw = params.findFloat("screenwindow", &swi);
     if (sw) {
         if (swi == 4) {
             screen.pMin.x = sw[0];

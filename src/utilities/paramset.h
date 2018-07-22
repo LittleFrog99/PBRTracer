@@ -21,7 +21,7 @@ class ParamSet {
 public:
     ParamSet() {}
 
-    void addFloat(const string &, unique_ptr<Float[]> v, int nValues = 1);
+    void addFloat(const string &, unique_ptr<float[]> v, int nValues = 1);
     void addInt(const string &, unique_ptr<int[]> v, int nValues);
     void addBool(const string &, unique_ptr<bool[]> v, int nValues);
     void addPoint2f(const string &, unique_ptr<Point2f[]> v, int nValues);
@@ -31,11 +31,11 @@ public:
     void addNormal3f(const string &, unique_ptr<Normal3f[]> v, int nValues);
     void addString(const string &, unique_ptr<string[]> v, int nValues);
     void addTexture(const string &, const string &);
-    void addRGBSpectrum(const string &, unique_ptr<Float[]> v, int nValues);
-    void addXYZSpectrum(const string &, unique_ptr<Float[]> v, int nValues);
-    void addBlackbodySpectrum(const string &, unique_ptr<Float[]> v, int nValues);
+    void addRGBSpectrum(const string &, unique_ptr<float[]> v, int nValues);
+    void addXYZSpectrum(const string &, unique_ptr<float[]> v, int nValues);
+    void addBlackbodySpectrum(const string &, unique_ptr<float[]> v, int nValues);
     void addSampledSpectrumFiles(const string &, const char **, int nValues);
-    void addSampledSpectrum(const string &, unique_ptr<Float[]> v, int nValues);
+    void addSampledSpectrum(const string &, unique_ptr<float[]> v, int nValues);
 
     bool eraseInt(const string &);
     bool eraseBool(const string &);
@@ -49,7 +49,7 @@ public:
     bool eraseString(const string &);
     bool eraseTexture(const string &);
 
-    Float findOneFloat(const string &, Float d) const;
+    float findOneFloat(const string &, float d) const;
     int findOneInt(const string &, int d) const;
     bool findOneBool(const string &, bool d) const;
     Point2f findOnePoint2f(const string &, const Point2f &d) const;
@@ -61,7 +61,7 @@ public:
     string findOneString(const string &, const string &d) const;
     string findOneFilename(const string &, const string &d) const;
     string findTexture(const string &) const;
-    const Float * findFloat(const string &, int *n) const;
+    const float * findFloat(const string &, int *n) const;
     const int * findInt(const string &, int *nValues) const;
     const bool * findBool(const string &, int *nValues) const;
     const Point2f * findPoint2f(const string &, int *nValues) const;
@@ -79,7 +79,7 @@ public:
     static int print(int i) { return printf("%d ", i); }
     static int print(bool v) { return v ? printf("\"true\" ") : printf("\"false\" ");}
 
-    static int print(Float f) {
+    static int print(float f) {
         if (int(f) == f)
             return printf("%d ", (int)f);
         else
@@ -117,7 +117,7 @@ public:
     static int print(const string &s) { return printf("\"%s\" ", s.c_str()); }
 
     static int print(const Spectrum &s) {
-        Float rgb[3];
+        float rgb[3];
         s.toRGB(rgb);
         int np = print(rgb[0]);
         np += print(rgb[1]);
@@ -129,7 +129,7 @@ public:
 private:
     vector<shared_ptr<ParamSetItem<bool>>> bools;
     vector<shared_ptr<ParamSetItem<int>>> ints;
-    vector<shared_ptr<ParamSetItem<Float>>> floats;
+    vector<shared_ptr<ParamSetItem<float>>> floats;
     vector<shared_ptr<ParamSetItem<Point2f>>> point2fs;
     vector<shared_ptr<ParamSetItem<Vector2f>>> vector2fs;
     vector<shared_ptr<ParamSetItem<Point3f>>> point3fs;
@@ -165,17 +165,17 @@ class TextureParams {
 public:
     // TextureParams Public Methods
     TextureParams(const ParamSet &geomParams, const ParamSet &materialParams,
-                  map<string, shared_ptr<Texture<Float>>> &fTex,
+                  map<string, shared_ptr<Texture<float>>> &fTex,
                   map<string, shared_ptr<Texture<Spectrum>>> &sTex)
         : floatTextures(fTex), spectrumTextures(sTex), geomParams(geomParams),
           materialParams(materialParams) {}
 
     shared_ptr<Texture<Spectrum>> getSpectrumTexture(const string &name, const Spectrum &def) const;
     shared_ptr<Texture<Spectrum>> getSpectrumTextureOrNull(const string &name) const;
-    shared_ptr<Texture<Float>> getFloatTexture(const string &name, Float def) const;
-    shared_ptr<Texture<Float>> getFloatTextureOrNull(const string &name) const;
+    shared_ptr<Texture<float>> getFloatTexture(const string &name, float def) const;
+    shared_ptr<Texture<float>> getFloatTextureOrNull(const string &name) const;
 
-    Float findFloat(const string &n, Float d) const {
+    float findFloat(const string &n, float d) const {
         return geomParams.findOneFloat(n, materialParams.findOneFloat(n, d));
     }
 
@@ -217,7 +217,7 @@ public:
     const ParamSet & getMaterialParams() const { return materialParams; }
 
 private:
-    map<string, shared_ptr<Texture<Float>>> &floatTextures;
+    map<string, shared_ptr<Texture<float>>> &floatTextures;
     map<string, shared_ptr<Texture<Spectrum>>> &spectrumTextures;
     const ParamSet &geomParams, &materialParams;
 

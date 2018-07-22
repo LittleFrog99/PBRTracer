@@ -15,9 +15,9 @@ public:
     unique_ptr<Sampler> clone(int seed);
 
 private:
-    static void sample1D(Float *samples, int nsamples, Random &rng, bool jitter = true);
+    static void sample1D(float *samples, int nsamples, Random &rng, bool jitter = true);
     static void sample2D(Point2f *samples, int nx, int ny, Random &rng, bool jitter = true);
-    static void latinHypercube(Float *samples, int nSamples, int nDim, Random &rng);
+    static void latinHypercube(float *samples, int nSamples, int nDim, Random &rng);
 
     const int xPixelSamples, yPixelSamples;
     const bool jitterSamples;

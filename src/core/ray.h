@@ -9,11 +9,11 @@ class Ray {
 public:
     Ray() : tMax(INFINITY), time(0.f), medium(nullptr) {}
 
-    Ray(const Point3f &o, const Vector3f &d, Float tMax = INFINITY,
-        Float time = 0.f, const Medium *medium = nullptr)
+    Ray(const Point3f &o, const Vector3f &d, float tMax = INFINITY,
+        float time = 0.f, const Medium *medium = nullptr)
         : o(o), d(d), tMax(tMax), time(time), medium(medium) {}
 
-    Point3f operator()(Float t) const { return o + d * t; }
+    Point3f operator()(float t) const { return o + d * t; }
     bool hasNaNs() const { return (o.hasNaNs() || d.hasNaNs() || isnan(tMax)); }
 
     friend ostream & operator << (ostream &os, const Ray &r) {
@@ -24,8 +24,8 @@ public:
 
     Point3f o;
     Vector3f d;
-    mutable Float tMax;
-    Float time;
+    mutable float tMax;
+    float time;
     const Medium *medium;
 };
 
@@ -33,8 +33,8 @@ class RayDifferential : public Ray {
 public:
     RayDifferential() { hasDifferentials = false; }
 
-    RayDifferential(const Point3f &o, const Vector3f &d, Float tMax = INFINITY,
-                    Float time = 0.f, const Medium *medium = nullptr)
+    RayDifferential(const Point3f &o, const Vector3f &d, float tMax = INFINITY,
+                    float time = 0.f, const Medium *medium = nullptr)
         : Ray(o, d, tMax, time, medium) {
         hasDifferentials = false;
     }
@@ -46,7 +46,7 @@ public:
                                                        rxDirection.hasNaNs() || ryDirection.hasNaNs()));
     }
 
-    void scaleDifferentials(Float s) {
+    void scaleDifferentials(float s) {
         rxOrigin = o + (rxOrigin - o) * s;
         ryOrigin = o + (ryOrigin - o) * s;
         rxDirection = d + (rxDirection - d) * s;

@@ -422,7 +422,7 @@ void ProgressReporter::printBar() {
             // After 15m, jump up to 5s intervals
             sleepDuration *= 5;
 
-        Float percentDone = Float(workDone) / Float(totalWork);
+        float percentDone = float(workDone) / float(totalWork);
         int plussesNeeded = round(totalPlusses * percentDone);
         while (plussesPrinted < plussesNeeded) {
             *curSpace++ = '+';
@@ -431,13 +431,13 @@ void ProgressReporter::printBar() {
         fputs(buf.get(), stdout);
 
         // Update elapsed time and estimated time to completion
-        Float seconds = elapsedMS() / 1000.f;
-        Float estRemaining = seconds / percentDone - seconds;
+        float seconds = elapsedMS() / 1000.f;
+        float estRemaining = seconds / percentDone - seconds;
         if (percentDone == 1.f)
             printf(" (%.1fs)       ", seconds);
         else if (!isinf(estRemaining))
             printf(" (%.1fs|%.1fs)  ", seconds,
-                   max((Float)0., estRemaining));
+                   max((float)0., estRemaining));
         else
             printf(" (%.1fs|?s)  ", seconds);
         fflush(stdout);

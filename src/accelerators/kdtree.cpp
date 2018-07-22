@@ -14,20 +14,20 @@ struct KDTree::Node {
         }
     }
 
-    void initInterior(int axis, int ac, Float s) {
+    void initInterior(int axis, int ac, float s) {
         split = s;
         flags = axis;
         child1 |= (ac << 2);
     }
 
-    Float splitPos() const { return split; }
-    Float nPrimitives() const { return nPrims >> 2; }
+    float splitPos() const { return split; }
+    float nPrimitives() const { return nPrims >> 2; }
     int splitAxis() const { return flags & 3; } // 0b11
     bool isLeaf() const { return (flags & 3) == 3; }
     int aboveChild() const { return child1 >> 2; }
 
     union {
-        Float split; // interior
+        float split; // interior
         int onePrim; // leaf (only one primitive)
         int primIndicesOffset; // leaf (more than one)
     };
@@ -40,17 +40,17 @@ struct KDTree::Node {
 
 struct KDTree::BoundEdge {
     BoundEdge() {}
-    BoundEdge(Float t, int primNum, bool starting)
+    BoundEdge(float t, int primNum, bool starting)
         :t(t), primNum(primNum) {
         type = starting ? EdgeType::Start : EdgeType::End;
     }
 
-    Float t;
+    float t;
     int primNum;
     EdgeType type;
 };
 
-KDTree::KDTree(vector<shared_ptr<Primitive>> &p, int isectCost, int travCost, Float emptyBonus,
+KDTree::KDTree(vector<shared_ptr<Primitive>> &p, int isectCost, int travCost, float emptyBonus,
                int maxPrims, int maxDepth)
     : isectCost(isectCost), travCost(travCost), maxPrims(maxPrims), emptyBonus(emptyBonus), primitives(p)
 {
@@ -107,10 +107,10 @@ void KDTree::buildTree(int nodeNum, const Bounds3f &nodeBounds, const vector<Bou
     // Initialize interior node and continue recursion
     // Choose split axis
     int bestAxis = -1, bestOffset = -1;
-    Float bestCost = INFINITY;
-    Float oldCost = isectCost * Float(nPrims);
-    Float totalSA = nodeBounds.surfaceArea();
-    Float invTotalSA = 1.0 / totalSA;
+    float bestCost = INFINITY;
+    float oldCost = isectCost * float(nPrims);
+    float totalSA = nodeBounds.surfaceArea();
+    float invTotalSA = 1.0 / totalSA;
     Vector3f d = nodeBounds.pMax - nodeBounds.pMin;
     int axis = nodeBounds.maxExtent();
     int retries = 0;
@@ -132,18 +132,18 @@ void KDTree::buildTree(int nodeNum, const Bounds3f &nodeBounds, const vector<Bou
     int nBelow = 0, nAbove = nPrims;
     for (int i = 0; i < 2 * nPrims; i++) {
         if (edges[axis][i].type == EdgeType::End) --nAbove;
-        Float edgeT = edges[axis][i].t;
+        float edgeT = edges[axis][i].t;
         if (edgeT > nodeBounds.pMin[axis] && edgeT < nodeBounds.pMax[axis]) {
             // Compute cost for split at ith edge
             int otherAxis0 = (axis + 1) % 3, otherAxis1 = (axis + 2) % 3;
-            Float belowSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+            float belowSA = 2 * (d[otherAxis0] * d[otherAxis1] +
                                  (edgeT - nodeBounds.pMin[axis]) * (d[otherAxis0] + d[otherAxis1]));
-            Float aboveSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+            float aboveSA = 2 * (d[otherAxis0] * d[otherAxis1] +
                                  (nodeBounds.pMax[axis] - edgeT) * (d[otherAxis0] + d[otherAxis1]));
-            Float pBelow = belowSA * invTotalSA;
-            Float pAbove = aboveSA * invTotalSA;
-            Float eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
-            Float cost = travCost + isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
+            float pBelow = belowSA * invTotalSA;
+            float pAbove = aboveSA * invTotalSA;
+            float eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
+            float cost = travCost + isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
             if (cost < bestCost) {
                 bestCost = cost;
                 bestAxis = axis;
@@ -175,7 +175,7 @@ void KDTree::buildTree(int nodeNum, const Bounds3f &nodeBounds, const vector<Bou
             prims1[n1++] = edges[bestAxis][i].primNum;
 
     // Recursively initialize children bounds
-    Float tSplit = edges[bestAxis][bestOffset].t;
+    float tSplit = edges[bestAxis][bestOffset].t;
     Bounds3f bounds0 = nodeBounds, bounds1 = nodeBounds;
     bounds0.pMax[bestAxis] = bounds1.pMin[bestAxis] = tSplit;
     buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges, prims0, prims1 + nPrims,
@@ -188,13 +188,13 @@ void KDTree::buildTree(int nodeNum, const Bounds3f &nodeBounds, const vector<Bou
 
 bool KDTree::intersect(const Ray &ray, SurfaceInteraction *isect) const {
     // Compute initial parametric range of ray inside kd-tree extent
-    Float tMin, tMax;
+    float tMin, tMax;
     if (!bounds.intersectP(ray, &tMin, &tMax)) return false;
 
     // Prepare to traverse kd-tree for ray
     struct KDTodo {
         const Node *node;
-        Float tMin, tMax;
+        float tMin, tMax;
     };
     Vector3f invDir(1.0 / ray.d.x, 1.0 / ray.d.y, 1.0 / ray.d.z);
     constexpr int maxTodo = 64;
@@ -209,7 +209,7 @@ bool KDTree::intersect(const Ray &ray, SurfaceInteraction *isect) const {
         if (!node->isLeaf()) { // interior
             // Compute parametric distance along ray to split plane
             int axis = node->splitAxis();
-            Float tPlane = (node->splitPos() - ray.o[axis]) * invDir[axis];
+            float tPlane = (node->splitPos() - ray.o[axis]) * invDir[axis];
             // Get node children pointers for ray
             const Node *firstChild, *secondChild;
             bool belowFirst = (ray.o[axis] < node->splitPos() ||
@@ -260,13 +260,13 @@ bool KDTree::intersect(const Ray &ray, SurfaceInteraction *isect) const {
 
 bool KDTree::intersectP(const Ray &ray) const {
     // Compute initial parametric range of ray inside kd-tree extent
-    Float tMin, tMax;
+    float tMin, tMax;
     if (!bounds.intersectP(ray, &tMin, &tMax)) return false;
 
     // Prepare to traverse kd-tree for ray
     struct KDTodo {
         const Node *node;
-        Float tMin, tMax;
+        float tMin, tMax;
     };
     Vector3f invDir(1.0 / ray.d.x, 1.0 / ray.d.y, 1.0 / ray.d.z);
     constexpr int maxTodo = 64;
@@ -281,7 +281,7 @@ bool KDTree::intersectP(const Ray &ray) const {
         if (!node->isLeaf()) { // interior
             // Compute parametric distance along ray to split plane
             int axis = node->splitAxis();
-            Float tPlane = (node->splitPos() - ray.o[axis]) * invDir[axis];
+            float tPlane = (node->splitPos() - ray.o[axis]) * invDir[axis];
             // Get node children pointers for ray
             const Node *firstChild, *secondChild; // front-to-back
             bool belowFirst = (ray.o[axis] < node->splitPos() ||
@@ -334,7 +334,7 @@ shared_ptr<KDTree> KDTree::create(vector<shared_ptr<Primitive>> prims, const Par
 {
     int isectCost = ps.findOneInt("intersectcost", 80);
     int travCost = ps.findOneInt("traversalcost", 1);
-    Float emptyBonus = ps.findOneFloat("emptybonus", 0.5f);
+    float emptyBonus = ps.findOneFloat("emptybonus", 0.5f);
     int maxPrims = ps.findOneInt("maxprims", 1);
     int maxDepth = ps.findOneInt("maxdepth", -1);
     return make_shared<KDTree>((prims), isectCost, travCost, emptyBonus, maxPrims, maxDepth);

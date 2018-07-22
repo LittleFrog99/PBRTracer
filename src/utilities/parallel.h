@@ -69,30 +69,22 @@ private:
 
 class AtomicFloat {
 public:
-    explicit AtomicFloat(Float v = 0) { bits = Math::floatToBits(v); }
-    operator Float() const { return Math::bitsToFloat(bits); }
+    explicit AtomicFloat(float v = 0) { bits = floatToBits(v); }
+    operator float() const { return bitsToFloat(bits); }
 
-    Float operator = (Float v) {
-        bits = Math::floatToBits(v);
+    float operator = (float v) {
+        bits = floatToBits(v);
         return v;
     }
 
-    void add(Float v) {
-#ifdef DOUBLE_AS_FLOAT
-        uint64_t oldBits = bits, newBits;
-#else
+    void add(float v) {
         uint32_t oldBits = bits, newBits;
-#endif
         do newBits = Math::floatToBits(Math::bitsToFloat(oldBits) + v);
         while (!bits.compare_exchange_weak(oldBits, newBits));
     }
 
 private:
-#ifdef DOUBLE_AS_FLOAT
-    atomic<uint64_t> bits;
-#else
     atomic<uint32_t> bits;
-#endif
 };
 
 

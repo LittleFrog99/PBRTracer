@@ -6,7 +6,7 @@
 class Sphere : public Shape {
 public:
     Sphere(const Transform *objToWorld, const Transform *worldToObj, bool revOrient,
-           Float radius, Float zMin, Float zMax, Float phiMax)
+           float radius, float zMin, float zMax, float phiMax)
         : Shape(objToWorld, worldToObj, revOrient), radius(radius),
           zMin(clamp(min(zMin, zMax), -radius, radius)),
           zMax(clamp(max(zMin, zMax), -radius, radius)),
@@ -21,17 +21,17 @@ public:
         return Bounds3f(Point3f(-radius, -radius, zMin), Point3f( radius, radius, zMax));
     }
 
-    bool intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
+    bool intersect(const Ray &r, float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture = true) const;
     bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
 
-    Float area() const { return phiMax * radius * (zMax - zMin); }
+    float area() const { return phiMax * radius * (zMax - zMin); }
 
 private:
-    const Float radius;
-    const Float zMin, zMax;
-    const Float thetaMin, thetaMax; // polar
-    const Float phiMax; // azimuth
+    const float radius;
+    const float zMin, zMax;
+    const float thetaMin, thetaMax; // polar
+    const float phiMax; // azimuth
 };
 
 #endif // SHAPE_SPHERE

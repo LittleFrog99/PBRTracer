@@ -2,7 +2,7 @@
 #include "imageio.h"
 #include "renderer.h"
 
-void FilmTile::addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight) {
+void FilmTile::addSample(const Point2f &pFilm, Spectrum L, float sampleWeight) {
     ProfilePhase pp(Profiler::Stage::AddFilmSample);
     if (L.luminance() > maxSampleLuminance)
         L *= maxSampleLuminance / L.luminance();
@@ -17,19 +17,19 @@ void FilmTile::addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight) {
     // Precompute $x$ and $y$ filter table offsets
     int *ifx = ALLOCA(int, p1.x - p0.x);
     for (int x = p0.x; x < p1.x; ++x) {
-        Float fx = abs((x - pFilmDiscrete.x) * invFilterRadius.x * filterTableSize);
+        float fx = abs((x - pFilmDiscrete.x) * invFilterRadius.x * filterTableSize);
         ifx[x - p0.x] = min(int(floor(fx)), filterTableSize - 1);
     }
     int *ify = ALLOCA(int, p1.y - p0.y);
     for (int y = p0.y; y < p1.y; ++y) {
-        Float fy = abs((y - pFilmDiscrete.y) * invFilterRadius.y * filterTableSize);
+        float fy = abs((y - pFilmDiscrete.y) * invFilterRadius.y * filterTableSize);
         ify[y - p0.y] = min(int(floor(fy)), filterTableSize - 1);
     }
     for (int y = p0.y; y < p1.y; ++y) {
         for (int x = p0.x; x < p1.x; ++x) {
             // Evaluate filter value at $(x,y)$ pixel
             int offset = ify[y - p0.y] * filterTableSize + ifx[x - p0.x];
-            Float filterWeight = filterTable[offset];
+            float filterWeight = filterTable[offset];
             // Update pixel values with filtered sample contribution
             FilmTilePixel &pixel = getPixel(Point2i(x, y));
             pixel.contribSum += L * sampleWeight * filterWeight;
@@ -39,7 +39,7 @@ void FilmTile::addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight) {
 }
 
 Film::Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
-           Float diagonal, const string &filename, Float scale, Float maxSampleLuminance)
+           float diagonal, const string &filename, float scale, float maxSampleLuminance)
     : fullResolution(resolution), diagonal(diagonal * 0.001f), filter(move(filter)),
       filename(filename), scale(scale), maxSampleLuminance(maxSampleLuminance)
 {
@@ -70,9 +70,9 @@ Bounds2i Film::getSampleBounds() const {
 }
 
 Bounds2f Film::getPhysicalExtent() const {
-    Float aspect = Float(fullResolution.y) / Float(fullResolution.x);
-    Float x = sqrt(SQ(diagonal) / (1 + SQ(aspect)));
-    Float y = aspect * x;
+    float aspect = float(fullResolution.y) / float(fullResolution.x);
+    float x = sqrt(SQ(diagonal) / (1 + SQ(aspect)));
+    float y = aspect * x;
     return Bounds2f(Point2f(-x / 2, -y / 2), Point2f(x / 2, y / 2));
 }
 
@@ -91,7 +91,7 @@ void Film::mergeFilmTile(unique_ptr<FilmTile> tile) {
     for (Point2i pixel : tile->getPixelBounds()) {
         const FilmTilePixel &tilePixel = tile->getPixel(pixel);
         Pixel &mergePixel = getPixel(pixel);
-        Float xyz[3];
+        float xyz[3];
         tilePixel.contribSum.toXYZ(xyz);
         for (int i = 0; i < 3; i++)
             mergePixel.xyz[i] += xyz[i];
@@ -112,32 +112,32 @@ void Film::setImage(const Spectrum *img) const {
 void Film::addSplat(const Point2f &p, Spectrum v) {
     if (!insideExclusive(Point2i(p), croppedPixelBounds))
         return;
-    Float xyz[3];
+    float xyz[3];
     v.toXYZ(xyz);
     Pixel &pixel = getPixel(Point2i(p));
     for (int i = 0; i < 3; i++)
         pixel.splatXYZ[i].add(xyz[i]);
 }
 
-void Film::writeImage(Float splatScale) {
+void Film::writeImage(float splatScale) {
     // Convert image to RGB and compute final pixel values
-    unique_ptr<Float[]> rgb(new Float[3 * croppedPixelBounds.area()]);
+    unique_ptr<float[]> rgb(new float[3 * croppedPixelBounds.area()]);
     int offset = 0;
     for (Point2i p : croppedPixelBounds) {
         // Convert XYZ color to RGB
         auto &pixel = getPixel(p);
         XYZToRGB(pixel.xyz, &rgb[3 * offset]);
         // Normalize pixel with weighted sum
-        Float filterWeightSum = pixel.filterWeightSum;
+        float filterWeightSum = pixel.filterWeightSum;
         if (filterWeightSum != 0) {
-            Float invWt = 1.0f / filterWeightSum;
+            float invWt = 1.0f / filterWeightSum;
             rgb[3 * offset] = max(0.0f, rgb[3 * offset] * invWt);
             rgb[3 * offset + 1] = max(0.0f, rgb[3 * offset + 1] * invWt);
             rgb[3 * offset + 2] = max(0.0f, rgb[3 * offset + 2] * invWt);
         }
         // Add splat value at pixel
-        Float splatRGB[3];
-        Float splatXYZ[3] = { pixel.splatXYZ[0], pixel.splatXYZ[1], pixel.splatXYZ[2] };
+        float splatRGB[3];
+        float splatXYZ[3] = { pixel.splatXYZ[0], pixel.splatXYZ[1], pixel.splatXYZ[2] };
         XYZToRGB(splatXYZ, splatRGB);
         rgb[3 * offset] += splatScale * splatRGB[0];
         rgb[3 * offset + 1] += splatScale * splatRGB[1];
@@ -180,7 +180,7 @@ Film * Film::create(const ParamSet &params, unique_ptr<Filter> filter) {
     if (Renderer::options.quickRender) yres = max(1, yres / 4);
     Bounds2f crop(Point2f(0, 0), Point2f(1, 1));
     int cwi;
-    const Float *cr = params.findFloat("cropwindow", &cwi);
+    const float *cr = params.findFloat("cropwindow", &cwi);
     if (cr && cwi == 4) {
         crop.pMin.x = clamp(min(cr[0], cr[1]), 0.f, 1.f);
         crop.pMax.x = clamp(max(cr[0], cr[1]), 0.f, 1.f);
@@ -189,9 +189,9 @@ Film * Film::create(const ParamSet &params, unique_ptr<Filter> filter) {
     } else if (cr)
         ERROR("%d values supplied for \"cropwindow\". Expected 4.", cwi);
 
-    Float scale = params.findOneFloat("scale", 1.);
-    Float diagonal = params.findOneFloat("diagonal", 35.);
-    Float maxSampleLuminance = params.findOneFloat("maxsampleluminance", INFINITY);
+    float scale = params.findOneFloat("scale", 1.);
+    float diagonal = params.findOneFloat("diagonal", 35.);
+    float maxSampleLuminance = params.findOneFloat("maxsampleluminance", INFINITY);
 
     return new Film(Point2i(xres, yres), crop, move(filter), diagonal, filename, scale,
                     maxSampleLuminance);

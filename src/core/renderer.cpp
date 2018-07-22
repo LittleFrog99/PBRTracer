@@ -77,7 +77,7 @@ shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Prim
 }
 
 Camera * makeCamera(const string &name, const ParamSet &paramSet, const TransformSet &cam2worldSet,
-                    Float transformStart, Float transformEnd, Film *film)
+                    float transformStart, float transformEnd, Film *film)
 {
     Camera *camera = nullptr;
     MediumInterface mediumInterface = graphicsState.createMediumInterface();

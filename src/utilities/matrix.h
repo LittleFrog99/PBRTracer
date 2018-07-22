@@ -11,14 +11,14 @@ public:
                 m[i][j] = (i == j);
     }
 
-    Matrix4x4(Float mat[4][4]) {
-        memcpy(m, mat, 16 * sizeof(Float));
+    Matrix4x4(float mat[4][4]) {
+        memcpy(m, mat, 16 * sizeof(float));
     }
 
-    Matrix4x4(Float t00, Float t01, Float t02, Float t03,
-              Float t10, Float t11, Float t12, Float t13,
-              Float t20, Float t21, Float t22, Float t23,
-              Float t30, Float t31, Float t32, Float t33)
+    Matrix4x4(float t00, float t01, float t02, float t03,
+              float t10, float t11, float t12, float t13,
+              float t20, float t21, float t22, float t23,
+              float t30, float t31, float t32, float t33)
     {
         m[0][0] = t00; m[0][1] = t01; m[0][2] = t02; m[0][3] = t03;
         m[1][0] = t10; m[1][1] = t11; m[1][2] = t12; m[1][3] = t13;
@@ -83,7 +83,7 @@ public:
 
     Matrix4x4 inverse() const;
 
-    Float m[4][4];
+    float m[4][4];
 };
 
 #endif // UTILITY_MATRIX

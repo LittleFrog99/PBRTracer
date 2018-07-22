@@ -5,15 +5,15 @@
 #include "log.h"
 
 struct TriangleMesh {
-    typedef map<string, shared_ptr<Texture<Float>>> FloatTextureMap;
+    typedef map<string, shared_ptr<Texture<float>>> FloatTextureMap;
     TriangleMesh(const Transform &objToWorld, int nTriangles, const int *vertexIndices, int nVertices,
                  const Point3f *P, const Vector3f *S, const Normal3f *N, const Point2f *UV,
-                 const shared_ptr<Texture<Float>> &alphaMask);
+                 const shared_ptr<Texture<float>> &alphaMask);
 
     static vector<shared_ptr<Shape>> create(const Transform *objToWorld, const Transform *worldToObj,
                                             bool revOrient, int nTriangles, const int *vertexIndices, int nVertices,
                                             const Point3f *p, const Vector3f *s, const Normal3f *n, const Point2f *uv,
-                                            const shared_ptr<Texture<Float>> &alphaMask);
+                                            const shared_ptr<Texture<float>> &alphaMask);
     static vector<shared_ptr<Shape>> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
                                             const ParamSet &params, FloatTextureMap *floatTextures);
 
@@ -23,7 +23,7 @@ struct TriangleMesh {
     unique_ptr<Normal3f[]> n;
     unique_ptr<Vector3f[]> s;
     unique_ptr<Point2f[]> uv;
-    shared_ptr<Texture<Float>> alphaMask;
+    shared_ptr<Texture<float>> alphaMask;
 };
 
 class Triangle : public Shape {
@@ -38,11 +38,11 @@ public:
     Bounds3f objectBound() const;
     Bounds3f worldBound() const;
 
-    bool intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
+    bool intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect,
                            bool testAlphaTexture = true) const;
     bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
 
-    Float area() const;
+    float area() const;
 
 private:
     void getUVs(Point2f uv[3]) const {
@@ -129,17 +129,17 @@ private:
         int f0EdgeNum = -1;
     };
 
-    static Float beta(int valence) { // used to weigh nearby vertices
+    static float beta(int valence) { // used to weigh nearby vertices
         if (valence == 3) return 3.0 / 16.0;
         else return 3.0 / (8.0 * valence);
     }
 
-    static Float loopGamma(int valence) {
+    static float loopGamma(int valence) {
         return 1.f / (valence + 3.f / (8.f * beta(valence)));
     }
 
-    static Point3f weightOneRing(SDVertex *vert, Float beta);
-    static Point3f weightBoundary(SDVertex *vert, Float beta);
+    static Point3f weightOneRing(SDVertex *vert, float beta);
+    static Point3f weightBoundary(SDVertex *vert, float beta);
 
 };
 

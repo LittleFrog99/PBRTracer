@@ -31,7 +31,7 @@ bool Sampler::setSampleNumber(int64_t sampleNum) {
 PixelSampler::PixelSampler(int64_t samplesPerPixel, int nSampledDimensions)
     : Sampler(samplesPerPixel) {
     for (int i = 0; i < nSampledDimensions; i++) {
-        samples1D.push_back(vector<Float>(samplesPerPixel));
+        samples1D.push_back(vector<float>(samplesPerPixel));
         samples2D.push_back(vector<Point2f>(samplesPerPixel));
     }
 }
@@ -46,7 +46,7 @@ bool PixelSampler::setSampleNumber(int64_t sampleNum) {
     return Sampler::setSampleNumber(sampleNum);
 }
 
-Float PixelSampler::get1D() {
+float PixelSampler::get1D() {
     if (cur1DDim < samples1D.size())
         return samples1D[cur1DDim][curPixelSampleIndex++];
     else
@@ -97,7 +97,7 @@ bool GlobalSampler::setSampleNumber(int64_t sampleNum) {
     return Sampler::setSampleNumber(sampleNum);
 }
 
-Float GlobalSampler::get1D() {
+float GlobalSampler::get1D() {
     if (dimension >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;
     return sampleDimension(intervalSampleIndex, dimension++);
@@ -120,7 +120,7 @@ Point2f concentricSampleDisk(const Point2f &u) {
     // Handle degeneracy at the origin
     if (uOffset.x == 0 && uOffset.y == 0) return Point2f(0, 0);
     // Apply concentric mapping to point
-    Float theta, r;
+    float theta, r;
     if (abs(uOffset.x) > abs(uOffset.y)) {
         r = uOffset.x;
         theta = PI_OVER_FOUR * (uOffset.y / uOffset.x);

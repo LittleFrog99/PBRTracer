@@ -111,7 +111,7 @@ BVH::BuildNode *BVH::recursiveBuild(MemoryArena &arena, vector<PrimitiveInfo> &p
             // Partition primitives based on $splitMethod
             switch (splitMethod) {
             case SplitMethod::Middle: {
-                Float pMid = (centroidBounds.pMin[dim] + centroidBounds.pMax[dim]) / 2;
+                float pMid = (centroidBounds.pMin[dim] + centroidBounds.pMax[dim]) / 2;
                 auto *midPtr = partition(&primsInfo[start], &primsInfo[end - 1] + 1, // in case of vector error
                         [dim, pMid] (const PrimitiveInfo &pi) { return pi.centroid[dim] < pMid; });
                 mid = midPtr - &primsInfo[0];
@@ -151,7 +151,7 @@ BVH::BuildNode *BVH::recursiveBuild(MemoryArena &arena, vector<PrimitiveInfo> &p
                     }
 
                     // Compute costs for splitting after each bucket
-                    Float cost[nBuckets - 1];
+                    float cost[nBuckets - 1];
                     for (int i = 0; i < nBuckets - 1; i++) {
                         Bounds3f b0, b1;
                         int count0 =0, count1 = 0;
@@ -168,7 +168,7 @@ BVH::BuildNode *BVH::recursiveBuild(MemoryArena &arena, vector<PrimitiveInfo> &p
                     }
 
                     // Find bucket to split at that minimizes SAH metric
-                    Float minCost = cost[0];
+                    float minCost = cost[0];
                     int minCostBucket = 0;
                     for (int i = 1; i < nBuckets - 1; i++)
                         if (cost[i] < minCost) {
@@ -177,7 +177,7 @@ BVH::BuildNode *BVH::recursiveBuild(MemoryArena &arena, vector<PrimitiveInfo> &p
                         }
 
                     // Either create leaf or split primitives at selected SAH bucket
-                    Float leafCost = nPrims;
+                    float leafCost = nPrims;
                     if (nPrims > maxPrimsInNode || minCost < leafCost) {
                         PrimitiveInfo *pmid = partition(&primsInfo[start], &primsInfo[end-1]+1,
                                 [=] (const PrimitiveInfo &pi) {
@@ -405,7 +405,7 @@ BVH::BuildNode * BVH::buildUpperSAH(MemoryArena &arena, vector<BuildNode *> &tre
 
     // Initialize _BucketInfo_ for HLBVH SAH partition buckets
     for (int i = start; i < end; ++i) {
-        Float centroid = (treeletRoots[i]->bounds.pMin[dim] +
+        float centroid = (treeletRoots[i]->bounds.pMin[dim] +
                           treeletRoots[i]->bounds.pMax[dim]) *
                          0.5f;
         int b = nBuckets * ((centroid - centroidBounds.pMin[dim]) /
@@ -416,7 +416,7 @@ BVH::BuildNode * BVH::buildUpperSAH(MemoryArena &arena, vector<BuildNode *> &tre
     }
 
     // Compute costs for splitting after each bucket
-    Float cost[nBuckets - 1];
+    float cost[nBuckets - 1];
     for (int i = 0; i < nBuckets - 1; ++i) {
         Bounds3f b0, b1;
         int count0 = 0, count1 = 0;
@@ -432,7 +432,7 @@ BVH::BuildNode * BVH::buildUpperSAH(MemoryArena &arena, vector<BuildNode *> &tre
     }
 
     // Find bucket to split at that minimizes SAH metric
-    Float minCost = cost[0];
+    float minCost = cost[0];
     int minCostSplitBucket = 0;
     for (int i = 1; i < nBuckets - 1; ++i) {
         if (cost[i] < minCost) {
@@ -444,7 +444,7 @@ BVH::BuildNode * BVH::buildUpperSAH(MemoryArena &arena, vector<BuildNode *> &tre
     // Split nodes and create interior HLBVH SAH node
     BuildNode **pmid = partition(&treeletRoots[start], &treeletRoots[end - 1] + 1,
             [=] (const BuildNode *node) {
-        Float centroid = (node->bounds.pMin[dim] + node->bounds.pMax[dim]) * 0.5f;
+        float centroid = (node->bounds.pMin[dim] + node->bounds.pMax[dim]) * 0.5f;
         int b = nBuckets * ((centroid - centroidBounds.pMin[dim]) /
                             (centroidBounds.pMax[dim] - centroidBounds.pMin[dim]));
         if (b == nBuckets) b = nBuckets - 1;

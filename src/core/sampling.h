@@ -11,7 +11,7 @@ public:
     Sampler(int64_t samplesPerPixel) : samplesPerPixel(samplesPerPixel) {}
     virtual ~Sampler() {}
 
-    virtual Float get1D() = 0;
+    virtual float get1D() = 0;
     virtual Point2f get2D() = 0;
     virtual unique_ptr<Sampler> clone(int seed) = 0;
 
@@ -24,7 +24,7 @@ public:
 
     void request1DArray(int n) {
         samples1DArraySizes.push_back(n);
-        sampleArray1D.push_back(vector<Float>(n * samplesPerPixel));
+        sampleArray1D.push_back(vector<float>(n * samplesPerPixel));
     }
 
     void request2DArray(int n) {
@@ -32,7 +32,7 @@ public:
         sampleArray2D.push_back(vector<Point2f>(n * samplesPerPixel));
     }
 
-    const Float * get1DArray(int n) {
+    const float * get1DArray(int n) {
         if (array1DOffset == sampleArray1D.size()) return nullptr;
         return &sampleArray1D[array1DOffset++][curPixelSampleIndex * n];
     }
@@ -55,7 +55,7 @@ protected:
     Point2i curPixel;
     int64_t curPixelSampleIndex;
     vector<int> samples1DArraySizes, samples2DArraySizes;
-    vector<vector<Float>> sampleArray1D;
+    vector<vector<float>> sampleArray1D;
     vector<vector<Point2f>> sampleArray2D;
 
 private:
@@ -67,11 +67,11 @@ public:
     PixelSampler(int64_t samplesPerPixel, int nSampledDimensions);
     bool startNextSample();
     bool setSampleNumber(int64_t);
-    Float get1D();
+    float get1D();
     Point2f get2D();
 
 protected:
-    vector<vector<Float>> samples1D;
+    vector<vector<float>> samples1D;
     vector<vector<Point2f>> samples2D;
     int cur1DDim = 0, cur2DDim = 0;
     Random rng;
@@ -83,11 +83,11 @@ public:
     bool startNextSample();
     void startPixel(const Point2i &p);
     bool setSampleNumber(int64_t sampleNum);
-    Float get1D();
+    float get1D();
     Point2f get2D();
 
     virtual int64_t getIndexForSample(int64_t sampleNum) const = 0;
-    virtual Float sampleDimension(int64_t index, int dimension) const = 0;
+    virtual float sampleDimension(int64_t index, int dimension) const = 0;
 
 private:
     int dimension;
@@ -100,13 +100,13 @@ namespace Sampling {
 
 Point2f rejectionSampleDisk(Random &rng);
 Vector3f uniformSampleHemisphere(const Point2f &u);
-Float uniformHemispherePdf();
+float uniformHemispherePdf();
 Vector3f uniformSampleSphere(const Point2f &u);
-Float uniformSpherePdf();
-Vector3f uniformSampleCone(const Point2f &u, Float thetamax);
-Vector3f uniformSampleCone(const Point2f &u, Float thetamax, const Vector3f &x, const Vector3f &y,
+float uniformSpherePdf();
+Vector3f uniformSampleCone(const Point2f &u, float thetamax);
+Vector3f uniformSampleCone(const Point2f &u, float thetamax, const Vector3f &x, const Vector3f &y,
                            const Vector3f &z);
-Float uniformConePdf(Float thetamax);
+float uniformConePdf(float thetamax);
 Point2f uniformSampleDisk(const Point2f &u);
 Point2f concentricSampleDisk(const Point2f &u);
 Point2f uniformSampleTriangle(const Point2f &u);
@@ -122,32 +122,32 @@ inline void shuffle(T *samp, int count, int nDimensions, Random &rng) {
 
 inline Vector3f cosineSampleHemisphere(const Point2f &u) {
     Point2f d = concentricSampleDisk(u);
-    Float z = sqrt(max((Float)0, 1 - d.x * d.x - d.y * d.y));
+    float z = sqrt(max((float)0, 1 - d.x * d.x - d.y * d.y));
     return Vector3f(d.x, d.y, z);
 }
 
-inline Float cosineHemispherePdf(Float cosTheta) { return cosTheta * INV_PI; }
+inline float cosineHemispherePdf(float cosTheta) { return cosTheta * INV_PI; }
 
-inline Float balanceHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
+inline float balanceHeuristic(int nf, float fPdf, int ng, float gPdf) {
     return (nf * fPdf) / (nf * fPdf + ng * gPdf);
 }
 
-inline Float powerHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
-    Float f = nf * fPdf, g = ng * gPdf;
+inline float powerHeuristic(int nf, float fPdf, int ng, float gPdf) {
+    float f = nf * fPdf, g = ng * gPdf;
     return (f * f) / (f * f + g * g);
 }
 
 };
 
 struct Distribution1D {
-    Distribution1D(const Float *f, int n) : func(f, f + n), cdf(n + 1) {
+    Distribution1D(const float *f, int n) : func(f, f + n), cdf(n + 1) {
         // Compute integral of step function at $x_i$
         cdf[0] = 0;
         for (int i = 1; i < n + 1; ++i) cdf[i] = cdf[i - 1] + func[i - 1] / n;
         // Transform step function integral into CDF
         funcInt = cdf[n];
         if (funcInt == 0) {
-            for (int i = 1; i < n + 1; ++i) cdf[i] = Float(i) / Float(n);
+            for (int i = 1; i < n + 1; ++i) cdf[i] = float(i) / float(n);
         } else {
             for (int i = 1; i < n + 1; ++i) cdf[i] /= funcInt;
         }
@@ -155,12 +155,12 @@ struct Distribution1D {
 
     int count() const { return int(func.size()); }
 
-    Float sampleContinuous(Float u, Float *pdf, int *off = nullptr) const {
+    float sampleContinuous(float u, float *pdf, int *off = nullptr) const {
         // Find surrounding CDF segments and _offset_
         int offset = findInterval(int(cdf.size()), [&](int index) { return cdf[index] <= u; });
         if (off) *off = offset;
         // Compute offset along CDF segment
-        Float du = u - cdf[offset];
+        float du = u - cdf[offset];
         if ((cdf[offset + 1] - cdf[offset]) > 0) {
             CHECK_GT(cdf[offset + 1], cdf[offset]);
             du /= (cdf[offset + 1] - cdf[offset]);
@@ -173,7 +173,7 @@ struct Distribution1D {
         return (offset + du) / count();
     }
 
-    int sampleDiscrete(Float u, Float *pdf = nullptr, Float *uRemapped = nullptr) const {
+    int sampleDiscrete(float u, float *pdf = nullptr, float *uRemapped = nullptr) const {
         // Find surrounding CDF segments and _offset_
         int offset = findInterval((int)cdf.size(),
                                   [&](int index) { return cdf[index] <= u; });
@@ -184,29 +184,29 @@ struct Distribution1D {
         return offset;
     }
 
-    Float discretePDF(int index) const {
+    float discretePDF(int index) const {
         CHECK(index >= 0 && index < count());
         return func[index] / (funcInt * count());
     }
 
-    vector<Float> func, cdf;
-    Float funcInt;
+    vector<float> func, cdf;
+    float funcInt;
 };
 
 class Distribution2D {
 public:
-    Distribution2D(const Float *data, int nu, int nv);
+    Distribution2D(const float *data, int nu, int nv);
 
-    Point2f sampleContinuous(const Point2f &u, Float *pdf) const {
-        Float pdfs[2];
+    Point2f sampleContinuous(const Point2f &u, float *pdf) const {
+        float pdfs[2];
         int v;
-        Float d1 = pMarginal->sampleContinuous(u[1], &pdfs[1], &v);
-        Float d0 = pConditionalV[v]->sampleContinuous(u[0], &pdfs[0]);
+        float d1 = pMarginal->sampleContinuous(u[1], &pdfs[1], &v);
+        float d0 = pConditionalV[v]->sampleContinuous(u[0], &pdfs[0]);
         *pdf = pdfs[0] * pdfs[1];
         return Point2f(d0, d1);
     }
 
-    Float pdf(const Point2f &p) const {
+    float pdf(const Point2f &p) const {
         int iu = clamp(int(p[0] * pConditionalV[0]->count()), 0, pConditionalV[0]->count() - 1);
         int iv = clamp(int(p[1] * pMarginal->count()), 0, pMarginal->count() - 1);
         return pConditionalV[iv]->func[iu] / pMarginal->funcInt;

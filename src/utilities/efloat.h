@@ -94,7 +94,7 @@ public:
 #ifndef NDEBUG
         // r.vPrecise = vPrecise * ef.vPrecise;
 #endif
-        Float prod[4] = {
+        float prod[4] = {
             lowerBound() * ef.lowerBound(), upperBound() * ef.lowerBound(),
             lowerBound() * ef.upperBound(), upperBound() * ef.upperBound()};
         r.low = nextFloatDown(
@@ -117,7 +117,7 @@ public:
             r.low = -INFINITY;
             r.high = INFINITY;
         } else {
-            Float div[4] = {
+            float div[4] = {
                 lowerBound() / ef.lowerBound(), upperBound() / ef.lowerBound(),
                 lowerBound() / ef.upperBound(), upperBound() / ef.upperBound()};
             r.low = nextFloatDown(min(min(div[0], div[1]), min(div[2], div[3])));

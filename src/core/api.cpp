@@ -92,7 +92,7 @@ void API::identity() {
         printf("%*sIdentity\n", catIndentCount, "");
 }
 
-void API::transform(Float tr[16]) {
+void API::transform(float tr[16]) {
     VERIFY_INITIALIZED("Transform");
     FOR_ACTIVE_TRANSFORMS(
         curTransform[i] = Transform(Matrix4x4(
@@ -107,7 +107,7 @@ void API::transform(Float tr[16]) {
     }
 }
 
-void API::concatTransform(Float tr[16]) {
+void API::concatTransform(float tr[16]) {
     VERIFY_INITIALIZED("ConcatTransform");
     FOR_ACTIVE_TRANSFORMS(
         curTransform[i] =
@@ -122,7 +122,7 @@ void API::concatTransform(Float tr[16]) {
     }
 }
 
-void API::translate(Float dx, Float dy, Float dz) {
+void API::translate(float dx, float dy, float dz) {
     VERIFY_INITIALIZED("Translate");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] *
                                             Transform::translate(Vector3f(dx, dy, dz));)
@@ -130,7 +130,7 @@ void API::translate(Float dx, Float dy, Float dz) {
         printf("%*sTranslate %.9g %.9g %.9g\n", catIndentCount, "", dx, dy, dz);
 }
 
-void API::rotate(Float angle, Float dx, Float dy, Float dz) {
+void API::rotate(float angle, float dx, float dy, float dz) {
     VERIFY_INITIALIZED("Rotate");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] *
                                                       Transform::rotate(angle, Vector3f(dx, dy, dz));)
@@ -139,7 +139,7 @@ void API::rotate(Float angle, Float dx, Float dy, Float dz) {
                dx, dy, dz);
 }
 
-void API::scale(Float sx, Float sy, Float sz) {
+void API::scale(float sx, float sy, float sz) {
     VERIFY_INITIALIZED("Scale");
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] *
                                                       Transform::scale(sx, sy, sz);)
@@ -147,8 +147,8 @@ void API::scale(Float sx, Float sy, Float sz) {
         printf("%*sScale %.9g %.9g %.9g\n", catIndentCount, "", sx, sy, sz);
 }
 
-void API::lookAt(Float ex, Float ey, Float ez, Float lx, Float ly, Float lz,
-                Float ux, Float uy, Float uz) {
+void API::lookAt(float ex, float ey, float ez, float lx, float ly, float lz,
+                float ux, float uy, float uz) {
     VERIFY_INITIALIZED("LookAt");
     auto lookAt = Transform::lookAt(Point3f(ex, ey, ez), Point3f(lx, ly, lz), Vector3f(ux, uy, uz));
     FOR_ACTIVE_TRANSFORMS(curTransform[i] = curTransform[i] * lookAt;);
@@ -197,7 +197,7 @@ void API::activeTransformStartTime() {
         printf("%*sActiveTransform StartTime\n", catIndentCount, "");
 }
 
-void API::transformTimes(Float start, Float end) {
+void API::transformTimes(float start, float end) {
     VERIFY_OPTIONS("TransformTimes");
     renderOptions->transformStartTime = start;
     renderOptions->transformEndTime = end;
@@ -392,7 +392,7 @@ void API::texture(const string &name, const string &type,
             graphicsState.floatTextures->end())
             WARNING("Texture \"%s\" being redefined", name.c_str());
         WARN_IF_ANIMATED_TRANSFORM("Texture");
-        shared_ptr<Texture<Float>> ft =
+        shared_ptr<Texture<float>> ft =
             makeFloatTexture(texname, curTransform[0], tp);
         if (ft) {
             // TODO: move this to be a GraphicsState method, also don't
@@ -708,7 +708,7 @@ void API::worldEnd() {
     graphicsState = GraphicsState();
     transformCache.clear();
     currentApiState = APIState::OptionsBlock;
-    // ImageTexture<Float, Float>::ClearCache(); // TODO: Uncomment after implementing $ImageTexture
+    // ImageTexture<float, float>::ClearCache(); // TODO: Uncomment after implementing $ImageTexture
     // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
     renderOptions.reset(new RenderOptions);
 

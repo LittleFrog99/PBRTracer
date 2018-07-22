@@ -16,15 +16,15 @@ struct Interaction {
     Interaction() : time(0) {}
 
     Interaction(const Point3f &p, const Normal3f &n, const Vector3f &pError,
-                const Vector3f &wo, Float time, const MediumInterface &mediumInterface)
+                const Vector3f &wo, float time, const MediumInterface &mediumInterface)
         : p(p), time(time), pError(pError), wo(normalize(wo)), n(n),
           mediumInterface(mediumInterface) {}
 
-    Interaction(const Point3f &p, const Vector3f &wo, Float time,
+    Interaction(const Point3f &p, const Vector3f &wo, float time,
                 const MediumInterface &mediumInterface)
         : p(p), time(time), wo(wo), mediumInterface(mediumInterface) {}
 
-    Interaction(const Point3f &p, Float time,
+    Interaction(const Point3f &p, float time,
                 const MediumInterface &mediumInterface)
         : p(p), time(time), mediumInterface(mediumInterface) {}
 
@@ -60,7 +60,7 @@ struct Interaction {
     }
 
     Point3f p;
-    Float time;
+    float time;
     Vector3f pError;
     Vector3f wo;
     Normal3f n;
@@ -70,7 +70,7 @@ struct Interaction {
 class MediumInteraction : public Interaction {
 public:
     MediumInteraction() : phase(nullptr) {}
-    MediumInteraction(const Point3f &p, const Vector3f &wo, Float time,
+    MediumInteraction(const Point3f &p, const Vector3f &wo, float time,
                       const Medium *medium, const PhaseFunction *phase)
         : Interaction(p, wo, time, medium), phase(phase) {}
     bool isValid() const { return phase != nullptr; }
@@ -84,7 +84,7 @@ public:
     SurfaceInteraction(const Point3f &p, const Vector3f &pError, const Point2f &uv, const Vector3f &wo,
                        const Vector3f &dpdu, const Vector3f &dpdv,
                        const Normal3f &dndu, const Normal3f &dndv,
-                       Float time, const Shape *sh);
+                       float time, const Shape *sh);
     void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv, const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
     void computeScatteringFuncs(const RayDifferential &ray, MemoryArena &arena, bool allowMultipleLobes = false,
@@ -105,7 +105,7 @@ public:
     BSDF *bsdf = nullptr;
     BSSRDF *bssrdf = nullptr;
     mutable Vector3f dpdx, dpdy;
-    mutable Float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
+    mutable float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
 
     // int faceIndex = 0;
 };

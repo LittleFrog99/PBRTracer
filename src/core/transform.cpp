@@ -10,40 +10,40 @@ Transform Transform::translate(const Vector3f &delta) {
     return Transform(m, minv);
 }
 
-Transform Transform::scale(Float x, Float y, Float z) {
+Transform Transform::scale(float x, float y, float z) {
     Matrix4x4 m(x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1);
     Matrix4x4 minv(1 / x, 0, 0, 0, 0, 1 / y, 0, 0, 0, 0, 1 / z, 0, 0, 0, 0, 1);
     return Transform(m, minv);
 }
 
-Transform Transform::rotateX(Float theta) {
-    Float sinTheta = sin(radians(theta));
-    Float cosTheta = cos(radians(theta));
+Transform Transform::rotateX(float theta) {
+    float sinTheta = sin(radians(theta));
+    float cosTheta = cos(radians(theta));
     Matrix4x4 m(1, 0, 0, 0, 0, cosTheta, -sinTheta, 0, 0, sinTheta, cosTheta, 0,
                 0, 0, 0, 1);
     return Transform(m, m.transpose());
 }
 
-Transform Transform::rotateY(Float theta) {
-    Float sinTheta = sin(radians(theta));
-    Float cosTheta = cos(radians(theta));
+Transform Transform::rotateY(float theta) {
+    float sinTheta = sin(radians(theta));
+    float cosTheta = cos(radians(theta));
     Matrix4x4 m(cosTheta, 0, sinTheta, 0, 0, 1, 0, 0, -sinTheta, 0, cosTheta, 0,
                 0, 0, 0, 1);
     return Transform(m, m.transpose());
 }
 
-Transform Transform::rotateZ(Float theta) {
-    Float sinTheta = sin(radians(theta));
-    Float cosTheta = cos(radians(theta));
+Transform Transform::rotateZ(float theta) {
+    float sinTheta = sin(radians(theta));
+    float cosTheta = cos(radians(theta));
     Matrix4x4 m(cosTheta, -sinTheta, 0, 0, sinTheta, cosTheta, 0, 0, 0, 0, 1, 0,
                 0, 0, 0, 1);
     return Transform(m, m.transpose());
 }
 
-Transform Transform::rotate(Float theta, const Vector3f &axis) {
+Transform Transform::rotate(float theta, const Vector3f &axis) {
     Vector3f a = normalize(axis);
-    Float sinTheta = sin(radians(theta));
-    Float cosTheta = cos(radians(theta));
+    float sinTheta = sin(radians(theta));
+    float cosTheta = cos(radians(theta));
 
     Matrix4x4 m;
     m.m[0][0] = a.x * a.x + (1 - a.x * a.x) * cosTheta;
@@ -106,7 +106,7 @@ Bounds3f Transform::operator()(const Bounds3f &b) const {
 }
 
 bool Transform::swapsHandedness() const {
-    Float det = m.m[0][0] * (m.m[1][1] * m.m[2][2] - m.m[1][2] * m.m[2][1]) -
+    float det = m.m[0][0] * (m.m[1][1] * m.m[2][2] - m.m[1][2] * m.m[2][1]) -
                 m.m[0][1] * (m.m[1][0] * m.m[2][2] - m.m[1][2] * m.m[2][0]) +
                 m.m[0][2] * (m.m[1][0] * m.m[2][1] - m.m[1][1] * m.m[2][0]);
     return det < 0;
@@ -148,23 +148,23 @@ SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
     return ret;
 }
 
-Transform Transform::orthographic(Float zNear, Float zFar) {
+Transform Transform::orthographic(float zNear, float zFar) {
     return scale(1, 1, 1 / (zFar - zNear)) * translate(Vector3f(0, 0, -zNear));
 }
 
-Transform Transform::perspective(Float fov, Float n, Float f) {
+Transform Transform::perspective(float fov, float n, float f) {
     // Perform projective divide for perspective projection
     Matrix4x4 persp(1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, f / (f - n), -f * n / (f - n),
                     0, 0, 1, 0);
     // Scale canonical perspective view to specified field of view
-    Float invTanAng = 1 / tan(radians(fov) / 2);
+    float invTanAng = 1 / tan(radians(fov) / 2);
     return scale(invTanAng, invTanAng, 1) * Transform(persp);
 }
 
-void Interval::findZeros(Float c1, Float c2, Float c3, Float c4, Float c5, Float theta, Interval tInterval,
-                         Float *zeros, int *zeroCount, int depth)
+void Interval::findZeros(float c1, float c2, float c3, float c4, float c5, float theta, Interval tInterval,
+                         float *zeros, int *zeroCount, int depth)
 {
     // Evaluate motion derivative in interval form, return if no zeros
     Interval range = Interval(c1) +
@@ -173,18 +173,18 @@ void Interval::findZeros(Float c1, Float c2, Float c3, Float c4, Float c5, Float
     if (range.low > 0. || range.high < 0. || range.low == range.high) return;
     if (depth > 0) {
         // Split _tInterval_ and check both resulting intervals
-        Float mid = (tInterval.low + tInterval.high) * 0.5f;
+        float mid = (tInterval.low + tInterval.high) * 0.5f;
         Interval::findZeros(c1, c2, c3, c4, c5, theta, Interval(tInterval.low, mid), zeros, zeroCount,
                             depth - 1);
         Interval::findZeros(c1, c2, c3, c4, c5, theta, Interval(mid, tInterval.high), zeros, zeroCount,
                             depth - 1);
     } else {
         // Use Newton's method to refine zero
-        Float tNewton = (tInterval.low + tInterval.high) * 0.5f;
+        float tNewton = (tInterval.low + tInterval.high) * 0.5f;
         for (int i = 0; i < 4; ++i) {
-            Float fNewton = c1 + (c2 + c3 * tNewton) * std::cos(2.f * theta * tNewton) +
+            float fNewton = c1 + (c2 + c3 * tNewton) * std::cos(2.f * theta * tNewton) +
                             (c4 + c5 * tNewton) * std::sin(2.f * theta * tNewton);
-            Float fPrimeNewton = (c3 + 2 * (c4 + c5 * tNewton) * theta) * std::cos(2.f * tNewton * theta) +
+            float fPrimeNewton = (c3 + 2 * (c4 + c5 * tNewton) * theta) * std::cos(2.f * tNewton * theta) +
                                  (c5 - 2 * (c2 + c3 * tNewton) * theta) * std::sin(2.f * tNewton * theta);
             if (fNewton == 0 || fPrimeNewton == 0) break;
             tNewton = tNewton - fNewton / fPrimeNewton;
@@ -198,9 +198,9 @@ void Interval::findZeros(Float c1, Float c2, Float c3, Float c4, Float c5, Float
 }
 
 AnimatedTransform::AnimatedTransform(const Transform *startTransform,
-                                     Float startTime,
+                                     float startTime,
                                      const Transform *endTransform,
-                                     Float endTime)
+                                     float endTime)
     : startTransform(startTransform),
       endTransform(endTransform),
       startTime(startTime),
@@ -215,42 +215,42 @@ AnimatedTransform::AnimatedTransform(const Transform *startTransform,
     hasRotation = dot(R[0], R[1]) < 0.9995f;
     // Compute terms of motion derivative function
     if (hasRotation) {
-        Float cosTheta = dot(R[0], R[1]);
-        Float theta = acos(clamp(cosTheta, -1, 1));
+        float cosTheta = dot(R[0], R[1]);
+        float theta = acos(clamp(cosTheta, -1, 1));
         Quaternion qperp = (R[1] - R[0] * cosTheta).normalize();
 
-        Float t0x = T[0].x;
-        Float t0y = T[0].y;
-        Float t0z = T[0].z;
-        Float t1x = T[1].x;
-        Float t1y = T[1].y;
-        Float t1z = T[1].z;
-        Float q1x = R[0].v.x;
-        Float q1y = R[0].v.y;
-        Float q1z = R[0].v.z;
-        Float q1w = R[0].w;
-        Float qperpx = qperp.v.x;
-        Float qperpy = qperp.v.y;
-        Float qperpz = qperp.v.z;
-        Float qperpw = qperp.w;
-        Float s000 = S[0].m[0][0];
-        Float s001 = S[0].m[0][1];
-        Float s002 = S[0].m[0][2];
-        Float s010 = S[0].m[1][0];
-        Float s011 = S[0].m[1][1];
-        Float s012 = S[0].m[1][2];
-        Float s020 = S[0].m[2][0];
-        Float s021 = S[0].m[2][1];
-        Float s022 = S[0].m[2][2];
-        Float s100 = S[1].m[0][0];
-        Float s101 = S[1].m[0][1];
-        Float s102 = S[1].m[0][2];
-        Float s110 = S[1].m[1][0];
-        Float s111 = S[1].m[1][1];
-        Float s112 = S[1].m[1][2];
-        Float s120 = S[1].m[2][0];
-        Float s121 = S[1].m[2][1];
-        Float s122 = S[1].m[2][2];
+        float t0x = T[0].x;
+        float t0y = T[0].y;
+        float t0z = T[0].z;
+        float t1x = T[1].x;
+        float t1y = T[1].y;
+        float t1z = T[1].z;
+        float q1x = R[0].v.x;
+        float q1y = R[0].v.y;
+        float q1z = R[0].v.z;
+        float q1w = R[0].w;
+        float qperpx = qperp.v.x;
+        float qperpy = qperp.v.y;
+        float qperpz = qperp.v.z;
+        float qperpw = qperp.w;
+        float s000 = S[0].m[0][0];
+        float s001 = S[0].m[0][1];
+        float s002 = S[0].m[0][2];
+        float s010 = S[0].m[1][0];
+        float s011 = S[0].m[1][1];
+        float s012 = S[0].m[1][2];
+        float s020 = S[0].m[2][0];
+        float s021 = S[0].m[2][1];
+        float s022 = S[0].m[2][2];
+        float s100 = S[1].m[0][0];
+        float s101 = S[1].m[0][1];
+        float s102 = S[1].m[0][2];
+        float s110 = S[1].m[1][0];
+        float s111 = S[1].m[1][1];
+        float s112 = S[1].m[1][2];
+        float s120 = S[1].m[2][0];
+        float s121 = S[1].m[2][1];
+        float s122 = S[1].m[2][2];
 
         c1[0] = DerivativeTerm(
             -t0x + t1x,
@@ -917,7 +917,7 @@ void AnimatedTransform::decompose(const Matrix4x4 &m, Vector3f *T,
     M.m[3][3] = 1.f;
 
     // Extract rotation _R_ from transformation matrix
-    Float norm;
+    float norm;
     int count = 0;
     Matrix4x4 R = M;
     do {
@@ -931,7 +931,7 @@ void AnimatedTransform::decompose(const Matrix4x4 &m, Vector3f *T,
         // Compute norm of difference between _R_ and _Rnext_
         norm = 0;
         for (int i = 0; i < 3; ++i) {
-            Float n = abs(R.m[i][0] - Rnext.m[i][0]) +
+            float n = abs(R.m[i][0] - Rnext.m[i][0]) +
                       abs(R.m[i][1] - Rnext.m[i][1]) +
                       abs(R.m[i][2] - Rnext.m[i][2]);
             norm = max(norm, n);
@@ -945,7 +945,7 @@ void AnimatedTransform::decompose(const Matrix4x4 &m, Vector3f *T,
     *S = R.inverse() * M;
 }
 
-void AnimatedTransform::interpolate(Float time, Transform *t) const {
+void AnimatedTransform::interpolate(float time, Transform *t) const {
     // Handle boundary conditions for matrix interpolation
     if (!actuallyAnimated || time <= startTime) {
         *t = *startTransform;
@@ -955,7 +955,7 @@ void AnimatedTransform::interpolate(Float time, Transform *t) const {
         *t = *endTransform;
         return;
     }
-    Float dt = (time - startTime) / (endTime - startTime);
+    float dt = (time - startTime) / (endTime - startTime);
     // Interpolate translation at _dt_
     Vector3f trans = (1 - dt) * T[0] + dt * T[1];
 
@@ -996,7 +996,7 @@ RayDifferential AnimatedTransform::operator() (const RayDifferential &r) const {
     }
 }
 
-Point3f AnimatedTransform::operator() (Float time, const Point3f &p) const {
+Point3f AnimatedTransform::operator() (float time, const Point3f &p) const {
     if (!actuallyAnimated || time <= startTime)
         return (*startTransform)(p);
     else if (time >= endTime)
@@ -1006,7 +1006,7 @@ Point3f AnimatedTransform::operator() (Float time, const Point3f &p) const {
     return t(p);
 }
 
-Vector3f AnimatedTransform::operator() (Float time, const Vector3f &v) const {
+Vector3f AnimatedTransform::operator() (float time, const Vector3f &v) const {
     if (!actuallyAnimated || time <= startTime)
         return (*startTransform)(v);
     else if (time >= endTime)
@@ -1030,11 +1030,11 @@ Bounds3f AnimatedTransform::motionBounds(const Bounds3f &b) const {
 Bounds3f AnimatedTransform::boundPointMotion(const Point3f &p) const {
     if (!actuallyAnimated) return Bounds3f((*startTransform)(p));
     Bounds3f bounds((*startTransform)(p), (*endTransform)(p));
-    Float cosTheta = dot(R[0], R[1]);
-    Float theta = acos(clamp(cosTheta, -1, 1));
+    float cosTheta = dot(R[0], R[1]);
+    float theta = acos(clamp(cosTheta, -1, 1));
     for (int c = 0; c < 3; ++c) {
         // Find any motion derivative zeros for the component _c_
-        Float zeros[8];
+        float zeros[8];
         int nZeros = 0;
         Interval::findZeros(c1[c].evaluate(p), c2[c].evaluate(p), c3[c].evaluate(p),
                             c4[c].evaluate(p), c5[c].evaluate(p), theta, Interval(0.0, 1.0),

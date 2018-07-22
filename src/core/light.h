@@ -20,15 +20,15 @@ class Light {
 public:
     Light(int flags, const Transform &LightToWorld, const MediumInterface &mediumInterface,
           int nSamples = 1);
-    virtual Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, Float *pdf,
+    virtual Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
                                VisibilityTester *vis) const = 0;
     virtual Spectrum power() const = 0;
     virtual void preprocess(const Scene &scene) {}
     virtual Spectrum compute_Le(const RayDifferential &r) const;
-    virtual Float pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
-    virtual Spectrum sample_Le(const Point2f &u1, const Point2f &u2, Float time, Ray *ray,
-                               Normal3f *nLight, Float *pdfPos, Float *pdfDir) const = 0;
-    virtual void pdf_Le(const Ray &ray, const Normal3f &nLight, Float *pdfPos, Float *pdfDir) const = 0;
+    virtual float pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
+    virtual Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray,
+                               Normal3f *nLight, float *pdfPos, float *pdfDir) const = 0;
+    virtual void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const = 0;
     virtual ~Light();
 
     static bool isDeltaLight(int flags) {

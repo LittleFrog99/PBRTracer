@@ -21,7 +21,7 @@ Spectrum Whitted::compute_Li(const RayDifferential &ray, const Scene &scene, Sam
     // Add contribution of each light source
     for (const auto &light : scene.lights) {
         Vector3f wi;
-        Float pdf;
+        float pdf;
         VisibilityTester visib;
         Spectrum Li = light->sample_Li(isect, sampler.get2D(), &wi, &pdf, &visib);
         if (Li.isBlack() || pdf == 0) continue;

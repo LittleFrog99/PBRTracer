@@ -18,11 +18,11 @@ public:
     virtual ~BxDF() {}
 
     virtual Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const = 0;
-    virtual Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
+    virtual Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
                                  BxDFType *sampledType = nullptr) const;
     virtual Spectrum rho_hd(const Vector3f &wo, int nSamples, const Point2f *samples) const;
     virtual Spectrum rho_hh(int nSamples, const Point2f *samples1, const Point2f *samples2) const;
-    virtual Float pdf(const Vector3f &wo, const Vector3f &wi) const;
+    virtual float pdf(const Vector3f &wo, const Vector3f &wi) const;
     virtual string toString() const = 0;
 
     bool matchesFlags(BxDFType t) const { return (type & t) == type; }
@@ -56,7 +56,7 @@ private:
 
 class BSDF {
 public:
-    BSDF(const SurfaceInteraction &si, Float eta = 1)
+    BSDF(const SurfaceInteraction &si, float eta = 1)
         : eta(eta), ns(si.shading.n), ng(si.n), ss(normalize(si.shading.dpdu)), ts(cross(ns, ss)) {}
 
     int numComponents(BxDFType flags = BSDF_ALL) const;
@@ -65,9 +65,9 @@ public:
                             BxDFType flags = BSDF_ALL) const;
     Spectrum compute_rho(const Vector3f &wo, int nSamples, const Point2f *samples,
                             BxDFType flags = BSDF_ALL) const;
-    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, Float *pdf,
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
                          BxDFType type = BSDF_ALL, BxDFType *sampledType = nullptr) const;
-    Float pdf(const Vector3f &wo, const Vector3f &wi, BxDFType flags = BSDF_ALL) const;
+    float pdf(const Vector3f &wo, const Vector3f &wi, BxDFType flags = BSDF_ALL) const;
     string toString() const;
 
     void add(BxDF *b) {
@@ -86,7 +86,7 @@ public:
     }
 
     static constexpr int MAX_BXDFS = 8;
-    const Float eta;
+    const float eta;
 
 private:
     const Normal3f ns, ng;

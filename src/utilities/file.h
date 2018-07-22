@@ -11,7 +11,7 @@ bool isAbsolutePath(const string &filename);
 string absolutePath(const string &filename);
 string resolveFilename(const string &filename);
 string directoryContaining(const string &filename);
-bool readFloatFile(const char *filename, vector<Float> *values);
+bool readFloatFile(const char *filename, vector<float> *values);
 
 void setSearchDirectory(const string &dirname) {
     searchDirectory = dirname;

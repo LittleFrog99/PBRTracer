@@ -1,6 +1,6 @@
 #include "fresnel.h"
 
-Float Fresnel::dielectric_Fr(Float cosThetaI, Float etaI, Float etaT) {
+float Fresnel::dielectric_Fr(float cosThetaI, float etaI, float etaT) {
     cosThetaI = clamp(cosThetaI, -1, 1);
     // Potentially swap indices of refraction
     bool entering = cosThetaI > 0.0f;
@@ -9,24 +9,24 @@ Float Fresnel::dielectric_Fr(Float cosThetaI, Float etaI, Float etaT) {
         cosThetaI = abs(cosThetaI);
     }
     // Compute _cosThetaT_ using Snell's law
-    Float sinThetaI = sqrt(max(0.0f, 1 - SQ(cosThetaI)));
-    Float sinThetaT = etaI / etaT * sinThetaI;
+    float sinThetaI = sqrt(max(0.0f, 1 - SQ(cosThetaI)));
+    float sinThetaT = etaI / etaT * sinThetaI;
     if (sinThetaI >= 1) return 1; // total internal reflection
-    Float cosThetaT = sqrt(max(0.0f, 1 - SQ(sinThetaT)));
-    Float rPara = (etaT * cosThetaI - etaI * cosThetaT) / (etaT * cosThetaI + etaI * cosThetaT);
-    Float rPerp = (etaI * cosThetaI - etaT * cosThetaT) / (etaI * cosThetaI + etaT * cosThetaT);
+    float cosThetaT = sqrt(max(0.0f, 1 - SQ(sinThetaT)));
+    float rPara = (etaT * cosThetaI - etaI * cosThetaT) / (etaT * cosThetaI + etaI * cosThetaT);
+    float rPerp = (etaI * cosThetaI - etaT * cosThetaT) / (etaI * cosThetaI + etaT * cosThetaT);
     return 0.5f * (SQ(rPara) + SQ(rPerp));
 }
 
-Spectrum Fresnel::conductor_Fr(Float cosThetaI, const Spectrum &etaI, const Spectrum &etaT,
+Spectrum Fresnel::conductor_Fr(float cosThetaI, const Spectrum &etaI, const Spectrum &etaT,
                                const Spectrum &k)
 {
     cosThetaI = clamp(cosThetaI, -1, 1);
     Spectrum eta = etaT / etaI;
     Spectrum etak = k / etaI;
 
-    Float cosThetaI2 = cosThetaI * cosThetaI;
-    Float sinThetaI2 = 1.0f - cosThetaI2;
+    float cosThetaI2 = cosThetaI * cosThetaI;
+    float sinThetaI2 = 1.0f - cosThetaI2;
     Spectrum eta2 = eta * eta;
     Spectrum etak2 = etak * etak;
 
@@ -44,13 +44,13 @@ Spectrum Fresnel::conductor_Fr(Float cosThetaI, const Spectrum &etaI, const Spec
     return 0.5 * (Rp + Rs);
 }
 
-Spectrum SpecularTransmission::sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, Float *pdf,
+Spectrum SpecularTransmission::sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
                                         BxDFType *sampledType) const
 {
     // Figure out which eta is incident and which is transmitted
     bool entering = cosTheta(wo) > 0;
-    Float etaI = entering ? etaA : etaB;
-    Float etaT = entering ? etaB : etaA;
+    float etaI = entering ? etaA : etaB;
+    float etaT = entering ? etaB : etaA;
     // Compute ray direction for specular transmission
     if (!refract(wo, faceforward(Normal3f(0, 0, 1), wo), etaI / etaT, wi)) return 0.0f;
     *pdf = 1;

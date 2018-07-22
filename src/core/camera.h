@@ -8,26 +8,26 @@
 struct CameraSample {
     Point2f pFilm;
     Point2f pLens;
-    Float time;
+    float time;
 };
 
 class Camera {
 public:
-    Camera(const AnimatedTransform &camToWorld, Float shutterOpen, Float shutterClose,
+    Camera(const AnimatedTransform &camToWorld, float shutterOpen, float shutterClose,
            Film *film, const Medium *medium)
         : cameraToWorld(camToWorld), shutterOpen(shutterOpen), shutterClose(shutterClose),
           film(film), medium(medium) {}
 
-    virtual Float generateRay(const CameraSample &sample, Ray *ray) const = 0;
-    virtual Float generateRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
+    virtual float generateRay(const CameraSample &sample, Ray *ray) const = 0;
+    virtual float generateRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
     // virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
-    // virtual void pdf_We(const Ray &ray, Float *pdfPos, Float *pdfDir) const;
-    // virtual Spectrum sample_Wi(const Interaction &ref, const Point2f &u,Vector3f *wi, Float *pdf,
+    // virtual void pdf_We(const Ray &ray, float *pdfPos, float *pdfDir) const;
+    // virtual Spectrum sample_Wi(const Interaction &ref, const Point2f &u,Vector3f *wi, float *pdf,
                                // Point2f *pRaster, VisibilityTester *vis) const;
     virtual ~Camera() { delete film; }
 
     AnimatedTransform cameraToWorld;
-    const Float shutterOpen, shutterClose;
+    const float shutterOpen, shutterClose;
     Film *film;
     const Medium *medium;
 };
@@ -41,8 +41,8 @@ inline ostream & operator << (ostream &os, const CameraSample &cs) {
 class ProjectiveCamera : public Camera {
 public:
     ProjectiveCamera(const AnimatedTransform &camToWorld, const Transform &camToScreen,
-                     const Bounds2f &screenWindow, Float shutterOpen,
-                     Float shutterClose, Float lensr, Float focald, Film *film,
+                     const Bounds2f &screenWindow, float shutterOpen,
+                     float shutterClose, float lensr, float focald, Film *film,
                      const Medium *medium)
         : Camera(camToWorld, shutterOpen, shutterClose, film, medium),
           cameraToScreen(camToScreen) {
@@ -60,7 +60,7 @@ public:
 protected:
     Transform cameraToScreen, rasterToCamera;
     Transform screenToRaster, rasterToScreen;
-    Float lensRadius, focalDistance;
+    float lensRadius, focalDistance;
 };
 
 #endif // CORE_CAMERA

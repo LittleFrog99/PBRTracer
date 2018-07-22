@@ -10,14 +10,14 @@
 
 struct FilmTilePixel {
     Spectrum contribSum = 0.f;
-    Float filterWeightSum = 0.f;
+    float filterWeightSum = 0.f;
 };
 
 class FilmTile {
 public:
     FilmTile(const Bounds2i &pixelBounds, const Vector2f &filterRadius,
-             const Float *filterTable, int filterTableSize,
-             Float maxSampleLuminance)
+             const float *filterTable, int filterTableSize,
+             float maxSampleLuminance)
         : pixelBounds(pixelBounds), filterRadius(filterRadius),
           invFilterRadius(1 / filterRadius.x, 1 / filterRadius.y),
           filterTable(filterTable), filterTableSize(filterTableSize),
@@ -25,7 +25,7 @@ public:
         pixels = vector<FilmTilePixel>(max(0, pixelBounds.area()));
     }
 
-    void addSample(const Point2f &pFilm, Spectrum L, Float sampleWeight = 1.0);
+    void addSample(const Point2f &pFilm, Spectrum L, float sampleWeight = 1.0);
 
     FilmTilePixel & getPixel(const Point2i &p) {
         CHECK(insideExclusive(p, pixelBounds));
@@ -46,17 +46,17 @@ public:
 private:
     const Bounds2i pixelBounds;
     const Vector2f filterRadius, invFilterRadius;
-    const Float *filterTable;
+    const float *filterTable;
     const int filterTableSize;
     vector<FilmTilePixel> pixels;
-    const Float maxSampleLuminance;
+    const float maxSampleLuminance;
     friend class Film;
 };
 
 class Film {
 public:
     Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
-         Float diagonal, const string &filename, Float scale, Float maxSampleLuminance = INFINITY);
+         float diagonal, const string &filename, float scale, float maxSampleLuminance = INFINITY);
     static Film * create(const ParamSet &params, unique_ptr<Filter> filter);
 
     Bounds2i getSampleBounds() const;
@@ -65,11 +65,11 @@ public:
     void mergeFilmTile(unique_ptr<FilmTile> tile);
     void setImage(const Spectrum *img) const;
     void addSplat(const Point2f &p, Spectrum v);
-    void writeImage(Float splatScale = 1);
+    void writeImage(float splatScale = 1);
     void clear();
 
     const Point2i fullResolution;
-    const Float diagonal; // NDC space, in meters
+    const float diagonal; // NDC space, in meters
     unique_ptr<Filter> filter;
     const string filename;
     Bounds2i croppedPixelBounds;
@@ -82,18 +82,18 @@ private:
             filterWeightSum = 0;
         }
 
-        Float xyz[3];
-        Float filterWeightSum;
+        float xyz[3];
+        float filterWeightSum;
         AtomicFloat splatXYZ[3];
-        Float pad; // padding to ensure 32 bytes for float or 64 bytes for double
+        float pad; // padding to ensure 32 bytes for float or 64 bytes for double
     };
 
     unique_ptr<Pixel[]> pixels;
     static constexpr int FILTER_TABLE_WIDTH = 16;
-    Float filterTable[SQ(FILTER_TABLE_WIDTH)];
+    float filterTable[SQ(FILTER_TABLE_WIDTH)];
     mutex mutex;
-    const Float scale;
-    const Float maxSampleLuminance;
+    const float scale;
+    const float maxSampleLuminance;
 
     Pixel & getPixel(const Point2i &p) {
         CHECK(insideExclusive(p, croppedPixelBounds));

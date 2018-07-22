@@ -28,11 +28,11 @@ public:
 
 class UVMapping2D : public TextureMapping2D {
 public:
-    UVMapping2D(Float su = 1, Float sv = 1, Float du = 0, Float dv = 0);
+    UVMapping2D(float su = 1, float sv = 1, float du = 0, float dv = 0);
     Point2f map(const SurfaceInteraction &si, Vector2f *dstdx, Vector2f *dstdy) const;
 
 private:
-    const Float su, sv, du, dv;
+    const float su, sv, du, dv;
 };
 
 class SphericalMapping2D : public TextureMapping2D {
@@ -62,13 +62,13 @@ private:
 
 class PlanarMapping2D : public TextureMapping2D {
 public:
-    PlanarMapping2D(const Vector3f &vs, const Vector3f &vt, Float ds = 0, Float dt = 0)
+    PlanarMapping2D(const Vector3f &vs, const Vector3f &vt, float ds = 0, float dt = 0)
         : vs(vs), vt(vt), ds(ds), dt(dt) {}
     Point2f map(const SurfaceInteraction &si, Vector2f *dstdx, Vector2f *dstdy) const;
 
 private:
     const Vector3f vs, vt;
-    const Float ds, dt;
+    const float ds, dt;
 };
 
 class TextureMapping3D {

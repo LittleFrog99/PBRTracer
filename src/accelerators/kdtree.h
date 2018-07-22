@@ -5,7 +5,7 @@
 
 class KDTree : public Aggregate {
 public:
-    KDTree(vector<shared_ptr<Primitive>> &p, int isectCost, int travCost, Float emptyBonus, int maxPrims,
+    KDTree(vector<shared_ptr<Primitive>> &p, int isectCost, int travCost, float emptyBonus, int maxPrims,
            int maxDepth);
     Bounds3f worldBound() const { return bounds; }
     bool intersect(const Ray &r, SurfaceInteraction *isect) const;
@@ -23,7 +23,7 @@ private:
                    int *prims0, int *prims1, int badRefines);
 
     const int isectCost, travCost, maxPrims;
-    const Float emptyBonus;
+    const float emptyBonus;
     vector<shared_ptr<Primitive>> primitives;
     vector<int> primIndices;
     Bounds3f bounds;

@@ -38,7 +38,7 @@ void SamplerIntegrator::render(const Scene &scene) {
             do {
                 CameraSample camSample = tileSampler->getCameraSample(pixel);
                 RayDifferential ray;
-                Float rayWeight = camera->generateRayDifferential(camSample, &ray);
+                float rayWeight = camera->generateRayDifferential(camSample, &ray);
                 ray.scaleDifferentials(1.0 / sqrt(tileSampler->samplesPerPixel));
                 ++nCameraRays;
 
@@ -90,7 +90,7 @@ Spectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const Su
 {
     // Compute specular reflection direction _wi_ and BSDF value
     Vector3f wo = isect.wo, wi;
-    Float pdf;
+    float pdf;
     BxDFType type = BxDFType(BSDF_REFLECTION | BSDF_SPECULAR);
     Spectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdf, type);
 
@@ -106,8 +106,8 @@ Spectrum SamplerIntegrator::specularReflect(const RayDifferential &ray, const Su
             Normal3f dndx = isect.shading.dndu * isect.dudx + isect.shading.dndv * isect.dvdx;
             Normal3f dndy = isect.shading.dndu * isect.dudy + isect.shading.dndv * isect.dvdy;
             Vector3f dwodx = -ray.rxDirection - wo, dwody = -ray.ryDirection - wo;
-            Float dDNdx = dot(dwodx, ns) + dot(wo, dndx);
-            Float dDNdy = dot(dwody, ns) + dot(wo, dndy);
+            float dDNdx = dot(dwodx, ns) + dot(wo, dndx);
+            float dDNdy = dot(dwody, ns) + dot(wo, dndy);
             rd.rxDirection = wi - dwodx + 2.f * Vector3f(dot(wo, ns) * dndx + dDNdx * ns);
             rd.ryDirection = wi - dwody + 2.f * Vector3f(dot(wo, ns) * dndy + dDNdy * ns);
         }
@@ -121,7 +121,7 @@ Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const S
                                              MemoryArena &arena, int depth) const
 {
     Vector3f wo = isect.wo, wi;
-    Float pdf;
+    float pdf;
     const Point3f &p = isect.p;
     const Normal3f &ns = isect.shading.n;
     const BSDF &bsdf = *isect.bsdf;
@@ -134,7 +134,7 @@ Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const S
             rd.rxOrigin = p + isect.dpdx;
             rd.ryOrigin = p + isect.dpdy;
 
-            Float eta = bsdf.eta;
+            float eta = bsdf.eta;
             Vector3f w = -wo;
             if (dot(wo, ns) < 0) eta = 1.f / eta;
 
@@ -142,12 +142,12 @@ Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const S
             Normal3f dndy = isect.shading.dndu * isect.dudy + isect.shading.dndv * isect.dvdy;
 
             Vector3f dwodx = -ray.rxDirection - wo, dwody = -ray.ryDirection - wo;
-            Float dDNdx = dot(dwodx, ns) + dot(wo, dndx);
-            Float dDNdy = dot(dwody, ns) + dot(wo, dndy);
+            float dDNdx = dot(dwodx, ns) + dot(wo, dndx);
+            float dDNdy = dot(dwody, ns) + dot(wo, dndy);
 
-            Float mu = eta * dot(w, ns) - dot(wi, ns);
-            Float dmudx = (eta - (eta * eta * dot(w, ns)) / dot(wi, ns)) * dDNdx;
-            Float dmudy = (eta - (eta * eta * dot(w, ns)) / dot(wi, ns)) * dDNdy;
+            float mu = eta * dot(w, ns) - dot(wi, ns);
+            float dmudx = (eta - (eta * eta * dot(w, ns)) / dot(wi, ns)) * dDNdx;
+            float dmudy = (eta - (eta * eta * dot(w, ns)) / dot(wi, ns)) * dDNdy;
 
             rd.rxDirection = wi + eta * dwodx - Vector3f(mu * dndx + dmudx * ns);
             rd.ryDirection = wi + eta * dwody - Vector3f(mu * dndy + dmudy * ns);

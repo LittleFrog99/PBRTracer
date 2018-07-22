@@ -36,32 +36,32 @@ unique_ptr<Sampler> StratifiedSampler::clone(int seed) {
     return unique_ptr<Sampler>(ss);
 }
 
-void StratifiedSampler::sample1D(Float *samples, int nSamples, Random &rng, bool jitter) {
-    Float invNSamples = 1.0 / nSamples;
+void StratifiedSampler::sample1D(float *samples, int nSamples, Random &rng, bool jitter) {
+    float invNSamples = 1.0 / nSamples;
     for (int i = 0; i < nSamples; i++) {
-        Float delta = jitter ? rng.uniformFloat() : 0.5f;
+        float delta = jitter ? rng.uniformFloat() : 0.5f;
         samples[i] = min((i + delta) * invNSamples, Random::ONE_MINUS_EPSILON);
     }
 }
 
 void StratifiedSampler::sample2D(Point2f *samples, int nx, int ny, Random &rng, bool jitter) {
-    Float dx = 1.0 / nx, dy = 1.0 / ny;
+    float dx = 1.0 / nx, dy = 1.0 / ny;
     for (int y = 0; y < ny; y++)
         for (int x = 0; x < nx; x++) {
-            Float jx = jitter ? rng.uniformFloat() : 0.5f;
-            Float jy = jitter ? rng.uniformFloat() : 0.5f;
+            float jx = jitter ? rng.uniformFloat() : 0.5f;
+            float jy = jitter ? rng.uniformFloat() : 0.5f;
             samples->x = min((x + jx) * dx, Random::ONE_MINUS_EPSILON);
             samples->y = min((y + jy) * dy, Random::ONE_MINUS_EPSILON);
             ++samples;
         }
 }
 
-void StratifiedSampler::latinHypercube(Float *samples, int nSamples, int nDim, Random &rng) {
+void StratifiedSampler::latinHypercube(float *samples, int nSamples, int nDim, Random &rng) {
     // Generate LHS samples along diagonal
-    Float invNSamples = 1.0 / nSamples;
+    float invNSamples = 1.0 / nSamples;
     for (int i = 0; i < nSamples; i++)
         for (int j = 0; j < nDim; j++) {
-            Float sj = (i + rng.uniformFloat()) * invNSamples;
+            float sj = (i + rng.uniformFloat()) * invNSamples;
             samples[nDim * i + j] = min(sj, Random::ONE_MINUS_EPSILON);
         }
     // Permute samples in each dimension

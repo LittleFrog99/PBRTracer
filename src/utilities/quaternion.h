@@ -38,26 +38,26 @@ struct Quaternion {
         return ret -= q2;
     }
 
-    Quaternion & operator *= (Float f) {
+    Quaternion & operator *= (float f) {
         v *= f;
         w *= f;
         return *this;
     }
 
-    Quaternion operator * (Float f) const {
+    Quaternion operator * (float f) const {
         Quaternion ret = *this;
         ret.v *= f;
         ret.w *= f;
         return ret;
     }
 
-    Quaternion & operator /= (Float f) {
+    Quaternion & operator /= (float f) {
         v /= f;
         w /= f;
         return *this;
     }
 
-    Quaternion operator / (Float f) const {
+    Quaternion operator / (float f) const {
         Quaternion ret = *this;
         ret.v /= f;
         ret.w /= f;
@@ -74,16 +74,16 @@ struct Quaternion {
     Transform toTransform() const;
 
     Vector3f v;
-    Float w;
+    float w;
 };
 
-inline Quaternion operator * (Float f, const Quaternion &q) { return q * f; }
+inline Quaternion operator * (float f, const Quaternion &q) { return q * f; }
 
 namespace Math {
 
-Quaternion slerp(Float t, const Quaternion &q1, const Quaternion &q2);
+Quaternion slerp(float t, const Quaternion &q1, const Quaternion &q2);
 
-inline Float dot(const Quaternion &q1, const Quaternion &q2) {
+inline float dot(const Quaternion &q1, const Quaternion &q2) {
     return dot(q1.v, q2.v) + q1.w * q2.w;
 }
 
@@ -93,13 +93,13 @@ inline Quaternion Quaternion::normalize() {
     return (*this) / sqrt(dot(*this, *this));
 }
 
-inline Quaternion Math::slerp(Float t, const Quaternion &q1, const Quaternion &q2) {
-    Float cosTheta = dot(q1, q2);
+inline Quaternion Math::slerp(float t, const Quaternion &q1, const Quaternion &q2) {
+    float cosTheta = dot(q1, q2);
     if (cosTheta > .9995f)
         return ((1 - t) * q1 + t * q2).normalize();
     else {
-        Float theta = acos(clamp(cosTheta, -1, 1));
-        Float thetap = theta * t;
+        float theta = acos(clamp(cosTheta, -1, 1));
+        float thetap = theta * t;
         Quaternion qperp = (q2 - cosTheta * q1).normalize();
         return q1 * cos(thetap) + qperp * sin(thetap);
     }
