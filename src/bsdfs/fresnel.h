@@ -93,8 +93,7 @@ public:
     string toString() const {
         return "[ SpecularTransmission: T: " + T.toString() +
                 STRING_PRINTF(" etaA: %f etaB: %f ", etaA, etaB) +
-                " fresnel: " + fresnel.toString() +
-                " mode : " + (mode == TransportMode::Radiance ? "RADIANCE" : "IMPORTANCE") + " ]";
+                " fresnel: " + fresnel.toString() + " mode : " + to_string(mode) + " ]";
     }
 
 private:
@@ -117,8 +116,7 @@ public:
 
     string toString() const {
         return "[ FresnelSpecular R: " + R.toString() + " T: " + T.toString() +
-                STRING_PRINTF(" etaA: %f etaB: %f ", etaA, etaB) +
-                " mode : " + (mode == TransportMode::Radiance ? "RADIANCE" : "IMPORTANCE") + " ]";
+                STRING_PRINTF(" etaA: %f etaB: %f ", etaA, etaB) + " mode : " + to_string(mode) + " ]";
     }
 
 private:

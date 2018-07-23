@@ -9,6 +9,12 @@ class SurfaceInteraction;
 
 enum class TransportMode { Radiance, Importance };
 
+namespace std {
+string to_string(TransportMode mode) {
+    return (mode == TransportMode::Radiance) ? "RADIANCE" : "IMPORTANCE";
+}
+}
+
 class Material {
 public:
     virtual void computeScatteringFuncs(SurfaceInteraction *si, MemoryArena &arena,

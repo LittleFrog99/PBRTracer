@@ -59,15 +59,18 @@ public:
     BSDF(const SurfaceInteraction &si, float eta = 1)
         : eta(eta), ns(si.shading.n), ng(si.n), ss(normalize(si.shading.dpdu)), ts(cross(ns, ss)) {}
 
-    int numComponents(BxDFType flags = BSDF_ALL) const;
+    int numComponents(BxDFType flags = BSDF_ALL) const { return nBxDFs; }
+
     Spectrum compute_f(const Vector3f &woW, const Vector3f &wiW, BxDFType flags = BSDF_ALL) const;
-    Spectrum compute_rho(int nSamples, const Point2f *samples1, const Point2f *samples2,
-                            BxDFType flags = BSDF_ALL) const;
-    Spectrum compute_rho(const Vector3f &wo, int nSamples, const Point2f *samples,
-                            BxDFType flags = BSDF_ALL) const;
     Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
                          BxDFType type = BSDF_ALL, BxDFType *sampledType = nullptr) const;
     float pdf(const Vector3f &wo, const Vector3f &wi, BxDFType flags = BSDF_ALL) const;
+
+    Spectrum rho_hd(const Vector3f &wo, int nSamples, const Point2f *samples,
+                    BxDFType flags = BSDF_ALL) const;
+    Spectrum rho_hh(int nSamples, const Point2f *samples1, const Point2f *samples2,
+                    BxDFType flags = BSDF_ALL) const;
+
     string toString() const;
 
     void add(BxDF *b) {
@@ -89,8 +92,8 @@ public:
     const float eta;
 
 private:
-    const Normal3f ns, ng;
-    const Vector3f ss, ts;
+    const Normal3f ns, ng; // shading and geometry normal
+    const Vector3f ss, ts; // primary and secondary tangents
     int nBxDFs = 0;
     BxDF *bxdfs[MAX_BXDFS];
 

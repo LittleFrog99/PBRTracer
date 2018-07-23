@@ -543,6 +543,11 @@ inline T dot(const Vector3<T> &v1, const Vector3<T> &v2) {
 }
 
 template <class T>
+inline T absDot(const Vector3<T> &v1, const Vector3<T> &v2) {
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+template <class T>
 inline T absDot(const Normal3<T> &n1, const Vector3<T> &v2) {
     return std::abs(n1.x * v2.x + n1.y * v2.y + n1.z * v2.z);
 }
@@ -653,6 +658,10 @@ inline bool refract(const Vector3f &wi, const Normal3f &n, float eta, Vector3f *
     float cosThetaT = sqrt(1 - sin2ThetaT);
     *wt = -wi * eta + (eta * cosThetaI - cosThetaT) * Vector3f(n);
     return true;
+}
+
+inline bool sameHemisphere(const Vector3f &w, const Vector3f &wp) {
+    return w.z * wp.z > 0;
 }
 
 }
