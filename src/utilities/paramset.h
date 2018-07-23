@@ -146,7 +146,7 @@ private:
     template <typename T>
     static void printItems(
         const char *type, int indent,
-        const std::vector<std::shared_ptr<ParamSetItem<T>>> &items) {
+        const vector<shared_ptr<ParamSetItem<T>>> &items) {
         for (const auto &item : items) {
             int np = printf("\n%*s\"%s %s\" [ ", indent + 8, "", type,
                             item->name.c_str());

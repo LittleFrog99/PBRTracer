@@ -97,13 +97,7 @@ int main(int argc, char *argv[]) {
                    "if used to render highly complex scenes. ***\n");
         printf("pbr-tracer (built %s at %s) [Detected %d cores]\n",
                __DATE__, __TIME__, Parallel::numSystemCores());
-#ifndef NDEBUG
-        LOG(INFO) << "Running debug build";
-        printf("*** DEBUG BUILD ***\n");
-#endif // !NDEBUG
-        printf(
-            "The source code to this project is covered "
-            "by the BSD License.\n");
+        printf( "The source code to this project is covered by the BSD License.\n");
         fflush(stdout);
     }
     API::init(options);

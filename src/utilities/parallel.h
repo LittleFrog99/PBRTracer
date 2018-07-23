@@ -79,7 +79,7 @@ public:
 
     void add(float v) {
         uint32_t oldBits = bits, newBits;
-        do newBits = Math::floatToBits(Math::bitsToFloat(oldBits) + v);
+        do newBits = floatToBits(bitsToFloat(oldBits) + v);
         while (!bits.compare_exchange_weak(oldBits, newBits));
     }
 

@@ -36,7 +36,7 @@ SET(SOURCES_SAMPLERS
     src/samplers/stratified.cpp src/samplers/halton.cpp)
 
 SET(SOURCES_BSDFS
-    src/bsdfs/fresnel.cpp)
+    src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp)
 
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)

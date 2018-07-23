@@ -16,6 +16,7 @@
 /* Macros */
 #define SQ(x) (x) * (x)
 #define CUB(x) (x) * (x) * (x)
+#define QUAD(x) SQ(x) * SQ(x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
 
 /* Type Declarations */

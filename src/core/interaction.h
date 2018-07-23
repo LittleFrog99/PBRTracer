@@ -9,7 +9,6 @@
 
 class Shape;
 class BSDF;
-class BSSRDF;
 class Primitive;
 
 struct Interaction {
@@ -82,8 +81,7 @@ class SurfaceInteraction : public Interaction {
 public:
     SurfaceInteraction() {}
     SurfaceInteraction(const Point3f &p, const Vector3f &pError, const Point2f &uv, const Vector3f &wo,
-                       const Vector3f &dpdu, const Vector3f &dpdv,
-                       const Normal3f &dndu, const Normal3f &dndv,
+                       const Vector3f &dpdu, const Vector3f &dpdv, const Normal3f &dndu, const Normal3f &dndv,
                        float time, const Shape *sh);
     void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv, const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
@@ -103,7 +101,7 @@ public:
     } shading;
     const Primitive *primitive = nullptr;
     BSDF *bsdf = nullptr;
-    BSSRDF *bssrdf = nullptr;
+    // BSSRDF *bssrdf = nullptr; to be added later
     mutable Vector3f dpdx, dpdy;
     mutable float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
 
