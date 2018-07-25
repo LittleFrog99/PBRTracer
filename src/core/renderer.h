@@ -72,7 +72,7 @@ struct MaterialInstance {
 
 struct GraphicsState {
     GraphicsState();
-    shared_ptr<Material> getMaterialForShape(const ParamSet &geomParams);
+    shared_ptr<Material> getMaterialForShape(const ParamSet &shapeParams);
     MediumInterface createMediumInterface();
 
     string currentInsideMedium, currentOutsideMedium;
@@ -134,9 +134,9 @@ namespace Renderer {
     shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, const Film *film);
     unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet);
     Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter> filter);
+    shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
     shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
                                   const Transform &medium2world);
-    shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
     shared_ptr<Texture<float>> makeFloatTexture(const string &name, const Transform &tex2world,
                                                 const TextureParams &tp);
     shared_ptr<Texture<Spectrum>> makeSpectrumTexture(const string &name,  const Transform &tex2world,

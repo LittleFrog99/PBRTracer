@@ -16,6 +16,9 @@
 #include "samplers/halton.h"
 #include "core/filter.h"
 #include "core/film.h"
+#include "materials/matte.h"
+#include "materials/plastic.h"
+#include "materials/mix.h"
 
 namespace Renderer {
 
@@ -42,16 +45,14 @@ vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object
         s = Sphere::create(object2world, world2object, reverseOrientation,paramSet);
     // Create remaining single _Shape_ types
     else if (name == "cylinder")
-        s = Cylinder::create(object2world, world2object, reverseOrientation,
-                             paramSet);
+        s = Cylinder::create(object2world, world2object, reverseOrientation, paramSet);
     else if (name == "disk")
         s = Disk::create(object2world, world2object, reverseOrientation, paramSet);
     if (s != nullptr) shapes.push_back(s);
 
     // Create multiple-_Shape_ types
     else if (name == "curve")
-        shapes = Curve::create(object2world, world2object,
-                               reverseOrientation, paramSet);
+        shapes = Curve::create(object2world, world2object, reverseOrientation, paramSet);
     else if (name == "trianglemesh") {
         shapes = TriangleMesh::create(object2world, world2object, reverseOrientation, paramSet,
                                       &*graphicsState.floatTextures);
@@ -128,7 +129,7 @@ unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet) {
         exit(1);
     }
     paramSet.reportUnused();
-    return std::unique_ptr<Filter>(filter);
+    return unique_ptr<Filter>(filter);
 }
 
 Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter> filter) {
@@ -141,7 +142,42 @@ Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter>
     return film;
 }
 
-};
+shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
+    Material *material = nullptr;
+    if (name == "" || name == "none")
+        return nullptr;
+    else if (name == "matte")
+        material = MatteMaterial::create(mp);
+    else if (name == "plastic")
+        material = PlasticMaterial::create(mp);
+    else if (name == "mix") {
+        string m1 = mp.findString("namedmaterial1", "");
+        string m2 = mp.findString("namedmaterial2", "");
+        shared_ptr<Material> mat1, mat2;
+        if (graphicsState.namedMaterials->find(m1) == graphicsState.namedMaterials->end()) {
+            ERROR("Named material \"%s\" undefined.  Using \"matte\"", m1.c_str());
+            mat1 = makeMaterial("matte", mp);
+        } else
+            mat1 = (*graphicsState.namedMaterials)[m1]->material;
+
+        if (graphicsState.namedMaterials->find(m2) == graphicsState.namedMaterials->end()) {
+            ERROR("Named material \"%s\" undefined.  Using \"matte\"", m2.c_str());
+            mat2 = makeMaterial("matte", mp);
+        } else
+            mat2 = (*graphicsState.namedMaterials)[m2]->material;
+
+        material = MixMaterial::create(mp, mat1, mat2);
+    } else {
+        WARNING("Material \"%s\" unknown. Using \"matte\".", name.c_str());
+        material = MatteMaterial::create(mp);
+    }
+
+    mp.reportUnused();
+    if (!material) ERROR("Unable to create material \"%s\"", name.c_str());
+    return shared_ptr<Material>(material);
+}
+
+}
 
 STAT_MEMORY_COUNTER("Memory/TransformCache", transformCacheBytes);
 STAT_PERCENT("Scene/TransformCache hits", nTransformCacheHits, nTransformCacheLookups);
@@ -235,9 +271,48 @@ uint64_t TransformCache::hash(const Transform &t) {
     return hash;
 }
 
+GraphicsState::GraphicsState()
+    : floatTextures(make_shared<FloatTextureMap>()), spectrumTextures(make_shared<SpectrumTextureMap>()),
+      namedMaterials(make_shared<NamedMaterialMap>())
+{
+    ParamSet empty;
+    TextureParams tp(empty, empty, *floatTextures, *spectrumTextures);
+    shared_ptr<Material> mtl(MatteMaterial::create(tp));
+    currentMaterial = make_shared<MaterialInstance>("matte", mtl, ParamSet());
+}
+
+shared_ptr<Material> GraphicsState::getMaterialForShape(const ParamSet &shapeParams) {
+    CHECK(currentMaterial);
+    if (shapeParams.shapeMaySetMaterialParameters()) {
+        // The shape's parameters will provide values for some of the material parameters.
+        TextureParams mp(shapeParams, currentMaterial->params, *floatTextures, *spectrumTextures);
+        return Renderer::makeMaterial(currentMaterial->name, mp);
+    } else
+        return currentMaterial->material;
+}
+
+MediumInterface GraphicsState::createMediumInterface() {
+    MediumInterface m;
+    if (currentInsideMedium != "") {
+        if (Renderer::renderOptions->namedMedia.find(currentInsideMedium) !=
+            Renderer::renderOptions->namedMedia.end())
+            m.inside = Renderer::renderOptions->namedMedia[currentInsideMedium].get();
+        else
+            ERROR("Named medium \"%s\" undefined.", currentInsideMedium.c_str());
+    }
+    if (currentOutsideMedium != "") {
+        if (Renderer::renderOptions->namedMedia.find(currentOutsideMedium) !=
+            Renderer::renderOptions->namedMedia.end())
+            m.outside = Renderer::renderOptions->namedMedia[currentOutsideMedium].get();
+        else
+            ERROR("Named medium \"%s\" undefined.", currentOutsideMedium.c_str());
+    }
+    return m;
+}
+
 Scene * RenderOptions::makeScene() {
-    shared_ptr<Primitive> accelerator =
-            Renderer::makeAccelerator(acceleratorName, move(primitives), acceleratorParams);
+    shared_ptr<Primitive> accelerator = Renderer::makeAccelerator(acceleratorName, move(primitives),
+                                                                  acceleratorParams);
     if (!accelerator) accelerator = make_shared<BVH>(primitives);
     Scene *scene = new Scene(accelerator, lights);
     // Erase primitives and lights from _RenderOptions_

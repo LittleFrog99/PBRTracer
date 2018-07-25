@@ -15,7 +15,7 @@ Spectrum Whitted::compute_Li(const RayDifferential &ray, const Scene &scene, Sam
 
     Normal3f n = isect.shading.n;
     Vector3f wo = isect.wo;
-    isect.computeScatteringFuncs(ray, arena);
+    isect.computeScatteringFunctions(ray, arena);
     L += isect.compute_Le(wo); // intersect emissive surface
 
     // Add contribution of each light source

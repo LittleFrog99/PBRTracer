@@ -1,11 +1,11 @@
 #ifndef CORE_MATERIAL
 #define CORE_MATERIAL
 
-
 #include "memory.h"
 #include "texture.h"
 
 class SurfaceInteraction;
+class TextureParams;
 
 enum class TransportMode { Radiance, Importance };
 
@@ -17,9 +17,9 @@ string to_string(TransportMode mode) {
 
 class Material {
 public:
-    virtual void computeScatteringFuncs(SurfaceInteraction *si, MemoryArena &arena,
-                                        TransportMode mode, bool allowMultipleLobes) const = 0;
-    virtual ~Material();
+    virtual void computeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
+                                            TransportMode mode, bool allowMultipleLobes) const = 0;
+    virtual ~Material() {}
     static void bump(const shared_ptr<Texture<float>> &d, SurfaceInteraction *si);
 };
 

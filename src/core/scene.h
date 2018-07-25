@@ -16,10 +16,10 @@ public:
     }
 
     const Bounds3f & getWorldBound() const { return worldBound; }
+
     bool intersect(const Ray &ray, SurfaceInteraction *isect) const;
     bool intersectP(const Ray &ray) const;
-    bool intersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect,
-                     Spectrum *transmittance) const;
+    bool intersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect, Spectrum *transmittance) const;
 
     vector<shared_ptr<Light>> lights;
     vector<shared_ptr<Light>> infiniteLights;

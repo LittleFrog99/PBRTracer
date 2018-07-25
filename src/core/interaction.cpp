@@ -1,5 +1,6 @@
 #include "interaction.h"
 #include "shape.h"
+#include "primitive.h"
 
 SurfaceInteraction::SurfaceInteraction(const Point3f &p, const Vector3f &pError,
                                        const Point2f &uv, const Vector3f &wo,
@@ -42,4 +43,11 @@ void SurfaceInteraction::setShadingGeometry(const Vector3f &dpdus, const Vector3
     shading.dpdv = dpdvs;
     shading.dndu = dndus;
     shading.dndv = dndvs;
+}
+
+void SurfaceInteraction::computeScatteringFunctions(const RayDifferential &ray, MemoryArena &arena,
+                                                bool allowMultipleLobes, TransportMode mode)
+{
+    computeDifferentials(ray);
+    primitive->computeScatteringFunctions(this, arena, mode, allowMultipleLobes);
 }

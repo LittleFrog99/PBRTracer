@@ -13,7 +13,7 @@ public:
     virtual bool intersectP(const Ray &r) const = 0;
     virtual const AreaLight * getAreaLight() const = 0;
     virtual const Material * getMaterial() const = 0;
-    virtual void computeScatteringFuncs(SurfaceInteraction *isect, MemoryArena &arena,
+    virtual void computeScatteringFunctions(SurfaceInteraction *isect, MemoryArena &arena,
                                         TransportMode mode, bool allowMultipleLobes) const = 0;
 };
 
@@ -29,9 +29,9 @@ public:
     const AreaLight * getAreaLight() const { return areaLight.get(); }
     const Material * getMaterial() const { return material.get(); }
 
-    void computeScatteringFuncs(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
+    void computeScatteringFunctions(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
                                 bool allowMultipleLobes) const {
-        if (material) material->computeScatteringFuncs(isect, arena, mode, allowMultipleLobes);
+        if (material) material->computeScatteringFunctions(isect, arena, mode, allowMultipleLobes);
     }
 
 private:
@@ -57,9 +57,9 @@ public:
         LOG(FATAL) << "TransformedPrimitive::getMaterial() shouldn't be called";
     }
 
-    void computeScatteringFuncs(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
+    void computeScatteringFunctions(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
                                 bool allowMultipleLobes) const {
-        LOG(FATAL) << "TransformedPrimitive::computeScatteringFuncs() shouldn't be called";
+        LOG(FATAL) << "TransformedPrimitive::computeScatteringFunctions() shouldn't be called";
     }
 
     Bounds3f worldBound() const {
@@ -81,9 +81,9 @@ public:
         LOG(FATAL) << "Aggregate::getMaterial() shouldn't be called";
     }
 
-    void computeScatteringFuncs(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
+    void computeScatteringFunctions(SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
                                 bool allowMultipleLobes) const {
-        LOG(FATAL) << "Aggregate::computeScatteringFuncs() shouldn't be called";
+        LOG(FATAL) << "Aggregate::computeScatteringFunctions() shouldn't be called";
     }
 };
 #endif // CORE_PRIMITIVE

@@ -11,7 +11,8 @@ SET(SOURCES_CORE
     src/core/renderer.cpp  src/core/texture.cpp src/core/integrator.cpp
     src/core/interaction.cpp src/core/spectrum.cpp src/core/transform.cpp
     src/core/shape.cpp src/core/primitive.cpp src/core/camera.cpp
-    src/core/api.cpp src/core/sampling.cpp src/core/film.cpp)
+    src/core/api.cpp src/core/sampling.cpp src/core/film.cpp
+    src/core/bsdf.cpp src/core/scene.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
@@ -38,13 +39,16 @@ SET(SOURCES_SAMPLERS
 SET(SOURCES_BSDFS
     src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp)
 
+SET(SOURCES_MATERIALS
+    src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp)
+
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)
 
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}
     ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS} ${SOURCES_BSDFS}
-    ${SOURCES_EXTENSIONS})
+    ${SOURCES_MATERIALS} ${SOURCES_EXTENSIONS})
 
 SET(GTEST_SOURCES
     src/tests/gtest/gtest_main.cc src/tests/gtest/gtest-all.cc)

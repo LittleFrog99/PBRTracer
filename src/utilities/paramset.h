@@ -72,6 +72,8 @@ public:
     const Spectrum * findSpectrum(const string &, int *nValues) const;
     const string * findString(const string &, int *nValues) const;
 
+    bool shapeMaySetMaterialParameters() const;
+
     void reportUnused() const;
     void clear();
     string toString() const;
@@ -141,7 +143,6 @@ private:
     static map<string, Spectrum> cachedSpectra;
 
     friend class TextureParams;
-    friend bool shapeMaySetMaterialParameters(const ParamSet &ps);
 
     template <typename T>
     static void printItems(
@@ -163,7 +164,6 @@ private:
 
 class TextureParams {
 public:
-    // TextureParams Public Methods
     TextureParams(const ParamSet &geomParams, const ParamSet &materialParams,
                   map<string, shared_ptr<Texture<float>>> &fTex,
                   map<string, shared_ptr<Texture<Spectrum>>> &sTex)

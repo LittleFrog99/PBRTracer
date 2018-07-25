@@ -376,6 +376,52 @@ string ParamSet::findTexture(const string &name) const {
     LOOKUP_ONE(textures);
 }
 
+bool ParamSet::shapeMaySetMaterialParameters() const {
+    for (const auto &param : textures)
+        // Any texture other than one for an alpha mask
+        if (param->name != "alpha" /* && param->name != "shadowalpha" */)
+            return true;
+
+    // The most common non-mesh primitive.
+    for (const auto &param : floats)
+        if (param->nValues == 1 && param->name != "radius")
+            return true;
+
+    // Extra special case strings, since plymesh uses "filename", curve "type", and loopsubdiv "scheme".
+    for (const auto &param : strings)
+        if (param->nValues == 1 && param->name != "filename" &&
+                param->name != "type" && param->name != "scheme")
+            return true;
+
+    // If there is a single value of the parameter, assume it may be for the material.
+    for (const auto &param : bools)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : ints)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : point2fs)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : vector2fs)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : point3fs)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : vector3fs)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : normals)
+        if (param->nValues == 1)
+            return true;
+    for (const auto &param : spectra)
+        if (param->nValues == 1)
+            return true;
+
+    return false;
+}
+
 #define CHECK_UNUSED(v)                                                 \
     for (size_t i = 0; i < (v).size(); ++i)                             \
         if (!(v)[i]->lookedUp)                                          \

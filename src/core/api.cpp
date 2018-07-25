@@ -297,8 +297,8 @@ void API::mediumInterface(const string &insideName, const string &outsideName) {
     graphicsState.currentOutsideMedium = outsideName;
     renderOptions->haveScatteringMedia = true;
     if (options.cat || options.toPly)
-        printf("%*sMediumInterface \"%s\" \"%s\"\n", catIndentCount, "",
-               insideName.c_str(), outsideName.c_str());
+        printf("%*sMediumInterface \"%s\" \"%s\"\n", catIndentCount, "", insideName.c_str(),
+               outsideName.c_str());
 }
 
 void API::worldBegin() {
@@ -427,8 +427,7 @@ void API::texture(const string &name, const string &type,
 void API::material(const string &name, const ParamSet &params) {
     VERIFY_WORLD("Material");
     ParamSet emptyParams;
-    TextureParams mp(params, emptyParams, *graphicsState.floatTextures,
-                     *graphicsState.spectrumTextures);
+    TextureParams mp(params, emptyParams, *graphicsState.floatTextures, *graphicsState.spectrumTextures);
     shared_ptr<Material> mtl = makeMaterial(name, mp);
     graphicsState.currentMaterial = make_shared<MaterialInstance>(name, mtl, params);
 
@@ -443,30 +442,26 @@ void API::makeNamedMaterial(const string &name, const ParamSet &params) {
     VERIFY_WORLD("MakeNamedMaterial");
     // error checking, warning if replace, what to use for transform?
     ParamSet emptyParams;
-    TextureParams mp(params, emptyParams, *graphicsState.floatTextures,
-                     *graphicsState.spectrumTextures);
+    TextureParams mp(params, emptyParams, *graphicsState.floatTextures, *graphicsState.spectrumTextures);
     string matName = mp.findString("type");
     WARN_IF_ANIMATED_TRANSFORM("MakeNamedMaterial");
     if (matName == "")
         ERROR("No parameter string \"type\" found in MakeNamedMaterial");
 
     if (options.cat || options.toPly) {
-        printf("%*sMakeNamedMaterial \"%s\" ", catIndentCount, "",
-               name.c_str());
+        printf("%*sMakeNamedMaterial \"%s\" ", catIndentCount, "", name.c_str());
         params.print(catIndentCount);
         printf("\n");
     } else {
         shared_ptr<Material> mtl = makeMaterial(matName, mp);
-        if (graphicsState.namedMaterials->find(name) !=
-            graphicsState.namedMaterials->end())
+        if (graphicsState.namedMaterials->find(name) != graphicsState.namedMaterials->end())
             WARNING("Named material \"%s\" redefined.", name.c_str());
         if (graphicsState.namedMaterialsShared) {
             graphicsState.namedMaterials =
-                make_shared<GraphicsState::NamedMaterialMap>(*graphicsState.namedMaterials);
+                    make_shared<GraphicsState::NamedMaterialMap>(*graphicsState.namedMaterials);
             graphicsState.namedMaterialsShared = false;
         }
-        (*graphicsState.namedMaterials)[name] =
-            make_shared<MaterialInstance>(matName, mtl, params);
+        (*graphicsState.namedMaterials)[name] = make_shared<MaterialInstance>(matName, mtl, params);
     }
 }
 
@@ -678,12 +673,12 @@ void API::worldEnd() {
     VERIFY_WORLD("WorldEnd");
     // Ensure there are no pushed graphics states
     while (pushedGraphicsStates.size()) {
-        WARNING("Missing end to pbrtAttributeBegin()");
+        WARNING("Missing end to API::attributeBegin()");
         pushedGraphicsStates.pop_back();
         pushedTransforms.pop_back();
     }
     while (pushedTransforms.size()) {
-        WARNING("Missing end to pbrtTransformBegin()");
+        WARNING("Missing end to API::transformBegin()");
         pushedTransforms.pop_back();
     }
 
