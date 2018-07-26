@@ -2,10 +2,10 @@
 #define CORE_MATERIAL
 
 #include "memory.h"
-#include "texture.h"
 
 class SurfaceInteraction;
 class TextureParams;
+template <class T> class Texture;
 
 enum class TransportMode { Radiance, Importance };
 

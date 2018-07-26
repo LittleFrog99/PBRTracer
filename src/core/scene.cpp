@@ -17,8 +17,7 @@ bool Scene::intersectP(const Ray &ray) const {
     return aggregate->intersectP(ray);
 }
 
-bool Scene::intersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect,
-                        Spectrum *Tr) const {
+bool Scene::intersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect, Spectrum *Tr) const {
     *Tr = Spectrum(1.f);
     while (true) {
         bool hitSurface = intersect(ray, isect);

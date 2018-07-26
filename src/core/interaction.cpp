@@ -30,9 +30,8 @@ void SurfaceInteraction::setShadingGeometry(const Vector3f &dpdus, const Vector3
 {
     // Compute shading.n for SurfaceInteraction
     shading.n = Normal3f(normalize(cross(dpdus, dpdvs)));
-    if (shape && (shape->reverseOrientation ^
-    shape->transformSwapsHandedness))
-    shading.n = -shading.n;
+    if (shape && (shape->reverseOrientation ^ shape->transformSwapsHandedness))
+        shading.n = -shading.n;
     if (orientationIsAuthoritative)
         n = faceforward(n, shading.n);
     else
@@ -50,4 +49,39 @@ void SurfaceInteraction::computeScatteringFunctions(const RayDifferential &ray, 
 {
     computeDifferentials(ray);
     primitive->computeScatteringFunctions(this, arena, mode, allowMultipleLobes);
+}
+
+void SurfaceInteraction::computeDifferentials(const RayDifferential &ray) const {
+    if (ray.hasDifferentials) {
+        // Compute auxiliary intersection points with plane
+        float d = dot(n, Vector3f(p));
+        float tx = -(dot(n, Vector3f(ray.rxOrigin)) - d) / dot(n, ray.rxDirection);
+        Point3f px = ray.rxOrigin + tx * ray.rxDirection;
+        float ty = -(dot(n, Vector3f(ray.ryOrigin)) - d) / dot(n, ray.ryDirection);
+        Point3f py = ray.ryOrigin + ty * ray.ryDirection;
+        dpdx = px - p;
+        dpdy = py - p;
+
+        // Compute (u, v) offsets at auxiliary points
+        // Choose two dimensions to use for ray offset computation
+        int dim[2];
+        if (abs(n.x) > abs(n.y) && abs(n.x) > abs(n.z)) {
+            dim[0] = 1; dim[1] = 2;
+        } else if (abs(n.y) > abs(n.z)) {
+            dim[0] = 0; dim[1] = 2;
+        } else {
+            dim[0] = 0; dim[1] = 1;
+        }
+        // Initialize A, Bx, and By matrices for offset computation
+        float A[2][2] = { { dpdu[dim[0]], dpdv[dim[0]] }, { dpdu[dim[1]], dpdv[dim[1]] } };
+        float Bx[2] = { px[dim[0]] - p[dim[0]], px[dim[1]] - p[dim[1]] };
+        float By[2] = { py[dim[0]] - p[dim[0]], py[dim[1]] - p[dim[1]] };
+
+        if (!solveLinear2x2(A, Bx, &dudx, &dvdx)) dudx = dvdx = 0;
+        if (!solveLinear2x2(A, By, &dudy, &dvdy)) dudy = dvdy = 0;
+    } else  {
+        dudx = dvdx = 0;
+        dudy = dvdy = 0;
+        dpdx = dpdy = Vector3f(0, 0, 0);
+    }
 }

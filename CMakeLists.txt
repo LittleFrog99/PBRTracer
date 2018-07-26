@@ -12,7 +12,8 @@ SET(SOURCES_CORE
     src/core/interaction.cpp src/core/spectrum.cpp src/core/transform.cpp
     src/core/shape.cpp src/core/primitive.cpp src/core/camera.cpp
     src/core/api.cpp src/core/sampling.cpp src/core/film.cpp
-    src/core/bsdf.cpp src/core/scene.cpp)
+    src/core/bsdf.cpp src/core/scene.cpp src/core/material.cpp
+    src/core/texture.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp

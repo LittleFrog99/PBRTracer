@@ -12,6 +12,7 @@ static APIState currentApiState = APIState::Uninitialized;
 };
 
 // API Macros
+#define SHOULD_PRINT if (options.cat || options.toPly)
 #define VERIFY_INITIALIZED(func)                           \
     if (!(options.cat || options.toPly) &&           \
         currentApiState == APIState::Uninitialized) {        \

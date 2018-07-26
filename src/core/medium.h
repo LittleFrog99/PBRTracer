@@ -11,7 +11,7 @@ class Sampler;
 
 class PhaseFunction {
 public:
-    virtual ~PhaseFunction();
+    virtual ~PhaseFunction() {}
     virtual float compute_p(const Vector3f &wo, const Vector3f &wi) const = 0;
     virtual float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
     virtual string toString() const = 0;

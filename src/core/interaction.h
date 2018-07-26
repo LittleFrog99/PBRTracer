@@ -1,11 +1,10 @@
 #ifndef CORE_INTERACTION
 #define CORE_INTERACTION
 
-#include "ray.h"
-#include "spectrum.h"
+#include "core/ray.h"
+#include "core/medium.h"
+#include "core/material.h"
 #include "memory.h"
-#include "medium.h"
-#include "material.h"
 
 class Shape;
 class BSDF;

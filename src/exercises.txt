@@ -31,3 +31,8 @@ Chapter 7 Sampling and Reconstruction
 Chapter 8 Reflection Models
 8.4 (C) Other interesting surfaces
 8.6 (B) Hair reflection model
+
+Chapter 9 Materials
+9.1 (B) Avoid evaluating the same texture twice
+9.2 (B) Disney Material
+

@@ -17,8 +17,7 @@ void SamplerIntegrator::render(const Scene &scene) {
                    (sampleExtent.y + tileSize - 1) / tileSize);
 
     ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
-    Parallel::forLoop2D(
-                [&](Point2i tile) {
+    Parallel::forLoop2D( [&] (Point2i tile) {
         MemoryArena arena;
         int seed = tile.y * nTiles.x + tile.x;
         unique_ptr<Sampler> tileSampler = sampler->clone(seed);
