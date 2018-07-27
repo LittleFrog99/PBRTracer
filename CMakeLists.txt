@@ -43,13 +43,16 @@ SET(SOURCES_BSDFS
 SET(SOURCES_MATERIALS
     src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp)
 
+SET(SOURCES_TEXTURES
+    src/textures/imagemap.cpp)
+
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)
 
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}
     ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS} ${SOURCES_BSDFS}
-    ${SOURCES_MATERIALS} ${SOURCES_EXTENSIONS})
+    ${SOURCES_MATERIALS} ${SOURCES_EXTENSIONS} ${SOURCES_TEXTURES})
 
 SET(GTEST_SOURCES
     src/tests/gtest/gtest_main.cc src/tests/gtest/gtest-all.cc)

@@ -7,9 +7,11 @@
 enum class ImageWrap { Repeat, Black, Clamp };
 
 template <class T>
-class MIPMap {
+class Mipmap {
 public:
-    MIPMap(const Point2i &res, const T *img, bool doTrilinear, float maxAnisotropy, ImageWrap wrapMode);
+    Mipmap(const Point2i &res, const T *img, bool doTrilinear = false, float maxAnisotropy = 8.0f,
+           ImageWrap wrapMode = ImageWrap::Repeat);
+    T lookup(const Point2f &st, Vector2f dst0, Vector2f dst1) const;
 
 private:
     struct ResampleWeight {

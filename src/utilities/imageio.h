@@ -6,6 +6,18 @@
 
 namespace ImageIO {
 
+inline float gammaCorrect(float value) {
+    if (value <= 0.0031308f)
+        return 12.92f * value;
+    return 1.055f * pow(value, (float)(1.f / 2.4f)) - 0.055f;
+}
+
+inline float inverseGammaCorrect(float value) {
+    if (value <= 0.04045f)
+        return value * 1.f / 12.92f;
+    return pow((value + 0.055f) * 1.f / 1.055f, (float)2.4f);
+}
+
 unique_ptr<RGBSpectrum[]> readImage(const string &name, Point2i *resolution);
 
 RGBSpectrum *readImageEXR(const string &name, int *width, int *height,

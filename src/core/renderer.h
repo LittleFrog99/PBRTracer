@@ -137,15 +137,21 @@ namespace Renderer {
     shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
     shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
                                   const Transform &medium2world);
-    shared_ptr<Texture<float>> makeFloatTexture(const string &name, const Transform &tex2world,
-                                                const TextureParams &tp);
-    shared_ptr<Texture<Spectrum>> makeSpectrumTexture(const string &name,  const Transform &tex2world,
-                                                      const TextureParams &tp);
     shared_ptr<Light> makeLight(const string &name, const ParamSet &paramSet,
                                 const Transform &light2world, const MediumInterface &mediumInterface);
     shared_ptr<AreaLight> makeAreaLight(const string &name, const Transform &light2world,
                                         const MediumInterface &mediumInterface,
                                         const ParamSet &paramSet, const shared_ptr<Shape> &shape);
+
+    template <class T>
+    shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2world,
+                                       const TextureParams &tp);
+    extern template
+    shared_ptr<Texture<float>> makeTexture<float>(const string &name, const Transform &tex2world,
+                                                  const TextureParams &tp);
+    extern template
+    shared_ptr<Texture<Spectrum>> makeTexture<Spectrum>(const string &name, const Transform &tex2world,
+                                                        const TextureParams &tp);
 
     extern Options options;
     extern int catIndentCount;

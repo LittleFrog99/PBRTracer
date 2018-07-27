@@ -1,6 +1,7 @@
 #include "api.h"
 #include "renderer.h"
 #include "accelerators/bvh.h"
+#include "textures/imagemap.h"
 
 using namespace Renderer;
 
@@ -393,8 +394,7 @@ void API::texture(const string &name, const string &type,
             graphicsState.floatTextures->end())
             WARNING("Texture \"%s\" being redefined", name.c_str());
         WARN_IF_ANIMATED_TRANSFORM("Texture");
-        shared_ptr<Texture<float>> ft =
-            makeFloatTexture(texname, curTransform[0], tp);
+        shared_ptr<Texture<float>> ft = makeTexture<float>(texname, curTransform[0], tp);
         if (ft) {
             // TODO: move this to be a GraphicsState method, also don't
             // provide direct floatTextures access?
@@ -411,8 +411,7 @@ void API::texture(const string &name, const string &type,
             graphicsState.spectrumTextures->end())
             WARNING("Texture \"%s\" being redefined", name.c_str());
         WARN_IF_ANIMATED_TRANSFORM("Texture");
-        shared_ptr<Texture<Spectrum>> st =
-            makeSpectrumTexture(texname, curTransform[0], tp);
+        shared_ptr<Texture<Spectrum>> st = makeTexture<Spectrum>(texname, curTransform[0], tp);
         if (st) {
             if (graphicsState.spectrumTexturesShared) {
                 graphicsState.spectrumTextures =
@@ -704,8 +703,8 @@ void API::worldEnd() {
     graphicsState = GraphicsState();
     transformCache.clear();
     currentApiState = APIState::OptionsBlock;
-    // ImageTexture<float, float>::ClearCache(); // TODO: Uncomment after implementing $ImageTexture
-    // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
+    ImageTexture<float, float>::clearCache(); 
+    ImageTexture<RGBSpectrum, Spectrum>::clearCache();
     renderOptions.reset(new RenderOptions);
 
     if (!options.cat && !options.toPly) {

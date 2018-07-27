@@ -164,6 +164,7 @@ private:
 
 class TextureParams {
 public:
+    TextureParams();
     TextureParams(const ParamSet &geomParams, const ParamSet &materialParams,
                   map<string, shared_ptr<Texture<float>>> &fTex,
                   map<string, shared_ptr<Texture<Spectrum>>> &sTex)
