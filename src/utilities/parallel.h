@@ -25,6 +25,8 @@ public:
     static void forLoop2D(function<void(Point2i)> func, const Point2i &count);
 
     static unsigned numSystemCores() { return max(1u, thread::hardware_concurrency()); }
+    static int maxThreadIndex();
+    static int getThreadIndex() { return threadIndex; }
 
 private:
     struct ForLoop {
@@ -64,7 +66,6 @@ private:
     static thread_local int threadIndex;
 
     static void workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier);
-    static int maxThreadIndex();
 };
 
 class AtomicFloat {

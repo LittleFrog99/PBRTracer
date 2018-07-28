@@ -5,6 +5,28 @@
 #include "mipmap.h"
 #include "imageio.h"
 
+struct TexInfo {
+    TexInfo(const string &filename, bool doTrilinear, float maxAniso, ImageWrap wrap, float scale, bool gamma)
+        : filename(filename), doTrilinear(doTrilinear), maxAniso(maxAniso), wrapMode(wrap), scale(scale),
+          gamma(gamma) {}
+
+    bool operator < (const TexInfo &t2) const {
+        if (filename != t2.filename) return filename < t2.filename;
+        if (doTrilinear != t2.doTrilinear) return doTrilinear < t2.doTrilinear;
+        if (maxAniso != t2.maxAniso) return maxAniso < t2.maxAniso;
+        if (scale != t2.scale) return scale < t2.scale;
+        if (gamma != t2.gamma) return !gamma;
+        return wrapMode < t2.wrapMode;
+    }
+
+    string filename;
+    bool doTrilinear;
+    float maxAniso;
+    ImageWrap wrapMode;
+    float scale;
+    bool gamma;
+};
+
 template <class Tmem, class Tret>
 class ImageTexture : public Texture<Tret> {
 public:
@@ -24,28 +46,6 @@ public:
     }
 
 private:
-    struct TexInfo {
-        TexInfo(const string &filename, bool doTrilinear, float maxAniso, ImageWrap wrap, float scale, bool gamma)
-            : filename(filename), doTrilinear(doTrilinear), maxAniso(maxAniso), wrapMode(wrap), scale(scale),
-              gamma(gamma) {}
-
-        bool operator < (const TexInfo &t2) const {
-            if (filename != t2.filename) return filename < t2.filename;
-            if (doTrilinear != t2.doTrilinear) return doTrilinear < t2.doTrilinear;
-            if (maxAniso != t2.maxAniso) return maxAniso < t2.maxAniso;
-            if (scale != t2.scale) return scale < t2.scale;
-            if (gamma != t2.gamma) return !gamma;
-            return wrapMode < t2.wrapMode;
-        }
-
-        string filename;
-        bool doTrilinear;
-        float maxAniso;
-        ImageWrap wrapMode;
-        float scale;
-        bool gamma;
-    };
-
     static ImageTexture<Tmem, Tret> * create(const Transform &tex2world, const TextureParams &tp);
 
     static void convertIn(const RGBSpectrum &from, RGBSpectrum *to, float scale, bool gamma) {

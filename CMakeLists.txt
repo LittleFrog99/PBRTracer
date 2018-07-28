@@ -19,7 +19,7 @@ SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
     src/utilities/imageio.cpp src/utilities/parallel.cpp src/utilities/stats.cpp
-    src/utilities/paramset.cpp src/utilities/parser.cpp)
+    src/utilities/paramset.cpp src/utilities/parser.cpp src/utilities/mipmap.cpp)
 
 SET(SOURCES_SHAPES
     src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp

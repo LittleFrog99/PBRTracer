@@ -4,6 +4,9 @@
 #include "file.h"
 
 template <class Tmem, class Tret>
+map<TexInfo, unique_ptr<Mipmap<Tmem>>> ImageTexture<Tmem, Tret>::textures;
+
+template <class Tmem, class Tret>
 Mipmap<Tmem> * ImageTexture<Tmem, Tret>::getTexture(const string &filename, bool doTrilinear, float maxAniso,
                                                     ImageWrap wrap, float scale, bool gamma)
 {
@@ -52,7 +55,7 @@ Tret ImageTexture<Tmem, Tret>::evaluate(const SurfaceInteraction &si) const {
 }
 
 template <class Tmem, class Tret>
-ImageTexture<Tmem, Tret> *ImageTexture<Tmem, Tret>::create(const Transform &tex2world, const TextureParams &tp)
+ImageTexture<Tmem, Tret> * ImageTexture<Tmem, Tret>::create(const Transform &tex2world, const TextureParams &tp)
 {
     // Initialize 2D texture mapping _map_ from _tp_
     unique_ptr<TextureMapping2D> map;
