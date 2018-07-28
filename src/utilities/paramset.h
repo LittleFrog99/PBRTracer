@@ -171,9 +171,25 @@ public:
         : floatTextures(fTex), spectrumTextures(sTex), geomParams(geomParams),
           materialParams(materialParams) {}
 
-    shared_ptr<Texture<Spectrum>> getSpectrumTexture(const string &name, const Spectrum &def) const;
+    template <class T>
+    shared_ptr<Texture<T>> getTexture(const string &name, const T &def) const {
+        shared_ptr<Texture<T>> tex;
+        getTextureOrNull(name, &tex);
+        if (tex)
+            return tex;
+        else
+            return make_shared<ConstantTexture<T>>(def);
+    }
+
+    void getTextureOrNull(const string &name, shared_ptr<Texture<float>> *tex) const {
+        *tex = getFloatTextureOrNull(name);
+    }
+
+    void getTextureOrNull(const string &name, shared_ptr<Texture<Spectrum>> *tex) const {
+        *tex = getSpectrumTextureOrNull(name);
+    }
+
     shared_ptr<Texture<Spectrum>> getSpectrumTextureOrNull(const string &name) const;
-    shared_ptr<Texture<float>> getFloatTexture(const string &name, float def) const;
     shared_ptr<Texture<float>> getFloatTextureOrNull(const string &name) const;
 
     float findFloat(const string &n, float d) const {

@@ -6,7 +6,7 @@
 bool Cylinder::intersect(const Ray &worldRay, float *tHit, SurfaceInteraction *isect,
                          bool testAlphaTexture) const
 {
-    ProfilePhase p(Profiler::Stage::ShapeIntersect);
+    ProfilePhase p(Stage::ShapeIntersect);
 
     // Tranform Ray to object space
     Vector3f oErr, dErr;
@@ -84,7 +84,7 @@ bool Cylinder::intersect(const Ray &worldRay, float *tHit, SurfaceInteraction *i
 }
 
 bool Cylinder::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
-    ProfilePhase p(Profiler::Stage::ShapeIntersectP);
+    ProfilePhase p(Stage::ShapeIntersectP);
 
     // Tranform Ray to object space
     Vector3f oErr, dErr;

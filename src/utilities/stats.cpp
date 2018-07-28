@@ -13,7 +13,7 @@ const char * Profiler::stageNames[] = {
     "Texture Loading",
     "Mipmap Generation",
     "Integrator::render()",
-    "SamplerIntegrator::computeLi()",
+    "SamplerIntegrator::compute_Li()",
     "SPPM Camera Pass",
     "SPPM Grid Construction",
     "SPPM Photon Pass",
@@ -24,13 +24,13 @@ const char * Profiler::stageNames[] = {
     "SpatialLightmap Spin wait",
     "SpatialLightmap Creation",
     "Direct lighting",
-    "BSDF::computeF()",
-    "BSDF::sampleF()",
+    "BSDF::compute_f()",
+    "BSDF::sample_f()",
     "BSDF::pdf()",
-    "BSSRDF::computeS()",
-    "BSSRDF::sampleS()",
-    "PhaseFunction::computeP()",
-    "PhaseFunction::sampleP()",
+    "BSSRDF::compute_S()",
+    "BSSRDF::sample_S()",
+    "PhaseFunction::compute_p()",
+    "PhaseFunction::sample_p()",
     "Accelerator::intersect()",
     "Accelerator::intersectP()",
     "Light::sample()",
@@ -55,14 +55,15 @@ const char * Profiler::stageNames[] = {
     "Ptex Lookup",
 };
 
-static_assert(int(Profiler::Stage::NumProfCategories) <= 64,
+static_assert(int(Stage::NumProfCategories) <= 64,
               "No more than 64 profiling categories may be defined.");
 
-static_assert(int(Profiler::Stage::NumProfCategories) ==
+static_assert(int(Stage::NumProfCategories) ==
               sizeof(Profiler::stageNames) / sizeof(Profiler::stageNames[0]),
               "stageNames[] array and Stage enumerant have different numbers of entries!");
 
 vector<function<void(StatsAccumulator &)>> * StatsRegisterer::funcs = nullptr;
+StatsAccumulator StatsRegisterer::accum;
 
 void StatsAccumulator::print(FILE *dest) {
     fprintf(dest, "Stats:\n");
@@ -174,22 +175,6 @@ void StatsAccumulator::getCategoryAndTitle(const string &str, string *category, 
         *title = string(slash + 1);
     }
 }
-
-namespace Stats {
-
-static StatsAccumulator statsAccum;
-
-void print(FILE *dest) { statsAccum.print(dest); }
-
-void clear() { statsAccum.clear(); }
-
-void reportThread() {
-    static mutex mut;
-    lock_guard<mutex> lock(mut);
-    StatsRegisterer::callCallbacks(statsAccum);
-}
-
-};
 
 thread_local uint64_t Profiler::state;
 chrono::system_clock::time_point Profiler::startTime;

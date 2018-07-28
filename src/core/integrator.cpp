@@ -31,7 +31,7 @@ void SamplerIntegrator::render(const Scene &scene) {
 
         unique_ptr<FilmTile> filmTile = camera->film->getFilmTile(tileBounds);
         for (Point2i pixel : tileBounds) {
-            ProfilePhase pp(Profiler::Stage::StartPixel);
+            ProfilePhase pp(Stage::StartPixel);
             tileSampler->startPixel(pixel);
 
             do {

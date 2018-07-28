@@ -19,6 +19,6 @@ void MixMaterial::computeScatteringFunctions(SurfaceInteraction *si, MemoryArena
 
 MixMaterial * MixMaterial::create(const TextureParams &mp, const shared_ptr<Material> &m1,
                                   const shared_ptr<Material> &m2) {
-    shared_ptr<Texture<Spectrum>> scale = mp.getSpectrumTexture("amount", Spectrum(0.5f));
+    shared_ptr<Texture<Spectrum>> scale = mp.getTexture("amount", Spectrum(0.5f));
     return new MixMaterial(m1, m2, scale);
 }

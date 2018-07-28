@@ -23,9 +23,9 @@ void PlasticMaterial::computeScatteringFunctions(SurfaceInteraction *si, MemoryA
 }
 
 PlasticMaterial * PlasticMaterial::create(const TextureParams &mp) {
-    shared_ptr<Texture<Spectrum>> Kd = mp.getSpectrumTexture("Kd", Spectrum(0.25f));
-    shared_ptr<Texture<Spectrum>> Ks = mp.getSpectrumTexture("Ks", Spectrum(0.25f));
-    shared_ptr<Texture<float>> roughness = mp.getFloatTexture("roughness", .1f);
+    shared_ptr<Texture<Spectrum>> Kd = mp.getTexture("Kd", Spectrum(0.25f));
+    shared_ptr<Texture<Spectrum>> Ks = mp.getTexture("Ks", Spectrum(0.25f));
+    shared_ptr<Texture<float>> roughness = mp.getTexture("roughness", 0.1f);
     shared_ptr<Texture<float>> bumpMap = mp.getFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.findBool("remaproughness", true);
     return new PlasticMaterial(Kd, Ks, roughness, bumpMap, remapRoughness);

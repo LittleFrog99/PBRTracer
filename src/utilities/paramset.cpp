@@ -641,15 +641,6 @@ void ParamSet::printSet(int indent) const {
     printItems("rgb", indent, spectra);
 }
 
-shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTexture(const string &n,
-                                                                const Spectrum &def) const {
-    shared_ptr<Texture<Spectrum>> tex = getSpectrumTextureOrNull(n);
-    if (tex)
-        return tex;
-    else
-        return make_shared<ConstantTexture<Spectrum>>(def);
-}
-
 shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(const string &n) const {
     // Check the shape parameters first.
     string name = geomParams.findTexture(n);
@@ -684,18 +675,9 @@ shared_ptr<Texture<Spectrum>> TextureParams::getSpectrumTextureOrNull(const stri
     if (spectrumTextures.find(name) != spectrumTextures.end())
         return spectrumTextures[name];
     else {
-        ERROR("Couldn't find spectrum texture named \"%s\" for parameter \"%s\"",
-              name.c_str(), n.c_str());
+        ERROR("Couldn't find spectrum texture named \"%s\" for parameter \"%s\"", name.c_str(), n.c_str());
         return nullptr;
     }
-}
-
-shared_ptr<Texture<float>> TextureParams::getFloatTexture(const string &n, float def) const {
-    shared_ptr<Texture<float>> tex = getFloatTextureOrNull(n);
-    if (tex)
-        return tex;
-    else
-        return make_shared<ConstantTexture<float>>(def);
 }
 
 shared_ptr<Texture<float>> TextureParams::getFloatTextureOrNull(const string &n) const {

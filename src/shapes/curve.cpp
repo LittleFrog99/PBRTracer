@@ -42,7 +42,7 @@ Point3f Curve::evaluateBezier(const Point3f cp[4], float u, Vector3f *deriv) {
 
 bool Curve::intersect(const Ray &worldRay, float *tHit, SurfaceInteraction *isect, bool testAlphaTexture) const
 {
-    ProfilePhase p(isect ? Profiler::Stage::CurveIntersect : Profiler::Stage::CurveIntersectP);
+    ProfilePhase p(isect ? Stage::CurveIntersect : Stage::CurveIntersectP);
 
     // Transform ray to object space
     Vector3f oErr, dErr;

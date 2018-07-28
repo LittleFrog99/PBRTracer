@@ -19,8 +19,8 @@ void MatteMaterial::computeScatteringFunctions(SurfaceInteraction *si, MemoryAre
 }
 
 MatteMaterial * MatteMaterial::create(const TextureParams &mp) {
-    shared_ptr<Texture<Spectrum>> Kd = mp.getSpectrumTexture("Kd", Spectrum(0.5f));
-    shared_ptr<Texture<float>> sigma = mp.getFloatTexture("sigma", 0.f);
+    shared_ptr<Texture<Spectrum>> Kd = mp.getTexture("Kd", Spectrum(0.5f));
+    shared_ptr<Texture<float>> sigma = mp.getTexture("sigma", 0.0f);
     shared_ptr<Texture<float>> bumpMap = mp.getFloatTextureOrNull("bumpmap");
     return new MatteMaterial(Kd, sigma, bumpMap);
 }

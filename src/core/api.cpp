@@ -689,13 +689,13 @@ void API::worldEnd() {
         unique_ptr<Integrator> integrator(renderOptions->makeIntegrator());
         unique_ptr<Scene> scene(renderOptions->makeScene());
 
-        CHECK_EQ(Profiler::state, Profiler::stageToBits(Profiler::Stage::SceneConstruction));
-        Profiler::state = Profiler::stageToBits(Profiler::Stage::IntegratorRender);
+        CHECK_EQ(Profiler::state, Profiler::stageToBits(Stage::SceneConstruction));
+        Profiler::state = Profiler::stageToBits(Stage::IntegratorRender);
 
         if (scene && integrator) integrator->render(*scene);
 
-        CHECK_EQ(Profiler::state, Profiler::stageToBits(Profiler::Stage::IntegratorRender));
-        Profiler::state = Profiler::stageToBits(Profiler::Stage::SceneConstruction);
+        CHECK_EQ(Profiler::state, Profiler::stageToBits(Stage::IntegratorRender));
+        Profiler::state = Profiler::stageToBits(Stage::SceneConstruction);
     }
 
     // Clean up after rendering. Do this before reporting stats so that
@@ -709,11 +709,11 @@ void API::worldEnd() {
 
     if (!options.cat && !options.toPly) {
         Parallel::mergeWorkerThreadStats();
-        reportThread();
+        StatsRegisterer::reportThread();
         if (!options.quiet) {
-            Stats::print(stdout);
+            StatsRegisterer::print(stdout);
             Profiler::reportResults(stdout);
-            Stats::clear();
+            StatsRegisterer::clear();
             Profiler::clear();
         }
     }

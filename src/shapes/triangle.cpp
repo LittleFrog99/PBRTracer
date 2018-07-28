@@ -136,7 +136,7 @@ STAT_PERCENT("Intersections/Ray-triangle intersection tests", nTriangleHits, nTr
 
 bool Triangle::intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect, bool testAlphaTexture) const
 {
-    ProfilePhase phase(Profiler::Stage::TriIntersect);
+    ProfilePhase phase(Stage::TriIntersect);
     nTriangleTests++;
 
     // Get triangle vertices
@@ -311,7 +311,7 @@ bool Triangle::intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect,
 }
 
 bool Triangle::intersectP(const Ray &ray, bool testAlphaTexture) const {
-    ProfilePhase phase(Profiler::Stage::TriIntersectP);
+    ProfilePhase phase(Stage::TriIntersectP);
     nTriangleTests++;
 
     // Get triangle vertices

@@ -46,6 +46,8 @@ private:
         bool gamma;
     };
 
+    static ImageTexture<Tmem, Tret> * create(const Transform &tex2world, const TextureParams &tp);
+
     static void convertIn(const RGBSpectrum &from, RGBSpectrum *to, float scale, bool gamma) {
         for (int i = 0; i < RGBSpectrum::NUM_SAMPLES; i++)
             (*to)[i] = scale * (gamma ? ImageIO::inverseGammaCorrect(from[i]) : from[i]);
@@ -66,6 +68,28 @@ private:
     unique_ptr<TextureMapping2D> mapping;
     Mipmap<Tmem> *mipmap;
     static map<TexInfo, unique_ptr<Mipmap<Tmem>>> textures;
+
+    template <class T>
+    friend class ImageTextureCreator;
+};
+
+template <class T>
+class ImageTextureCreator {
+public:
+    static Texture<T> * create(const Transform &tex2world, const TextureParams &tp) {
+        Texture<T> *ptr;
+        create(tex2world, tp, &ptr);
+        return ptr;
+    }
+
+private:
+    static void create(const Transform &tex2world, const TextureParams &tp, Texture<float> **tex) {
+        *tex = ImageTexture<float, float>::create(tex2world, tp);
+    }
+
+    static void create(const Transform &tex2world, const TextureParams &tp, Texture<Spectrum> **tex) {
+        *tex = ImageTexture<RGBSpectrum, Spectrum>::create(tex2world, tp);
+    }
 };
 
 extern template class ImageTexture<float, float>;

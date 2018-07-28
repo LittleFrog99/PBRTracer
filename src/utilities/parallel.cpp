@@ -125,7 +125,7 @@ void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
     unique_lock<mutex> lock(workListMutex);
     while (!shutdownThreads) {
         if (reportWorkerStats) {
-            Stats::reportThread();
+            StatsRegisterer::reportThread();
             if (--reporterCount == 0)
                 // Once all worker threads have merged their stats, wake up
                 // the main thread.

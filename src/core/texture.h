@@ -18,9 +18,14 @@ public:
     ConstantTexture(const T &value) : value(value) {}
     T evaluate(const SurfaceInteraction &) const { return value; }
 
+    static ConstantTexture<T> * create(const Transform &tex2world, const TextureParams &tp);
+
 private:
     T value;
 };
+
+extern template class ConstantTexture<float>;
+extern template class ConstantTexture<Spectrum>;
 
 /* Texture Mapping Interfaces and Subclasses */
 class TextureMapping2D {

@@ -19,6 +19,8 @@
 #include "materials/matte.h"
 #include "materials/plastic.h"
 #include "materials/mix.h"
+#include "textures/mix.h"
+#include "textures/imagemap.h"
 
 namespace Renderer {
 
@@ -176,6 +178,34 @@ shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
     if (!material) ERROR("Unable to create material \"%s\"", name.c_str());
     return shared_ptr<Material>(material);
 }
+
+template <class T>
+shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2world,
+                                   const TextureParams &tp)
+{
+    Texture<T> *tex = nullptr;
+    if (name == "constant")
+        tex = ConstantTexture<T>::create(tex2world, tp);
+    else if (name == "scale")
+        tex = ScaleTexture<T, T>::create(tex2world, tp);
+    else if (name == "mix")
+        tex = MixTexture<T>::create(tex2world, tp);
+    else if (name == "bilerp")
+        tex = BilerpTexture<T>::create(tex2world, tp);
+    else if (name == "imagemap")
+        tex = ImageTextureCreator<T>::create(tex2world, tp);
+    else
+        WARNING("Float texture \"%s\" unknown.", name.c_str());
+    tp.reportUnused();
+    return shared_ptr<Texture<T>>(tex);
+}
+
+template
+shared_ptr<Texture<float>> makeTexture<float>(const string &name, const Transform &tex2world,
+                                              const TextureParams &tp);
+template
+shared_ptr<Texture<Spectrum>> makeTexture<Spectrum>(const string &name, const Transform &tex2world,
+                                                    const TextureParams &tp);
 
 }
 

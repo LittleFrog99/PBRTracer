@@ -5,33 +5,8 @@
 #include <array>
 #include <thread>
 
-namespace Stats {
-
-void print(FILE *dest);
-void clear();
-void reportThread();
-
-};
-
+namespace Stats {}
 using namespace Stats;
-
-class StatsAccumulator;
-
-class StatsRegisterer {
-public:
-    StatsRegisterer(function<void(StatsAccumulator &)> func) {
-        if (!funcs)
-            funcs = new vector<function<void(StatsAccumulator &)>>;
-        funcs->push_back(func);
-    }
-
-    static void callCallbacks(StatsAccumulator &accum) {
-        for (auto func : *funcs) func(accum);
-    }
-
-private:
-    static vector<function<void(StatsAccumulator &)>> *funcs;
-};
 
 class StatsAccumulator {
 public:
@@ -101,9 +76,83 @@ private:
     static void getCategoryAndTitle(const string &str, string *category, string *title);
 };
 
+class StatsRegisterer {
+public:
+    StatsRegisterer(function<void(StatsAccumulator &)> func) {
+        if (!funcs)
+            funcs = new vector<function<void(StatsAccumulator &)>>;
+        funcs->push_back(func);
+    }
+
+    static void print(FILE *dest) { accum.print(dest); }
+    static void clear() { accum.clear(); }
+
+    static void reportThread() {
+        static mutex mut;
+        lock_guard<mutex> lock(mut);
+        callCallbacks(accum);
+    }
+
+private:
+    static void callCallbacks(StatsAccumulator &accum) {
+        for (auto func : *funcs) func(accum);
+    }
+
+    static vector<function<void(StatsAccumulator &)>> *funcs;
+    static StatsAccumulator accum;
+};
+
+enum class Stage {
+    SceneConstruction,
+    AccelConstruction,
+    TextureLoading,
+    MIPMapCreation,
+    IntegratorRender,
+    SamplerIntegratorLi,
+    SPPMCameraPass,
+    SPPMGridConstruction,
+    SPPMPhotonPass,
+    SPPMStatsUpdate,
+    BDPTGenerateSubpath,
+    BDPTConnectSubpaths,
+    LightDistribLookup,
+    LightDistribSpinWait,
+    LightDistribCreation,
+    DirectLighting,
+    BSDFEvaluation,
+    BSDFSampling,
+    BSDFPdf,
+    BSSRDFEvaluation,
+    BSSRDFSampling,
+    PhaseFuncEvaluation,
+    PhaseFuncSampling,
+    AccelIntersect,
+    AccelIntersectP,
+    LightSample,
+    LightPdf,
+    MediumSample,
+    MediumTr,
+    TriIntersect,
+    TriIntersectP,
+    CurveIntersect,
+    CurveIntersectP,
+    ShapeIntersect,
+    ShapeIntersectP,
+    ComputeScatteringFuncs,
+    GenerateCameraRay,
+    MergeFilmTile,
+    SplatFilm,
+    AddFilmSample,
+    StartPixel,
+    GetSample,
+    TexFiltTrilerp,
+    TexFiltEWA,
+    TexFiltPtex,
+    NumProfCategories
+};
+
 class Profiler {
 public:
-    enum class Stage;
     static const char *stageNames[];
 
     static void init();
@@ -138,7 +187,7 @@ private:
 
 class ProfilePhase {
 public:
-    ProfilePhase(Profiler::Stage p) {
+    ProfilePhase(Stage p) {
         categoryBit = Profiler::stageToBits(p);
         reset = (Profiler::state & categoryBit) == 0;
         Profiler::state |= categoryBit;
@@ -269,55 +318,6 @@ namespace Stats {                                        \
         numVar = denomVar = 0;                                \
     }                                                         \
     static StatsRegisterer STATS_REG##numVar(STATS_FUNC##numVar); \
-};
-
-enum class Profiler::Stage {
-    SceneConstruction,
-    AccelConstruction,
-    TextureLoading,
-    MIPMapCreation,
-    IntegratorRender,
-    SamplerIntegratorLi,
-    SPPMCameraPass,
-    SPPMGridConstruction,
-    SPPMPhotonPass,
-    SPPMStatsUpdate,
-    BDPTGenerateSubpath,
-    BDPTConnectSubpaths,
-    LightDistribLookup,
-    LightDistribSpinWait,
-    LightDistribCreation,
-    DirectLighting,
-    BSDFEvaluation,
-    BSDFSampling,
-    BSDFPdf,
-    BSSRDFEvaluation,
-    BSSRDFSampling,
-    PhaseFuncEvaluation,
-    PhaseFuncSampling,
-    AccelIntersect,
-    AccelIntersectP,
-    LightSample,
-    LightPdf,
-    MediumSample,
-    MediumTr,
-    TriIntersect,
-    TriIntersectP,
-    CurveIntersect,
-    CurveIntersectP,
-    ShapeIntersect,
-    ShapeIntersectP,
-    ComputeScatteringFuncs,
-    GenerateCameraRay,
-    MergeFilmTile,
-    SplatFilm,
-    AddFilmSample,
-    StartPixel,
-    GetSample,
-    TexFiltTrilerp,
-    TexFiltEWA,
-    TexFiltPtex,
-    NumProfCategories
 };
 
 #endif // UTILITY_STATS

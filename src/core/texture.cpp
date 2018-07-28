@@ -1,4 +1,5 @@
 #include "texture.h"
+#include "paramset.h"
 
 Point2f SphericalMapping2D::map(const SurfaceInteraction &si, Vector2f *dstdx, Vector2f *dstdy) const
 {
@@ -33,3 +34,11 @@ Point2f CylindricalMapping2D::map(const SurfaceInteraction &si, Vector2f *dstdx,
     else if ((*dstdy)[1] < -.5f) (*dstdy)[1] = -((*dstdy)[1] + 1);
     return st;
 }
+
+template <class T>
+ConstantTexture<T> * ConstantTexture<T>::create(const Transform &tex2world, const TextureParams &tp) {
+    return new ConstantTexture<T>(tp.findFloat("value", 1.f));
+}
+
+template class ConstantTexture<float>;
+template class ConstantTexture<Spectrum>;
