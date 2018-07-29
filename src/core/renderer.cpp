@@ -1,4 +1,4 @@
-#include "api.h"
+    #include "api.h"
 #include "core/renderer.h"
 #include "paramset.h"
 
@@ -21,6 +21,8 @@
 #include "materials/mix.h"
 #include "textures/mix.h"
 #include "textures/imagemap.h"
+#include "textures/uv.h"
+#include "textures/checkerboard.h"
 
 namespace Renderer {
 
@@ -194,6 +196,10 @@ shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2worl
         tex = BilerpTexture<T>::create(tex2world, tp);
     else if (name == "imagemap")
         tex = ImageTextureCreator<T>::create(tex2world, tp);
+    else if (name == "uv")
+        tex = UVTexture<T>::create(tex2world, tp);
+    else if (name == "checkerboard")
+        tex = CheckerboardTextureCreator<T>::create(tex2world, tp);
     else
         WARNING("Float texture \"%s\" unknown.", name.c_str());
     tp.reportUnused();

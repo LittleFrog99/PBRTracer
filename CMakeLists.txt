@@ -44,7 +44,7 @@ SET(SOURCES_MATERIALS
     src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp)
 
 SET(SOURCES_TEXTURES
-    src/textures/imagemap.cpp)
+    src/textures/imagemap.cpp src/textures/checkerboard.cpp)
 
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)
@@ -59,14 +59,6 @@ SET(GTEST_SOURCES
 
 SET(SOURCES_EXECUTABLE src/main.cpp ${ALL_LIBS})
 
-FIND_LIBRARY(ILMIMF IlmImf)
-FIND_LIBRARY(IEX Iex)
-FIND_LIBRARY(ILMTHREAD IlmThread)
-FIND_LIBRARY(GLOG glog)
-FIND_LIBRARY(HALF Half)
-
-LINK_LIBRARIES(${ILMIMF} ${IEX} ${ILMTHREAD} ${GLOG} ${HALF})
-
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES_EXECUTABLE})
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} z)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} z glog IlmImf Iex IlmThread Half)

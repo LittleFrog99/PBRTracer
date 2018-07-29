@@ -99,7 +99,7 @@ private:
 
 class TextureMapping3D {
 public:
-    virtual ~TextureMapping3D();
+    virtual ~TextureMapping3D() {}
     virtual Point3f map(const SurfaceInteraction &si, Vector3f *dpdx, Vector3f *dpdy) const = 0;
 };
 

@@ -63,11 +63,11 @@ Mipmap<T>::Mipmap(const Point2i &res, const T *img, bool doTrilinear, float maxA
     }
 
     // Initialize levels of Mipmap from image
-    int nLevels = 1 + log2Int(max(resolution[0], resolution[1]));
+    unsigned nLevels = 1 + log2Int(max(resolution[0], resolution[1]));
     pyramid.resize(nLevels);
     // Initialize most detailed level of Mipmap
     pyramid[0].reset(new BlockedArray<T, 2>(resolution[0], resolution[1], resampled ? resampled.get() : img));
-    for (int i = 0; i < nLevels; i++) {
+    for (size_t i = 0; i < nLevels; i++) {
         // // Initialize ith Mipmap from i-1th level
         int sRes = max(1, pyramid[i - 1]->uSize() / 2);
         int tRes = max(1, pyramid[i - 1]->vSize() / 2);
