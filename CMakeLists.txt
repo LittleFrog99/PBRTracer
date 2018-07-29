@@ -44,7 +44,7 @@ SET(SOURCES_MATERIALS
     src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp)
 
 SET(SOURCES_TEXTURES
-    src/textures/imagemap.cpp src/textures/checkerboard.cpp)
+    src/textures/imagemap.cpp src/textures/checkerboard.cpp src/textures/dots.cpp)
 
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)

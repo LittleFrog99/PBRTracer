@@ -23,6 +23,9 @@
 #include "textures/imagemap.h"
 #include "textures/uv.h"
 #include "textures/checkerboard.h"
+#include "textures/dots.h"
+#include "textures/bumpy.h"
+#include "textures/windy.h"
 
 namespace Renderer {
 
@@ -182,8 +185,7 @@ shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
 }
 
 template <class T>
-shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2world,
-                                   const TextureParams &tp)
+shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2world, const TextureParams &tp)
 {
     Texture<T> *tex = nullptr;
     if (name == "constant")
@@ -200,6 +202,14 @@ shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2worl
         tex = UVTexture<T>::create(tex2world, tp);
     else if (name == "checkerboard")
         tex = CheckerboardTextureCreator<T>::create(tex2world, tp);
+    else if (name == "dots")
+        tex = DotsTexture<T>::create(tex2world, tp);
+    else if (name == "fbm")
+        tex = FBmTexture<T>::create(tex2world, tp);
+    else if (name == "wrinkled")
+        tex = WrinkledTexture<T>::create(tex2world, tp);
+    else if (name == "windy")
+        tex = WindyTexture<T>::create(tex2world, tp);
     else
         WARNING("Float texture \"%s\" unknown.", name.c_str());
     tp.reportUnused();

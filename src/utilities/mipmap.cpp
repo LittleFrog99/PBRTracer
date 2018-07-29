@@ -93,14 +93,14 @@ Mipmap<T>::Mipmap(const Point2i &res, const T *img, bool doTrilinear, float maxA
 template <class T>
 T Mipmap<T>::lookup(const Point2f &st, float width) const {
     // Compute mipmap level for trilinear filtering
-    float level = levels() - 1 + Math::log2(max(width, 1e-8f));
+    float level = levels() - 1 + log2f(max(width, 1e-8f));
     // Preform trilinear interpolation
     if (level < 0)
         return triangle(0, st);
     else if (level > levels() - 1)
         return texel(levels() - 1, 0, 0);
     else {
-        int iLevel = floor(level);
+        int iLevel = floorf(level);
         float delta = level - iLevel;
         return lerp(delta, triangle(iLevel, st), triangle(iLevel + 1, st));
     }
@@ -111,7 +111,7 @@ T Mipmap<T>::triangle(unsigned level, const Point2f &st) const {
     level = clamp(level, 0, levels() - 1);
     float s = st[0] * pyramid[level]->uSize() - 0.5f; // to correctly compute distances to discrete coordinates
     float t = st[1] * pyramid[level]->vSize() - 0.5f;
-    int s0 = floor(s), t0 = floor(t);
+    int s0 = floorf(s), t0 = floorf(t);
     float ds = s - s0, dt = t - t0;
     return (1 - ds) * (1 - dt) * texel(level, s0, t0) + (1 - ds) * dt * texel(level, s0, t0 + 1) +
             ds * (1 - dt) * texel(level, s0 + 1, t0) + ds * dt * texel(level, s0 + 1, t0 + 1);
@@ -140,8 +140,8 @@ T Mipmap<T>::lookup(const Point2f &st, Vector2f dst0, Vector2f dst1) const {
         return triangle(0, st);
 
     // Choose level of detail for EWA lookup and perform EWA filtering
-    float level = max(0.0f, levels() - 1.0f + Math::log2(minorLen));
-    unsigned iLevel = floor(level);
+    float level = max(0.0f, levels() - 1.0f + log2f(minorLen));
+    unsigned iLevel = floorf(level);
     return lerp(level - iLevel, EWA(iLevel, st, dst0, dst1), EWA(iLevel + 1, st, dst0, dst1));
 }
 
@@ -171,9 +171,9 @@ T Mipmap<T>::EWA(unsigned level, Point2f st, Vector2f dst0, Vector2f dst1) const
     float invDet = 1.0f / det;
     float uSqrt = sqrt(det * C), vSqrt = sqrt(det * A);
     int s0 = ceil(st[0] - 2 * invDet * uSqrt);
-    int s1 = floor(st[0] + 2 * invDet * uSqrt);
+    int s1 = floorf(st[0] + 2 * invDet * uSqrt);
     int t0 = ceil(st[1] - 2 * invDet * vSqrt);
-    int t1 = floor(st[1] + 2 * invDet * vSqrt);
+    int t1 = floorf(st[1] + 2 * invDet * vSqrt);
 
     // Scan over ellipse bound and compute quadratic equation
     T sum(0.0f);
@@ -223,7 +223,7 @@ unique_ptr<ResampleWeight[]> Mipmap<T>::resampleWeights(int oldRes, int newRes) 
     for (int i = 0; i < newRes; i++) {
         // Compute image resampling weights for ith texel
         float center = (i + 0.5f) * oldRes / newRes;
-        wt[i].firstTexel = floor(center - filterWidth + 0.5f); // an offset to lower end is needed
+        wt[i].firstTexel = floorf(center - filterWidth + 0.5f); // an offset to lower end is needed
         for (int j = 0; j < 4; j++) {
             float pos = wt[i].firstTexel + j + 0.5f;
             wt[i].weight[j] = lanczos((pos - center) / filterWidth);

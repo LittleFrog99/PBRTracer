@@ -6,7 +6,7 @@ T Checkerboard2DTexture<T>::evaluate(const SurfaceInteraction &si) const {
     Vector2f dstdx, dstdy;
     Point2f st = mapping->map(si, &dstdx, &dstdy);
     if (aaMethod == AAMethod::None) {
-        if (int(floor(st[0]) + floor(st[1])) % 2 == 0)
+        if (int(floorf(st[0]) + floorf(st[1])) % 2 == 0)
             return tex1->evaluate(si);
         else return tex2->evaluate(si);
     } else {
@@ -15,15 +15,15 @@ T Checkerboard2DTexture<T>::evaluate(const SurfaceInteraction &si) const {
         float dt = max(abs(dstdx[1]), abs(dstdy[1]));
         float s0 = st[0] - ds, s1 = st[0] + ds;
         float t0 = st[1] - dt, t1 = st[1] + dt;
-        if (floor(s0) == floor(s1) && floor(t0) == floor(t1)) {
-            if (int(floor(st[0]) + floor(st[1])) % 2 == 0)
+        if (floorf(s0) == floorf(s1) && floorf(t0) == floorf(t1)) {
+            if (int(floorf(st[0]) + floorf(st[1])) % 2 == 0)
                 return tex1->evaluate(si);
             else return tex2->evaluate(si);
         }
 
         // Apply box filter to checkerboard region
         constexpr auto bumpInt = [] (float x) {
-            return floor(x / 2) + 2 * max(x / 2 - floor(x / 2) - 0.5f, 0.0f);
+            return floorf(x / 2) + 2 * max(x / 2 - floorf(x / 2) - 0.5f, 0.0f);
         };
         float sint = (bumpInt(s1) - bumpInt(s0)) / (2 * ds);
         float tint = (bumpInt(t1) - bumpInt(t0)) / (2 * dt);

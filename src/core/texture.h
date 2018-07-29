@@ -8,7 +8,7 @@
 template <class T>
 class Texture {
 public:
-    virtual T evaluate(const SurfaceInteraction &) const = 0;
+    virtual T evaluate(const SurfaceInteraction &si) const = 0;
     virtual ~Texture() {}
 };
 
@@ -32,6 +32,7 @@ class TextureMapping2D {
 public:
     virtual ~TextureMapping2D() {}
     virtual Point2f map(const SurfaceInteraction &si, Vector2f *dstdx, Vector2f *dstdy) const = 0;
+    static unique_ptr<TextureMapping2D> create(const Transform &tex2world, const TextureParams &tp);
 };
 
 class UVMapping2D : public TextureMapping2D {
@@ -116,5 +117,17 @@ public:
 private:
     const Transform worldToTexture;
 };
+
+namespace Noise {
+
+float perlin(float x, float y = 0.5f, float z = 0.5f);
+float fBm(const Point3f &p, const Vector3f &dpdx, const Vector3f &dpdy, float omega, int maxOctaves);
+float turbulence(const Point3f &p, const Vector3f &dpdx, const Vector3f &dpdy, float omega, int maxOctaves);
+inline float perlin(const Point3f &p) { return perlin(p.x, p.y, p.z); }
+
+constexpr int NOISE_PERM_SIZE = 256;
+extern int NOISE_PERM[2 * NOISE_PERM_SIZE];
+
+}
 
 #endif // CORE_TEXTURE

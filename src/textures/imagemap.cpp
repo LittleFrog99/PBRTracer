@@ -58,26 +58,7 @@ template <class Tmem, class Tret>
 ImageTexture<Tmem, Tret> * ImageTexture<Tmem, Tret>::create(const Transform &tex2world, const TextureParams &tp)
 {
     // Initialize 2D texture mapping _map_ from _tp_
-    unique_ptr<TextureMapping2D> map;
-    string type = tp.findString("mapping", "uv");
-    if (type == "uv") {
-        float su = tp.findFloat("uscale", 1.);
-        float sv = tp.findFloat("vscale", 1.);
-        float du = tp.findFloat("udelta", 0.);
-        float dv = tp.findFloat("vdelta", 0.);
-        map.reset(new UVMapping2D(su, sv, du, dv));
-    } else if (type == "spherical")
-        map.reset(new SphericalMapping2D(tex2world.inverse()));
-    else if (type == "cylindrical")
-        map.reset(new CylindricalMapping2D(tex2world.inverse()));
-    else if (type == "planar")
-        map.reset(new PlanarMapping2D(tp.findVector3f("v1", Vector3f(1, 0, 0)),
-                                      tp.findVector3f("v2", Vector3f(0, 1, 0)),
-                                      tp.findFloat("udelta", 0.f), tp.findFloat("vdelta", 0.f)));
-    else {
-        ERROR("2D texture mapping \"%s\" unknown", type.c_str());
-        map.reset(new UVMapping2D);
-    }
+    auto map = TextureMapping2D::create(tex2world, tp);
 
     // Initialize _ImageTexture_ parameters
     float maxAniso = tp.findFloat("maxanisotropy", 8.f);
