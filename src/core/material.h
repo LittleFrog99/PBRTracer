@@ -3,7 +3,7 @@
 
 #include "memory.h"
 
-class SurfaceInteraction;
+struct SurfaceInteraction;
 class TextureParams;
 template <class T> class Texture;
 

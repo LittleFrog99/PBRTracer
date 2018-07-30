@@ -2,6 +2,7 @@
 #include "renderer.h"
 #include "accelerators/bvh.h"
 #include "textures/imagemap.h"
+#include "stats.h"
 
 using namespace Renderer;
 
@@ -534,8 +535,8 @@ void API::shape(const string &name, const ParamSet &params) {
             // Possibly create area light for shape
             shared_ptr<AreaLight> area;
             if (graphicsState.areaLight != "") {
-                area = makeAreaLight(graphicsState.areaLight, curTransform[0],
-                        mi, graphicsState.areaLightParams, s);
+                area = makeAreaLight(graphicsState.areaLight, curTransform[0], mi,
+                        graphicsState.areaLightParams, s);
                 if (area) areaLights.push_back(area);
             }
             prims.push_back(make_shared<GeometricPrimitive>(s, mtl, area, mi));
@@ -549,8 +550,7 @@ void API::shape(const string &name, const ParamSet &params) {
                 "Ignoring currently set area light when creating "
                 "animated shape");
         Transform *identity = transformCache.lookup(Transform());
-        auto shapes = makeShapes(name, identity, identity,
-                                           graphicsState.reverseOrientation, params);
+        auto shapes = makeShapes(name, identity, identity, graphicsState.reverseOrientation, params);
         if (shapes.empty()) return;
 
         // Create _GeometricPrimitive_(s) for animated shape

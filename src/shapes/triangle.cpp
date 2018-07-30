@@ -214,7 +214,7 @@ bool Triangle::intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect,
     Vector3f dp02 = p0 - p2, dp12 = p1 - p2;
     float delDet = duv02[0] * duv12[1] - duv02[1] * duv12[0];
     if (delDet == 0)
-        coordSystem(normalize(cross(p2 - p0, p1 - p0)), &dpdu, &dpdv);
+        coordinateSystem(normalize(cross(p2 - p0, p1 - p0)), &dpdu, &dpdv);
     else {
         float invDelDet = 1.0 / delDet;
         dpdu = ( duv12[1] * dp02 - duv02[1] * dp12) * invDelDet;
@@ -266,7 +266,7 @@ bool Triangle::intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect,
             ts = normalize(ts);
             ss = cross(ts, ns); // adjust ss to ensure coordinate system is orthogonal
         } else
-            coordSystem((Vector3f)ns, &ss, &ts);
+            coordinateSystem((Vector3f)ns, &ss, &ts);
 
         Normal3f dndu, dndv; // similar to dpdu and dpdv
         if (mesh->n) {
@@ -284,7 +284,7 @@ bool Triangle::intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect,
                     dndu = dndv = Normal3f(0, 0, 0);
                 else {
                     Vector3f dnu, dnv;
-                    coordSystem(dn, &dnu, &dnv);
+                    coordinateSystem(dn, &dnu, &dnv);
                     dndu = Normal3f(dnu);
                     dndv = Normal3f(dnv);
                 }
@@ -388,7 +388,7 @@ bool Triangle::intersectP(const Ray &ray, bool testAlphaTexture) const {
     Vector3f dp02 = p0 - p2, dp12 = p1 - p2;
     float delDet = duv02[0] * duv12[1] - duv02[1] * duv12[0];
     if (delDet == 0)
-        coordSystem(normalize(cross(p2 - p0, p1 - p0)), &dpdu, &dpdv);
+        coordinateSystem(normalize(cross(p2 - p0, p1 - p0)), &dpdu, &dpdv);
     else {
         float invDelDet = 1.0 / delDet;
         dpdu = ( duv12[1] * dp02 - duv02[1] * dp12) * invDelDet;

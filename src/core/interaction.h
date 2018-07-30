@@ -16,15 +16,14 @@ struct Interaction {
     Interaction(const Point3f &p, const Normal3f &n, const Vector3f &pError,
                 const Vector3f &wo, float time, const MediumInterface &mediumInterface)
         : p(p), time(time), pError(pError), wo(normalize(wo)), n(n),
-          mediumInterface(mediumInterface) {}
+          mediumInterface(mediumInterface) {} // for geometry intersection
 
     Interaction(const Point3f &p, const Vector3f &wo, float time,
                 const MediumInterface &mediumInterface)
         : p(p), time(time), wo(wo), mediumInterface(mediumInterface) {}
 
-    Interaction(const Point3f &p, float time,
-                const MediumInterface &mediumInterface)
-        : p(p), time(time), mediumInterface(mediumInterface) {}
+    Interaction(const Point3f &p, float time, const MediumInterface &mediumInterface)
+        : p(p), time(time), mediumInterface(mediumInterface) {} // for light sample point
 
     bool isSurfaceInteraction() const { return n != Normal3f(); }
 
@@ -65,19 +64,19 @@ struct Interaction {
     MediumInterface mediumInterface;
 };
 
-class MediumInteraction : public Interaction {
-public:
+struct MediumInteraction : public Interaction {
     MediumInteraction() : phase(nullptr) {}
-    MediumInteraction(const Point3f &p, const Vector3f &wo, float time,
-                      const Medium *medium, const PhaseFunction *phase)
+    MediumInteraction(const Point3f &p, const Vector3f &wo, float time, const Medium *medium,
+                      const PhaseFunction *phase)
         : Interaction(p, wo, time, medium), phase(phase) {}
+
     bool isValid() const { return phase != nullptr; }
 
     const PhaseFunction *phase;
 };
 
-class SurfaceInteraction : public Interaction {
-public:
+struct SurfaceInteraction : public Interaction {
+
     SurfaceInteraction() {}
     SurfaceInteraction(const Point3f &p, const Vector3f &pError, const Point2f &uv, const Vector3f &wo,
                        const Vector3f &dpdu, const Vector3f &dpdv, const Normal3f &dndu, const Normal3f &dndv,

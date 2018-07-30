@@ -1,6 +1,7 @@
-    #include "api.h"
+#include "api.h"
 #include "core/renderer.h"
 #include "paramset.h"
+#include "stats.h"
 
 #include "shapes/triangle.h"
 #include "shapes/sphere.h"
@@ -26,6 +27,16 @@
 #include "textures/dots.h"
 #include "textures/bumpy.h"
 #include "textures/windy.h"
+#include "media/homogeneous.h"
+#include "media/grid.h"
+#include "lights/diffuse.h"
+#include "lights/projection.h"
+#include "lights/spot.h"
+#include "lights/point.h"
+#include "lights/gonio.h"
+#include "lights/infinite.h"
+#include "lights/distant.h"
+#include "integrators/whitted.h"
 
 namespace Renderer {
 
@@ -223,6 +234,82 @@ template
 shared_ptr<Texture<Spectrum>> makeTexture<Spectrum>(const string &name, const Transform &tex2world,
                                                     const TextureParams &tp);
 
+shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet, const Transform &medium2world)
+{
+    float sig_a_rgb[3] = {.0011f, .0024f, .014f}, sig_s_rgb[3] = {2.55f, 3.21f, 3.77f};
+    Spectrum sig_a = Spectrum::fromRGB(sig_a_rgb), sig_s = Spectrum::fromRGB(sig_s_rgb);
+    string preset = paramSet.findOneString("preset", "");
+    // TODO: Add medium scattering properties
+    /* bool found = GetMediumScatteringProperties(preset, &sig_a, &sig_s);
+    if (preset != "" && !found)
+        Warning("Material preset \"%s\" not found.  Using defaults.", preset.c_str()); */
+    float scale = paramSet.findOneFloat("scale", 1.f);
+    float g = paramSet.findOneFloat("g", 0.0f);
+    sig_a = paramSet.findOneSpectrum("sigma_a", sig_a) * scale;
+    sig_s = paramSet.findOneSpectrum("sigma_s", sig_s) * scale;
+    Medium *m = nullptr;
+    if (name == "homogeneous") {
+        m = new HomogeneousMedium(sig_a, sig_s, g);
+    } else if (name == "heterogeneous") {
+        int nitems;
+        const float *data = paramSet.findFloat("density", &nitems);
+        if (!data) {
+            ERROR("No \"density\" values provided for heterogeneous medium?");
+            return nullptr;
+        }
+        int nx = paramSet.findOneInt("nx", 1);
+        int ny = paramSet.findOneInt("ny", 1);
+        int nz = paramSet.findOneInt("nz", 1);
+        Point3f p0 = paramSet.findOnePoint3f("p0", Point3f(0.f, 0.f, 0.f));
+        Point3f p1 = paramSet.findOnePoint3f("p1", Point3f(1.f, 1.f, 1.f));
+        if (nitems != nx * ny * nz) {
+            ERROR("GridDensityMedium has %d density values; expected nx*ny*nz = %d", nitems, nx * ny * nz);
+            return nullptr;
+        }
+        Transform data2Medium = Transform::translate(Vector3f(p0)) *
+                                Transform::scale(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
+        m = new GridDensityMedium(sig_a, sig_s, g, nx, ny, nz, medium2world * data2Medium, data);
+    } else
+        WARNING("Medium \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return shared_ptr<Medium>(m);
+}
+
+shared_ptr<Light> makeLight(const string &name, const ParamSet &paramSet,
+                            const Transform &light2world, const MediumInterface &mediumInterface)
+{
+    shared_ptr<Light> light;
+    if (name == "point")
+        light = PointLight::create(light2world, mediumInterface.outside, paramSet);
+    else if (name == "spot")
+        light = SpotLight::create(light2world, mediumInterface.outside, paramSet);
+    else if (name == "goniometric")
+        light = GonioPhotometricLight::create(light2world, mediumInterface.outside, paramSet);
+    else if (name == "projection")
+        light = ProjectionLight::create(light2world, mediumInterface.outside, paramSet);
+    else if (name == "distant")
+        light = DistantLight::create(light2world, paramSet);
+    else if (name == "infinite" || name == "exinfinite")
+        light = InfiniteAreaLight::create(light2world, paramSet);
+    else
+        WARNING("Light \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return light;
+}
+
+shared_ptr<AreaLight> makeAreaLight(const string &name, const Transform &light2world,
+                                    const MediumInterface &mediumInterface,
+                                    const ParamSet &paramSet, const shared_ptr<Shape> &shape)
+{
+    shared_ptr<AreaLight> area;
+    if (name == "area" || name == "diffuse")
+        area = DiffuseAreaLight::create(light2world, mediumInterface.outside, paramSet, shape);
+    else
+        WARNING("Area light \"%s\" unknown.", name.c_str());
+    paramSet.reportUnused();
+    return area;
+}
+
 }
 
 STAT_MEMORY_COUNTER("Memory/TransformCache", transformCacheBytes);
@@ -380,4 +467,36 @@ Camera * RenderOptions::makeCamera() const {
     return camera;
 }
 
+Integrator * RenderOptions::makeIntegrator() const {
+    shared_ptr<const Camera> camera(makeCamera());
+    if (!camera) {
+        ERROR("Unable to create camera");
+        return nullptr;
+    }
 
+    shared_ptr<Sampler> sampler = Renderer::makeSampler(samplerName, samplerParams, camera->film);
+    if (!sampler) {
+        ERROR("Unable to create sampler.");
+        return nullptr;
+    }
+
+    Integrator *integrator = nullptr;
+    if (integratorName == "whitted")
+        integrator = WhittedIntegrator::create(integratorParams, sampler, camera);
+    else {
+        ERROR("Integrator \"%s\" unknown.", integratorName.c_str());
+        return nullptr;
+    }
+
+    if (Renderer::renderOptions->haveScatteringMedia && integratorName != "volpath" &&
+        integratorName != "bdpt" && integratorName != "mlt") {
+        WARNING("Scene has scattering media but \"%s\" integrator doesn't support "
+                "volume scattering. Consider using \"volpath\", \"bdpt\", or "
+                "\"mlt\".", integratorName.c_str());
+    }
+
+    integratorParams.reportUnused();
+    if (lights.empty())
+        WARNING("No light sources defined in scene; Rendering a black image.");
+    return integrator;
+}

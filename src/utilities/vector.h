@@ -203,7 +203,10 @@ public:
     bool hasNaNs() const { return isnan(x) || isnan(y) || isnan(z); }
 
     template <class U>
-    explicit Point3(const Point3<U> &p) : x(p.x), y(p.y), z(p.z) {}
+    explicit Point3(const Point3<U> &p) : x(p.x), y(p.y), z(p.z) { DCHECK(!hasNaNs()); }
+
+    template <class U>
+    explicit Point3(const Vector3<U> &v) : x(v.x), y(v.y), z(v.z) { DCHECK(!hasNaNs()); }
 
     template <class U>
     explicit operator Vector3<U>() const { return Vector3<U>(x, y, z); }
@@ -406,7 +409,7 @@ inline Vector3<T> permute(const Vector3<T> &v, int x, int y, int z) {
 }
 
 template <class T>
-inline void coordSystem(const Vector3<T> &v1, Vector3<T> *v2,
+inline void coordinateSystem(const Vector3<T> &v1, Vector3<T> *v2,
                              Vector3<T> *v3) {
     if (std::abs(v1.x) > std::abs(v1.y))
         *v2 = Vector3<T>(-v1.z, 0, v1.x) / sqrt(v1.x * v1.x + v1.z * v1.z);
@@ -464,7 +467,7 @@ inline Point3<T> max(const Point3<T> &p1, const Point3<T> &p2) {
 
 template <class T>
 inline Point3<T> floor(const Point3<T> &p) {
-    return Point3<T>(floor(p.x), floor(p.y), floor(p.z));
+    return Point3<T>(std::floor(p.x), std::floor(p.y), std::floor(p.z));
 }
 
 template <class T>

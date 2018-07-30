@@ -6,42 +6,32 @@
 #include "memory.h"
 #include "stringprint.h"
 
-class MediumInteraction;
+struct MediumInteraction;
 class Sampler;
 
 class PhaseFunction {
 public:
     virtual ~PhaseFunction() {}
     virtual float compute_p(const Vector3f &wo, const Vector3f &wi) const = 0;
-    virtual float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
+    // virtual float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
     virtual string toString() const = 0;
-};
-
-inline ostream & operator << (ostream &os, const PhaseFunction &p) {
-    os << p.toString();
-    return os;
-}
-
-class Medium {
-public:
-    virtual ~Medium() {}
-    virtual Spectrum compute_Tr(const Ray &ray, Sampler &sampler) const = 0;
-    virtual Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
-                            MediumInteraction *mi) const = 0;
-
-    static bool getMediumScatteringProperties(const string &name, Spectrum *sigma_a, Spectrum *sigma_s);
 };
 
 class HenyeyGreenstein : public PhaseFunction {
 public:
     HenyeyGreenstein(float g) : g(g) {}
-    float compute_p(const Vector3f &wo, const Vector3f &wi) const;
-    float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
+
+    float compute_p(const Vector3f &wo, const Vector3f &wi) const {
+        return phaseHG(dot(wo, wi), g);
+    }
+
+    // float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
+
     string toString() const {
         return STRING_PRINTF("[ HenyeyGreenstein g: %f ]", g);
     }
 
-    inline static float phase(float cosTheta, float g) {
+    inline static float phaseHG(float cosTheta, float g) {
         float denom = 1 + g * g + 2 * g * cosTheta;
         return INV_PI * (1 - g * g) / (denom * sqrt(denom));
     }
@@ -50,11 +40,20 @@ private:
     const float g;
 };
 
+class Medium {
+public:
+    virtual ~Medium() {}
+    virtual Spectrum compute_Tr(const Ray &ray, Sampler &sampler) const = 0;
+    /* virtual Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
+                            MediumInteraction *mi) const = 0; */
+};
+
 struct MediumInterface {
     MediumInterface() : inside(nullptr), outside(nullptr) {}
     MediumInterface(const Medium *medium) : inside(medium), outside(medium) {}
     MediumInterface(const Medium *inside, const Medium *outside)
         : inside(inside), outside(outside) {}
+
     bool isMediumTransition() const { return inside != outside; }
 
     const Medium *inside, *outside;

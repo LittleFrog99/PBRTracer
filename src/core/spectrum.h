@@ -26,7 +26,7 @@ void sortSamples(float *lambda, float *vals, int n);
 float interpolateSamples(const float *lambda, const float *vals, int n, float l);
 float averageSamples(const float *lambda, const float *v, int n, float lambda0, float lambda1);
 
-void blackbody(const float *lambda, int n, float T, float *Le);
+void blackbody(const float *lambda, int n, float T, float *Le); // lambda in nanometers
 void blackbodyNormalized(const float *lambda, int n, float T, float *Le);
 
 inline void XYZToRGB(const float xyz[3], float rgb[3]) {

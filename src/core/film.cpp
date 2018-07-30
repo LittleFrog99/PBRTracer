@@ -1,6 +1,8 @@
 #include "film.h"
+#include "core/renderer.h"
 #include "imageio.h"
-#include "renderer.h"
+#include "paramset.h"
+#include "stats.h"
 
 void FilmTile::addSample(const Point2f &pFilm, Spectrum L, float sampleWeight) {
     ProfilePhase pp(Stage::AddFilmSample);

@@ -23,7 +23,7 @@ public:
                        const shared_ptr<AreaLight> &areaLight, const MediumInterface &mediumInterface)
         : shape(shape), material(material), areaLight(areaLight), mediumInterface(mediumInterface) {}
 
-    Bounds3f worldBound() const;
+    Bounds3f worldBound() const { return shape->worldBound(); }
     bool intersect(const Ray &r, SurfaceInteraction *isect) const;
     bool intersectP(const Ray &r) const { return shape->intersectP(r); }
     const AreaLight * getAreaLight() const { return areaLight.get(); }

@@ -64,21 +64,19 @@ void SpectrumUtil::blackbody(const float *lambda, int n, float T, float *Le) {
         for (int i = 0; i < n; ++i) Le[i] = 0.f;
         return;
     }
-    const float c = 299792458;
-    const float h = 6.62606957e-34;
-    const float kb = 1.3806488e-23;
+    constexpr float c = 299792458; // light speed in vacuum
+    constexpr float h = 6.62606957e-34f; // Planck's constant
+    constexpr float kb = 1.3806488e-23f; // Boltzmann constant
     for (int i = 0; i < n; ++i) {
-        // Compute emitted radiance for blackbody at wavelength _lambda[i]_
-        float l = lambda[i] * 1e-9;
-        float lambda5 = pow(l, 5);
+        float l = lambda[i] * 1e-9f; // convert wavelengths to meters
+        float lambda5 = POW5(l);
         Le[i] = (2 * h * c * c) / (lambda5 * (exp((h * c) / (l * kb * T)) - 1));
     }
 }
 
 void SpectrumUtil::blackbodyNormalized(const float *lambda, int n, float T, float *Le) {
     blackbody(lambda, n, T, Le);
-    // Normalize _Le_ values based on maximum blackbody radiance
-    float lambdaMax = 2.8977721e-3 / T * 1e9;
+    float lambdaMax = 2.8977721e-3f / T * 1e9f; // convert b to nm*K first
     float maxL;
     blackbody(&lambdaMax, 1, T, &maxL);
     for (int i = 0; i < n; ++i) Le[i] /= maxL;

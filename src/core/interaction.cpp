@@ -85,3 +85,8 @@ void SurfaceInteraction::computeDifferentials(const RayDifferential &ray) const 
         dpdx = dpdy = Vector3f(0, 0, 0);
     }
 }
+
+Spectrum SurfaceInteraction::compute_Le(const Vector3f &w) const {
+    const auto area = primitive->getAreaLight();
+    return area ? area->compute_L(*this, w) : 0.0f;
+}

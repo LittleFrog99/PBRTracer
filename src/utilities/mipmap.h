@@ -17,7 +17,7 @@ class Mipmap {
 public:
     Mipmap(const Point2i &res, const T *img, bool doTrilinear = false, float maxAnisotropy = 8.0f,
            ImageWrap wrapMode = ImageWrap::Repeat);
-    T lookup(const Point2f &st, float width) const; // triangle filter
+    T lookup(const Point2f &st, float width = 0.0f) const; // triangle filter
     T lookup(const Point2f &st, Vector2f dst0, Vector2f dst1) const; // EWA filter
 
     unsigned width() const { return resolution[0]; }

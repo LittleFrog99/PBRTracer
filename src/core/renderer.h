@@ -97,9 +97,9 @@ struct GraphicsState {
 
 
 struct RenderOptions {
-    Integrator *makeIntegrator() const;
-    Scene *makeScene();
-    Camera *makeCamera() const;
+    Integrator * makeIntegrator() const;
+    Scene * makeScene();
+    Camera * makeCamera() const;
 
     float transformStartTime = 0, transformEndTime = 1;
     string filterName = "box";

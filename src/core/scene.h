@@ -1,19 +1,14 @@
 #ifndef CORE_SCENE
 #define CORE_SCENE
 
-#include "primitive.h"
+#include "interaction.h"
+#include "bounds.h"
+
+class Light;
 
 class Scene {
 public:
-    Scene(shared_ptr<Primitive> aggregate, const vector<shared_ptr<Light>> &lights)
-        : lights(lights), aggregate(aggregate) {
-        worldBound = aggregate->worldBound();
-        for (const auto &light : lights) {
-            light->preprocess(*this);
-            if (light->flags & int(LightFlags::Infinite))
-                infiniteLights.push_back(light);
-        }
-    }
+    Scene(shared_ptr<Primitive> aggregate, const vector<shared_ptr<Light>> &lights);
 
     const Bounds3f & getWorldBound() const { return worldBound; }
 

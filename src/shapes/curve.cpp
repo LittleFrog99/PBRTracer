@@ -54,7 +54,7 @@ bool Curve::intersect(const Ray &worldRay, float *tHit, SurfaceInteraction *isec
 
     // Project curve control points to plane perpendicular to ray
     Vector3f dx, dy;
-    coordSystem(ray.d, &dx, &dy);
+    coordinateSystem(ray.d, &dx, &dy);
     Transform objToRay = Transform::lookAt(ray.o, ray.o + ray.d, dx);
     Point3f cpRay[4] = { objToRay(cpObj[0]), objToRay(cpObj[1]), objToRay(cpObj[2]), objToRay(cpObj[3]) };
 

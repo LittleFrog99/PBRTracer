@@ -14,8 +14,8 @@
 #include <glog/logging.h>
 
 /* Macros */
-#define SQ(x) (x) * (x)
-#define CUB(x) (x) * (x) * (x)
+#define SQ(x) (x * x)
+#define CUB(x) (x * x * x)
 #define QUAD(x) SQ(x) * SQ(x)
 #define POW5(x) CUB(x) * SQ(x)
 #define ALLOCA(TYPE, COUNT) (TYPE *)alloca((COUNT) * sizeof(TYPE))
@@ -55,7 +55,7 @@ static constexpr float INV_FOUR_PI = 0.07957747154594766788;
 static constexpr float PI_OVER_TWO = 1.57079632679489661923;
 static constexpr float PI_OVER_FOUR = 0.78539816339744830961;
 static constexpr float SQRT_TWO = 1.41421356237309504880;
-static constexpr float MACHINE_EPSILON = numeric_limits<float>::epsilon() * 0.5;
+static constexpr float MACHINE_EPSILON = numeric_limits<float>::epsilon() * 0.5f;
 static constexpr float SHADOW_EPSILON = 0.0001f;
 
 /* Utility Inline Funtions */

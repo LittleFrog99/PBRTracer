@@ -13,7 +13,7 @@ SET(SOURCES_CORE
     src/core/shape.cpp src/core/primitive.cpp src/core/camera.cpp
     src/core/api.cpp src/core/sampling.cpp src/core/film.cpp
     src/core/bsdf.cpp src/core/scene.cpp src/core/material.cpp
-    src/core/texture.cpp)
+    src/core/texture.cpp src/core/light.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
@@ -46,13 +46,22 @@ SET(SOURCES_MATERIALS
 SET(SOURCES_TEXTURES
     src/textures/imagemap.cpp src/textures/checkerboard.cpp src/textures/dots.cpp)
 
+SET(SOURCES_MEDIA
+    src/media/grid.cpp)
+
+SET(SOURCES_LIGHTS
+    src/lights/point.cpp src/lights/spot.cpp src/lights/projection.cpp
+    src/lights/distant.cpp src/lights/gonio.cpp src/lights/diffuse.cpp
+    src/lights/infinite.cpp)
+
 SET(SOURCES_EXTENSIONS
     src/ext/lodepng.cpp src/ext/targa.cpp)
 
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}
     ${SOURCES_INTEGRATORS} ${SOURCES_CAMERAS} ${SOURCES_SAMPLERS} ${SOURCES_BSDFS}
-    ${SOURCES_MATERIALS} ${SOURCES_EXTENSIONS} ${SOURCES_TEXTURES})
+    ${SOURCES_MATERIALS}  ${SOURCES_TEXTURES} ${SOURCES_MEDIA} ${SOURCES_LIGHTS}
+    ${SOURCES_EXTENSIONS})
 
 SET(GTEST_SOURCES
     src/tests/gtest/gtest_main.cc src/tests/gtest/gtest-all.cc)

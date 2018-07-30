@@ -5,7 +5,11 @@ bool GeometricPrimitive::intersect(const Ray &r, SurfaceInteraction *isect) cons
     if (!shape->intersect(r, &tHit, isect)) return false;
     r.tMax = tHit;
     isect->primitive = this;
-    // TODO: Initialize SurfaceInteraction::mediumInterface
+    // Initialize SurfaceInteraction::mediumInterface
+    if (mediumInterface.isMediumTransition())
+        isect->mediumInterface = mediumInterface;
+    else
+        isect->mediumInterface = MediumInterface(r.medium);
     return true;
 }
 

@@ -1,12 +1,10 @@
- #ifndef CORE_FILM
+#ifndef CORE_FILM
 #define CORE_FILM
 
 #include "spectrum.h"
 #include "bounds.h"
 #include "filter.h"
-#include "stats.h"
 #include "parallel.h"
-#include "paramset.h"
 
 struct FilmTilePixel {
     Spectrum contribSum = 0.f;
