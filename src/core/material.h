@@ -10,7 +10,7 @@ template <class T> class Texture;
 enum class TransportMode { Radiance, Importance };
 
 namespace std {
-string to_string(TransportMode mode) {
+inline string to_string(TransportMode mode) {
     return (mode == TransportMode::Radiance) ? "RADIANCE" : "IMPORTANCE";
 }
 }

@@ -44,6 +44,11 @@ public:
     bool intersect(const Ray &r, float *tHit, SurfaceInteraction *isect, bool testAlphaTexture) const;
     float area() const;
 
+    Interaction sample(const Point2f &u, float *) const {
+        LOG(FATAL) << "Curve::sample() not implemented.";
+        return Interaction();
+    }
+
 private:
     Point3f blossomBezier(float u0, float u1, float u2) const;
     void getContrlPoints(Point3f cp[4]) const;

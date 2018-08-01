@@ -28,6 +28,9 @@ class MicrofacetDistribution {
 public:
     virtual float D(const Vector3f &wh) const = 0; // normal distribution function
     virtual float lambda(const Vector3f &w) const = 0;
+
+    virtual Vector3f sample_wh(const Vector3f &wo, const Point2f &u) const = 0;
+
     virtual string toString() const = 0;
 
     float G1(const Vector3f &w) const { // masking-shadowing function
@@ -36,6 +39,13 @@ public:
 
     float G(const Vector3f &wo, const Vector3f &wi) const {
         return 1.0f / (1.0f + lambda(wo) + lambda(wi));
+    }
+
+    float pdf(const Vector3f &wo, const Vector3f &wh) const {
+        if (sampleVisibleArea)
+            return D(wh) * G1(wo) * absDot(wo, wh) / absCosTheta(wo);
+        else
+            return D(wh) * absCosTheta(wh);
     }
 
     inline static float roughnessToAlpha(float roughness) {
@@ -59,28 +69,19 @@ public:
     BeckmannDistribution(float alphaX, float alphaY, bool sampleVis = true)
         : MicrofacetDistribution(sampleVis), alphaX(alphaX), alphaY(alphaY) {}
 
-    float D(const Vector3f &wh) const {
-        float tanTheta2 = tan2Theta(wh);
-        if (isinf(tanTheta2)) return 0.0f;
-        float cos4Theta = SQ(cos2Theta(wh));
-        return exp(-tanTheta2 * (cos2Phi(wh) / SQ(alphaX) + sin2Phi(wh) / SQ(alphaY)))
-                / (PI * alphaX * alphaY * cos4Theta);
-    }
+    float D(const Vector3f &wh) const;
+    float lambda(const Vector3f &w) const;
 
-    float lambda(const Vector3f &w) const {
-        float absTanTheta = abs(tanTheta(w));
-        if (isinf(absTanTheta)) return 0.0f;
-        float alpha = sqrt(cos2Phi(w) * SQ(alphaX) + sin2Phi(w) * SQ(alphaY));
-        float a = 1.0f / (alpha * absTanTheta);
-        if (a >= 1.6f) return 0.0f;
-        return (1 - 1.259f * a + 0.396f * SQ(a)) / (3.535f * a + 2.181f * SQ(a));
-    }
+    Vector3f sample_wh(const Vector3f &wo, const Point2f &u) const;
 
     string toString() const {
         return STRING_PRINTF("[ BeckmannDistribution alphax: %f alphay: %f ]", alphaX, alphaY);
     }
 
 private:
+    Vector3f beckmannSample(const Vector3f &wi, const Point2f &u) const;
+    static void beckmannSample11(float cosThetaI, const Point2f &u, float *slope_x, float *slope_y);
+
     const float alphaX, alphaY;
 };
 
@@ -89,27 +90,19 @@ public:
     TrowbridgeReitzDistribution(float alphaX, float alphaY, bool sampleVis = true)
         : MicrofacetDistribution(sampleVis), alphaX(alphaX), alphaY(alphaY) {}
 
-    float D(const Vector3f &wh) const {
-        float tanTheta2 = tan2Theta(wh);
-        if (isinf(tanTheta2)) return 0.0f;
-        const float cos4Theta = SQ(cos2Theta(wh));
-        float e = tanTheta2 * (cos2Phi(wh) / SQ(alphaX) + sin2Phi(wh) / SQ(alphaY));
-        return 1.0f / (PI * alphaX * alphaY * cos4Theta * SQ(1 + e));
-    }
+    float D(const Vector3f &wh) const;
+    float lambda(const Vector3f &w) const;
 
-    float lambda(const Vector3f &w) const {
-        float absTanTheta = abs(tanTheta(w));
-        if (isinf(absTanTheta)) return 0.0;
-        float alpha = sqrt(cos2Phi(w) * SQ(alphaX) + sin2Phi(w) * SQ(alphaY));
-        float alpha2Tan2Theta = (alpha * absTanTheta) * (alpha * absTanTheta);
-        return (-1 + sqrt(1.f + alpha2Tan2Theta)) / 2;
-    }
+    Vector3f sample_wh(const Vector3f &wo, const Point2f &u) const;
 
     string toString() const {
         return STRING_PRINTF("[ TrowbridgeReitzDistribution alphax: %f alphay: %f ]", alphaX, alphaY);
     }
 
 private:
+    Vector3f trowbridgeReitzSample(const Vector3f &wi, const Point2f &u) const;
+    static void trowbridgeReitzSample11(float cosTheta, Point2f u, float *slope_x, float *slope_y);
+
     const float alphaX, alphaY;
 };
 
@@ -119,6 +112,8 @@ public:
         : BxDF(BxDFType(BSDF_REFLECTION | BSDF_GLOSSY)), R(R), distrib(distrib), fresnel(fresnel) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const;
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
+                      BxDFType *sampledType) const;
 
     string toString() const {
         return "[ MicrofacetReflection R: " + R.toString() + " distribution: " + distrib->toString() +
@@ -139,6 +134,9 @@ public:
           etaA(etaA), etaB(etaB), fresnel(etaA, etaB), mode(mode) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const;
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
+                      BxDFType *sampledType) const;
+    float pdf(const Vector3f &wo, const Vector3f &wi) const;
 
     string toString() const {
         return "[ MicrofacetTransmission T: " + T.toString() + " distribution: " + distrib->toString() +
@@ -160,6 +158,9 @@ public:
         : BxDF(BxDFType(BSDF_REFLECTION | BSDF_GLOSSY)), Rd(Rd), Rs(Rs), distrib(distrib) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const;
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &uOrig, float *pdf,
+                      BxDFType *sampledType) const;
+    float pdf(const Vector3f &wo, const Vector3f &wi) const;
 
     string toString() const {
         return "[ FresnelBlend Rd: " + Rd.toString() + " Rs: " + Rs.toString() +

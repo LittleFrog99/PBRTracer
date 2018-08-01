@@ -20,9 +20,7 @@ public:
 class GeometricPrimitive : public Primitive {
 public:
     GeometricPrimitive(const shared_ptr<Shape> &shape, const shared_ptr<Material> &material,
-                       const shared_ptr<AreaLight> &areaLight, const MediumInterface &mediumInterface)
-        : shape(shape), material(material), areaLight(areaLight), mediumInterface(mediumInterface) {}
-
+                       const shared_ptr<AreaLight> &areaLight, const MediumInterface &mediumInterface);
     Bounds3f worldBound() const { return shape->worldBound(); }
     bool intersect(const Ray &r, SurfaceInteraction *isect) const;
     bool intersectP(const Ray &r) const { return shape->intersectP(r); }
@@ -43,8 +41,7 @@ private:
 
 class TransformedPrimitive : public Primitive {
 public:
-    TransformedPrimitive(shared_ptr<Primitive> &primitive, const AnimatedTransform &primToWorld)
-        : primitive(primitive), primitiveToWorld(primToWorld) {}
+    TransformedPrimitive(shared_ptr<Primitive> &primitive, const AnimatedTransform &primToWorld);
 
     bool intersect(const Ray &r, SurfaceInteraction *in) const;
     bool intersectP(const Ray &r) const;

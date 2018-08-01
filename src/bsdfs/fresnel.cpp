@@ -58,3 +58,28 @@ Spectrum SpecularTransmission::sample_f(const Vector3f &wo, Vector3f *wi, const 
     // TODO: Account for non-symmetry with transmission to different medium
     return ft / absCosTheta(*wi);
 }
+
+Spectrum FresnelSpecular::sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
+                                   BxDFType *sampledType) const
+{
+    float F = Fresnel::dielectric_Fr(cosTheta(wo), etaA, etaB);
+    if (u[0] < F) { // reflection
+        *wi = Vector3f(-wo.x, -wo.y, wo.z);
+        if (sampledType)
+            *sampledType = BxDFType(BSDF_SPECULAR | BSDF_REFLECTION);
+        *pdf = F;
+        return F * R / absCosTheta(*wi);
+    } else {
+        bool entering = cosTheta(wo) > 0;
+        float etaI = entering ? etaA : etaB;
+        float etaT = entering ? etaB : etaA;
+        if (!refract(wo, faceforward(Normal3f(0, 0, 1), wo), etaI / etaT, wi))
+            return 0;
+        Spectrum ft = T * (1 - F);
+        // TODO: Account for non-symmetry with transmission to different medium
+        if (sampledType)
+            *sampledType = BxDFType(BSDF_SPECULAR | BSDF_TRANSMISSION);
+        *pdf = 1 - F;
+        return ft / absCosTheta(*wi);
+    }
+}

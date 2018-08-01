@@ -40,10 +40,13 @@ void FilmTile::addSample(const Point2f &pFilm, Spectrum L, float sampleWeight) {
     }
 }
 
-Film::Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
+const int Film::FILTER_TABLE_WIDTH = 16;
+
+Film::Film(const Point2i &resolution, const Bounds2f &cropWindow, Filter *filter,
            float diagonal, const string &filename, float scale, float maxSampleLuminance)
-    : fullResolution(resolution), diagonal(diagonal * 0.001f), filter(move(filter)),
-      filename(filename), scale(scale), maxSampleLuminance(maxSampleLuminance)
+    : fullResolution(resolution), diagonal(diagonal * 0.001f), filter(filter),
+      filename(filename), filterTable(new float[SQ(FILTER_TABLE_WIDTH)]), scale(scale),
+      maxSampleLuminance(maxSampleLuminance)
 {
     // Compute film image bounds
     croppedPixelBounds = Bounds2i(Point2i(ceil(fullResolution.x * cropWindow.pMin.x),
@@ -84,7 +87,7 @@ unique_ptr<FilmTile> Film::getFilmTile(const Bounds2i &sampleBounds) {
     Point2i p0(ceil(floatBounds.pMin - halfPixel - filter->radius));
     Point2i p1(floor(floatBounds.pMax - halfPixel + filter->radius) + Point2f(1, 1));
     Bounds2i tilePixelBounds = intersect(Bounds2i(p0, p1), croppedPixelBounds);
-    return make_unique<FilmTile>(tilePixelBounds, filter->radius, filterTable, FILTER_TABLE_WIDTH,
+    return make_unique<FilmTile>(tilePixelBounds, filter->radius, filterTable.get(), FILTER_TABLE_WIDTH,
                                  maxSampleLuminance);
 }
 
@@ -164,7 +167,7 @@ void Film::clear() {
 }
 
 
-Film * Film::create(const ParamSet &params, unique_ptr<Filter> filter) {
+Film * Film::create(const ParamSet &params, Filter *filter) {
     string filename;
     if (Renderer::options.imageFile != "") {
         filename = Renderer::options.imageFile;
@@ -195,6 +198,6 @@ Film * Film::create(const ParamSet &params, unique_ptr<Filter> filter) {
     float diagonal = params.findOneFloat("diagonal", 35.);
     float maxSampleLuminance = params.findOneFloat("maxsampleluminance", INFINITY);
 
-    return new Film(Point2i(xres, yres), crop, move(filter), diagonal, filename, scale,
+    return new Film(Point2i(xres, yres), crop, filter, diagonal, filename, scale,
                     maxSampleLuminance);
 }

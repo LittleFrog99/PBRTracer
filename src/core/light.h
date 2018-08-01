@@ -27,7 +27,7 @@ public:
 
     virtual Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
                                VisibilityTester *vis) const = 0;
-    // virtual float pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
+    virtual float pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
 
     virtual Spectrum compute_Le(const RayDifferential &r) const { return Spectrum(0.0f); }
     /* virtual Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray,

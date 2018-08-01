@@ -19,6 +19,8 @@ public:
         return Li * falloff(-*wi);
     }
 
+    float pdf_Li(const Interaction &, const Vector3f &) const { return 0; }
+
     Spectrum power() const { return I * 2 * PI * (1.0f - 0.5f * (cosFalloffStart + cosTotalWidth)); }
 
 private:

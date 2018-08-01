@@ -2,6 +2,7 @@
 #include "stats.h"
 #include "paramset.h"
 #include "efloat.h"
+#include "core/sampling.h"
 
 bool Disk::intersect(const Ray &worldRay, float *tHit, SurfaceInteraction *isect,
                      bool testAlphaTexture) const
@@ -68,6 +69,17 @@ bool Disk::intersectP(const Ray &worldRay, bool testAlphaTexture) const  {
     if (phi > phiMax) return false;
 
     return true;
+}
+
+Interaction Disk::sample(const Point2f &u, float *pdf) const {
+    Point2f pd = Sampling::concentricSampleDisk(u);
+    Point3f pObj(pd.x * radius, pd.y * radius, height);
+    Interaction it;
+    it.n = normalize((*objectToWorld)(Normal3f(0, 0, 1)));
+    if (reverseOrientation) it.n *= -1;
+    it.p = (*objectToWorld)(pObj, Vector3f(), &it.pError);
+    *pdf = this->pdf(it);
+    return it;
 }
 
 shared_ptr<Shape> Disk::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,

@@ -43,8 +43,7 @@ public:
     }
 
     string stateString() const {
-      return STRING_PRINTF("(%d,%d), sample %" PRId64, curPixel.x, curPixel.y,
-                           curPixelSampleIndex);
+      return STRING_PRINTF("(%d,%d), sample %" PRId64, curPixel.x, curPixel.y, curPixelSampleIndex);
     }
 
     int64_t currentSampleNumber() const { return curPixelSampleIndex; }
@@ -98,18 +97,84 @@ private:
 
 namespace Sampling {
 
-Point2f rejectionSampleDisk(Random &rng);
-Vector3f uniformSampleHemisphere(const Point2f &u);
-float uniformHemispherePdf();
-Vector3f uniformSampleSphere(const Point2f &u);
-float uniformSpherePdf();
-Vector3f uniformSampleCone(const Point2f &u, float thetamax);
-Vector3f uniformSampleCone(const Point2f &u, float thetamax, const Vector3f &x, const Vector3f &y,
-                           const Vector3f &z);
-float uniformConePdf(float thetamax);
-Point2f uniformSampleDisk(const Point2f &u);
-Point2f concentricSampleDisk(const Point2f &u);
-Point2f uniformSampleTriangle(const Point2f &u);
+inline Point2f rejectionSampleDisk(Random &rng) {
+    Point2f p;
+    do {
+        p.x = 1 - 2 * rng.uniformFloat();
+        p.y = 1 - 2 * rng.uniformFloat();
+    } while (SQ(p.x) + SQ(p.y) > 1);
+    return p;
+}
+
+inline Vector3f uniformSampleHemisphere(const Point2f &u) {
+    float z = u[0];
+    float r = sqrt(max(0.0f, 1.0f - z * z));
+    float phi = 2 * PI * u[1];
+    return Vector3f(r * cos(phi), r * sin(phi), z);
+}
+
+inline constexpr float uniformHemispherePdf() { return INV_TWO_PI; }
+
+inline Vector3f uniformSampleSphere(const Point2f &u) {
+    float z = 1 - 2 * u[0];
+    float r = sqrt(max(0.0f, 1.0f - z * z));
+    float phi = 2 * PI * u[1];
+    return Vector3f(r * cos(phi), r * sin(phi), z);
+}
+
+inline constexpr float uniformSpherePdf() { return INV_FOUR_PI; }
+
+inline Point2f uniformSampleDisk(const Point2f &u) {
+    float r = sqrt(u[0]);
+    float theta = 2 * PI * u[1];
+    return Point2f(r * cos(theta), r * sin(theta));
+}
+
+inline Point2f concentricSampleDisk(const Point2f &u) {
+    Point2f uOffset = 2.f * u - Vector2f(1, 1); // map to [-1, 1]
+    if (uOffset.x == 0 && uOffset.y == 0) return Point2f(0, 0); // degeneracy at origin
+    float theta, r;
+    if (abs(uOffset.x) > abs(uOffset.y)) {
+        r = uOffset.x;
+        theta = PI_OVER_FOUR * (uOffset.y / uOffset.x);
+    } else {
+        r = uOffset.y;
+        theta = PI_OVER_TWO - PI_OVER_FOUR * (uOffset.x / uOffset.y);
+    }
+    return r * Point2f(cos(theta), sin(theta));
+}
+
+inline Vector3f cosineSampleHemisphere(const Point2f &u) {
+    Point2f d = concentricSampleDisk(u);
+    float z = sqrt(max(0.0f, 1.0f - d.x * d.x - d.y * d.y));
+    return Vector3f(d.x, d.y, z);
+}
+
+inline constexpr float cosineHemispherePdf(const float cosTheta) { return cosTheta * INV_PI; }
+
+inline Vector3f uniformSampleCone(const Point2f &u, float cosThetaMax) {
+    float cosTheta = 1.0f - u[0] + u[0] * cosThetaMax;
+    float sinTheta = sqrt(1.0f - SQ(cosTheta));
+    float phi = 2 * PI * u[1];
+    return Vector3f(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}
+
+inline Vector3f uniformSampleCone(const Point2f &u, float cosThetaMax,
+                                  const Vector3f &x, const Vector3f &y, const Vector3f &z) {
+    float cosTheta = 1.0f - u[0] + u[0] * cosThetaMax;
+    float sinTheta = sqrt(1.0f - SQ(cosTheta));
+    float phi = 2 * PI * u[1];
+    return cos(phi) * sinTheta * x + sin(phi) * sinTheta * y + cosTheta * z;
+}
+
+constexpr float uniformConePdf(const float cosThetaMax) {
+    return 1.0f / (2 * PI * (1.0f - cosThetaMax));
+}
+
+inline Point2f uniformSampleTriangle(const Point2f &u) { // PDF just one over triangle area
+    float su0 = sqrt(u[0]);
+    return Point2f(1 - su0, u[1] * su0);
+}
 
 template <typename T>
 inline void shuffle(T *samp, int count, int nDimensions, Random &rng) {
@@ -119,14 +184,6 @@ inline void shuffle(T *samp, int count, int nDimensions, Random &rng) {
             swap(samp[nDimensions * i + j], samp[nDimensions * other + j]); // move entire blocks
     }
 }
-
-inline Vector3f cosineSampleHemisphere(const Point2f &u) {
-    Point2f d = concentricSampleDisk(u);
-    float z = sqrt(max((float)0, 1 - d.x * d.x - d.y * d.y));
-    return Vector3f(d.x, d.y, z);
-}
-
-inline float cosineHemispherePdf(float cosTheta) { return cosTheta * INV_PI; }
 
 inline float balanceHeuristic(int nf, float fPdf, int ng, float gPdf) {
     return (nf * fPdf) / (nf * fPdf + ng * gPdf);
@@ -140,49 +197,12 @@ inline float powerHeuristic(int nf, float fPdf, int ng, float gPdf) {
 };
 
 struct Distribution1D {
-    Distribution1D(const float *f, int n) : func(f, f + n), cdf(n + 1) {
-        // Compute integral of step function at $x_i$
-        cdf[0] = 0;
-        for (int i = 1; i < n + 1; ++i) cdf[i] = cdf[i - 1] + func[i - 1] / n;
-        // Transform step function integral into CDF
-        funcInt = cdf[n];
-        if (funcInt == 0) {
-            for (int i = 1; i < n + 1; ++i) cdf[i] = float(i) / float(n);
-        } else {
-            for (int i = 1; i < n + 1; ++i) cdf[i] /= funcInt;
-        }
-    }
+    Distribution1D(const float *f, int n);
+
+    float sampleContinuous(float u, float *pdf, int *off = nullptr) const;
+    int sampleDiscrete(float u, float *pdf = nullptr, float *uRemapped = nullptr) const;
 
     int count() const { return int(func.size()); }
-
-    float sampleContinuous(float u, float *pdf, int *off = nullptr) const {
-        // Find surrounding CDF segments and _offset_
-        int offset = findInterval(int(cdf.size()), [&](int index) { return cdf[index] <= u; });
-        if (off) *off = offset;
-        // Compute offset along CDF segment
-        float du = u - cdf[offset];
-        if ((cdf[offset + 1] - cdf[offset]) > 0) {
-            CHECK_GT(cdf[offset + 1], cdf[offset]);
-            du /= (cdf[offset + 1] - cdf[offset]);
-        }
-        DCHECK(!isnan(du));
-
-        // Compute PDF for sampled offset
-        if (pdf) *pdf = (funcInt > 0) ? func[offset] / funcInt : 0;
-        // Return $x\in{}[0,1)$ corresponding to sample
-        return (offset + du) / count();
-    }
-
-    int sampleDiscrete(float u, float *pdf = nullptr, float *uRemapped = nullptr) const {
-        // Find surrounding CDF segments and _offset_
-        int offset = findInterval((int)cdf.size(),
-                                  [&](int index) { return cdf[index] <= u; });
-        if (pdf) *pdf = (funcInt > 0) ? func[offset] / (funcInt * count()) : 0;
-        if (uRemapped)
-            *uRemapped = (u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);
-        if (uRemapped) CHECK(*uRemapped >= 0.f && *uRemapped <= 1.f);
-        return offset;
-    }
 
     float discretePDF(int index) const {
         CHECK(index >= 0 && index < count());

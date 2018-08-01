@@ -21,6 +21,8 @@ public:
     bool intersect(const Ray &r, float *tHit, SurfaceInteraction *isect, bool testAlphaTexture = true) const;
     bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
 
+    Interaction sample(const Point2f &u, float *pdf) const;
+
     float area() const { return 0.5 * phiMax * (SQ(radius) - SQ(innerRadius)); }
 
 private:

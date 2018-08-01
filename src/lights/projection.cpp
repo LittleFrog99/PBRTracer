@@ -21,7 +21,7 @@ ProjectionLight::ProjectionLight(const Transform &lightToWorld, const MediumInte
 
     // Compute cosine of cones surrounding projection directions
     float opposite = tan(radians(fov) / 2.0f);
-    float tanDiag = opposite * sqrtf(1.0f + 1.0f / SQ(aspect));
+    float tanDiag = opposite * sqrt(1.0f + 1.0f / SQ(aspect));
     cosTotalWidth = cos(atan(tanDiag));
 }
 

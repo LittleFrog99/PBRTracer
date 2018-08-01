@@ -18,12 +18,12 @@ public:
     virtual ~BxDF() {}
 
     virtual Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const = 0;
-    virtual Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
-                                 BxDFType *sampledType = nullptr) const;
+    virtual Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
+                              BxDFType *sampledType = nullptr) const;
     virtual float pdf(const Vector3f &wo, const Vector3f &wi) const;
 
-    virtual Spectrum rho_hd(const Vector3f &wo, int nSamples, const Point2f *samples) const;
-    virtual Spectrum rho_hh(int nSamples, const Point2f *samples1, const Point2f *samples2) const;
+    virtual Spectrum rho_hd(const Vector3f &wo, int nSamples, const Point2f *u) const;
+    virtual Spectrum rho_hh(int nSamples, const Point2f *samples1, const Point2f *u) const;
 
     virtual string toString() const = 0;
 
@@ -52,7 +52,7 @@ public:
     }
 
 private:
-    BxDF *bxdf;
+    BxDF *bxdf = nullptr;
     Spectrum scale;
 };
 
@@ -64,7 +64,7 @@ public:
     Spectrum compute_f(const Vector3f &woW, const Vector3f &wiW, BxDFType flags = BSDF_ALL) const;
     Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
                          BxDFType type = BSDF_ALL, BxDFType *sampledType = nullptr) const;
-    float pdf(const Vector3f &wo, const Vector3f &wi, BxDFType flags = BSDF_ALL) const;
+    float pdf(const Vector3f &woWorld, const Vector3f &wiWorld, BxDFType flags = BSDF_ALL) const;
 
     Spectrum rho_hd(const Vector3f &wo, int nSamples, const Point2f *samples,
                     BxDFType flags = BSDF_ALL) const {

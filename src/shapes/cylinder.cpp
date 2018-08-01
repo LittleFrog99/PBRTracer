@@ -136,6 +136,22 @@ bool Cylinder::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
     return true;
 }
 
+Interaction Cylinder::sample(const Point2f &u, float *pdf) const {
+    float z = lerp(u[0], zMin, zMax);
+    float phi = u[1] * phiMax;
+    Point3f pObj = Point3f(radius * cos(phi), radius * sin(phi), z);
+    Interaction it;
+    it.n = normalize((*objectToWorld)(Normal3f(pObj.x, pObj.y, 0)));
+    if (reverseOrientation) it.n *= -1;
+    float hitRadius = sqrt(SQ(pObj.x) + SQ(pObj.y)); // reprojecct pObj to cylinder surface
+    pObj.x *= radius / hitRadius;
+    pObj.y *= radius / hitRadius;
+    Vector3f pObjError = gamma(3) * abs(Vector3f(pObj.x, pObj.y, 0));
+    it.p = (*objectToWorld)(pObj, pObjError, &it.pError);
+    *pdf = this->pdf(it);
+    return it;
+}
+
 shared_ptr<Shape> Cylinder::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
                                    const ParamSet &params)
 {

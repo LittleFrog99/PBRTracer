@@ -70,6 +70,8 @@ public:
         return fresnel->evaluate(cosTheta(*wi)) * R / absCosTheta(*wi);
     }
 
+    float pdf(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
+
     string toString() const {
         return "[ SpecularReflection R: " + R.toString() + " fresnel: " + fresnel->toString() + " ]";
     }
@@ -86,9 +88,9 @@ public:
           fresnel(etaA, etaB), mode(mode) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
-
     Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
                       BxDFType *sampledType = nullptr) const;
+    float pdf(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
 
     string toString() const {
         return "[ SpecularTransmission: T: " + T.toString() +
@@ -110,8 +112,7 @@ public:
           R(R), T(T), etaA(etaA), etaB(etaB), fresnel(etaA, etaB), mode(mode) {}
 
     Spectrum compute_f(const Vector3f &wo, const Vector3f &wi) const { return 0.0f; }
-
-    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &sample, float *pdf,
+    Spectrum sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
                       BxDFType *sampledType = nullptr) const;
 
     string toString() const {

@@ -4,6 +4,12 @@
 
 namespace File {
 
+static string searchDirectory;
+
+void setSearchDirectory(const string &dirname) {
+    searchDirectory = dirname;
+}
+
 bool isAbsolutePath(const string &filename) {
     return (filename.size() > 0) && filename[0] == '/';
 }

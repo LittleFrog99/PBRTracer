@@ -18,6 +18,8 @@ public:
         return Li * projection(-*wi);
     }
 
+    float pdf_Li(const Interaction &, const Vector3f &) const { return 0; }
+
     Spectrum power() const {
         return (projMap ? projMap->lookup(Point2f(0.5f, 0.5f), 0.5f) : Spectrum(1.0f)) *
                 I * 2 * PI * (1.0f - cosTotalWidth);

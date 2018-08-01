@@ -132,8 +132,8 @@ namespace Renderer {
     Camera * makeCamera(const string &name, const ParamSet &paramSet, const TransformSet &cam2worldSet,
                         float transformStart, float transformEnd, Film *film);
     shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, const Film *film);
-    unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet);
-    Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter> filter);
+    Filter * makeFilter(const string &name, const ParamSet &paramSet);
+    Film * makeFilm(const string &name, const ParamSet &paramSet, Filter *filter);
     shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp);
     shared_ptr<Medium> makeMedium(const string &name, const ParamSet &paramSet,
                                   const Transform &medium2world);

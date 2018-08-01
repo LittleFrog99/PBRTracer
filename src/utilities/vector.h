@@ -477,7 +477,7 @@ inline Point3<T> ceil(const Point3<T> &p) {
 
 template <class T>
 inline Point3<T> abs(const Point3<T> &p) {
-    return Point3<T>(abs(p.x), abs(p.y), abs(p.z));
+    return Point3<T>(std::abs(p.x), std::abs(p.y), std::abs(p.z));
 }
 
 template <class T>

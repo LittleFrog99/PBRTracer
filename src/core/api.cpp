@@ -536,7 +536,7 @@ void API::shape(const string &name, const ParamSet &params) {
             shared_ptr<AreaLight> area;
             if (graphicsState.areaLight != "") {
                 area = makeAreaLight(graphicsState.areaLight, curTransform[0], mi,
-                        graphicsState.areaLightParams, s);
+                                     graphicsState.areaLightParams, s);
                 if (area) areaLights.push_back(area);
             }
             prims.push_back(make_shared<GeometricPrimitive>(s, mtl, area, mi));

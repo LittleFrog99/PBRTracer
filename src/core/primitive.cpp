@@ -1,4 +1,14 @@
 #include "primitive.h"
+#include "stats.h"
+
+STAT_MEMORY_COUNTER("Memory/Primitives", primitiveMemory);
+
+GeometricPrimitive::GeometricPrimitive(const shared_ptr<Shape> &shape, const shared_ptr<Material> &material,
+                                       const shared_ptr<AreaLight> &areaLight, const MediumInterface &interface)
+    : shape(shape), material(material), areaLight(areaLight), mediumInterface(interface)
+{
+    primitiveMemory += sizeof(*this);
+}
 
 bool GeometricPrimitive::intersect(const Ray &r, SurfaceInteraction *isect) const {
     float tHit;
@@ -11,6 +21,13 @@ bool GeometricPrimitive::intersect(const Ray &r, SurfaceInteraction *isect) cons
     else
         isect->mediumInterface = MediumInterface(r.medium);
     return true;
+}
+
+TransformedPrimitive::TransformedPrimitive(shared_ptr<Primitive> &primitive,
+                                           const AnimatedTransform &primToWorld)
+    : primitive(primitive), primitiveToWorld(primToWorld)
+{
+    primitiveMemory += sizeof(*this);
 }
 
 bool TransformedPrimitive::intersect(const Ray &worldRay, SurfaceInteraction *isect) const {

@@ -32,7 +32,7 @@ public:
              const shared_ptr<TriangleMesh> &mesh, int triNumber)
         : Shape(objToWorld, worldToObj, revOrient), mesh(mesh)
     {
-        v = &mesh->vertexIndices[3 * triNumber];
+        v = &(mesh->vertexIndices[3 * triNumber]);
     }
 
     Bounds3f objectBound() const;
@@ -41,6 +41,8 @@ public:
     bool intersect(const Ray &ray, float *tHit, SurfaceInteraction *isect,
                            bool testAlphaTexture = true) const;
     bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
+
+    Interaction sample(const Point2f &u, float *pdf) const;
 
     float area() const;
 
@@ -64,11 +66,14 @@ private:
 
 class Subdivision {
 public:
+    static vector<shared_ptr<Shape>> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                            const ParamSet &params);
+
+private:
     static vector<shared_ptr<Shape>> subdivide(const Transform *objToWorld, const Transform *worldToObj,
                                                bool reverseOrientation, int nLevels, int nIndices,
                                                const int *vertexIndices, int nVertices, const Point3f *p);
 
-private:
 #define NEXT(i) ((i + 1) % 3)
 #define PREV(i) ((i + 2) % 3)
 

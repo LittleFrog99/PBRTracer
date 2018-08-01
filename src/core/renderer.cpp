@@ -71,11 +71,11 @@ vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object
     // Create multiple-_Shape_ types
     else if (name == "curve")
         shapes = Curve::create(object2world, world2object, reverseOrientation, paramSet);
-    else if (name == "trianglemesh") {
+    else if (name == "trianglemesh")
         shapes = TriangleMesh::create(object2world, world2object, reverseOrientation, paramSet,
                                       &*graphicsState.floatTextures);
-        // TODO: Write to PLY files
-    }
+    else if (name == "loopsubdiv")
+        shapes = Subdivision::create(object2world, world2object, reverseOrientation, paramSet);
     else
         WARNING("Shape \"%s\" unknown.", name.c_str());
     return shapes;
@@ -130,7 +130,7 @@ shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, co
     return shared_ptr<Sampler>(sampler);
 }
 
-unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet) {
+Filter * makeFilter(const string &name, const ParamSet &paramSet) {
     Filter *filter = nullptr;
     if (name == "box")
         filter = BoxFilter::create(paramSet);
@@ -147,13 +147,13 @@ unique_ptr<Filter> makeFilter(const string &name, const ParamSet &paramSet) {
         exit(1);
     }
     paramSet.reportUnused();
-    return unique_ptr<Filter>(filter);
+    return filter;
 }
 
-Film * makeFilm(const string &name, const ParamSet &paramSet, unique_ptr<Filter> filter) {
+Film * makeFilm(const string &name, const ParamSet &paramSet, Filter *filter) {
     Film *film = nullptr;
     if (name == "image")
-        film = Film::create(paramSet, move(filter));
+        film = Film::create(paramSet, filter);
     else
         WARNING("Film \"%s\" unknown.", name.c_str());
     paramSet.reportUnused();
@@ -455,8 +455,8 @@ Scene * RenderOptions::makeScene() {
 }
 
 Camera * RenderOptions::makeCamera() const {
-    unique_ptr<Filter> filter = Renderer::makeFilter(filterName, filterParams);
-    Film *film = Renderer::makeFilm(filmName, filmParams, move(filter));
+    Filter *filter = Renderer::makeFilter(filterName, filterParams);
+    Film *film = Renderer::makeFilm(filmName, filmParams, filter);
     if (!film) {
         ERROR("Unable to create film.");
         return nullptr;

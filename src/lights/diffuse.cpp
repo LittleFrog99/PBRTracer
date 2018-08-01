@@ -11,3 +11,12 @@ shared_ptr<DiffuseAreaLight> DiffuseAreaLight::create(const Transform &light2wor
     if (Renderer::options.quickRender) nSamples = max(1, nSamples / 4);
     return make_shared<DiffuseAreaLight>(light2world, medium, L * sc, nSamples, shape);
 }
+
+Spectrum DiffuseAreaLight::sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
+                                     VisibilityTester *vis) const {
+    Interaction pShape = shape->sample(ref, u, pdf);
+    pShape.mediumInterface = mediumInterface;
+    *wi = normalize(pShape.p - ref.p);
+    *vis = VisibilityTester(ref, pShape);
+    return compute_L(pShape, -*wi);
+}

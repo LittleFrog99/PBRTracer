@@ -2,6 +2,7 @@
 #include "stats.h"
 #include "paramset.h"
 #include "efloat.h"
+#include "core/sampling.h"
 
 bool Sphere::intersect(const Ray &worldRay, float *tHit,SurfaceInteraction *isect,
                        bool testAlphaTexture) const
@@ -140,6 +141,69 @@ bool Sphere::intersectP(const Ray &worldRay, bool testAlphaTexture) const {
     }
 
     return true;
+}
+
+Interaction Sphere::sample(const Point2f &u, float *pdf) const {
+    Point3f pObj = Point3f() + radius * Sampling::uniformSampleSphere(u);
+    Interaction it;
+    it.n = normalize((*objectToWorld)(Normal3f(pObj.x, pObj.y, pObj.z)));
+    if (reverseOrientation) it.n *= -1;
+    pObj *= radius / distance(pObj, Point3f());
+    Vector3f pObjError = gamma(5) * abs(Vector3f(pObj));
+    it.p = (*objectToWorld)(pObj, pObjError, &it.pError);
+    *pdf = Shape::pdf(it);
+    return it;
+}
+
+Interaction Sphere::sample(const Interaction &ref, const Point2f &u, float *pdf) const {
+    // Compute coordinate system for sphere sampling
+    Point3f pCenter = (*objectToWorld)(Point3f());
+    Vector3f wcZ = normalize(pCenter - ref.p);
+    Vector3f wcX, wcY;
+    coordinateSystem(wcZ, &wcX, &wcY);
+
+    // Sample uniformly on sphere if p is inside it
+    Point3f pOrigin = offsetRayOrigin(ref.p, ref.pError, ref.n, pCenter - ref.p);
+    if (distanceSq(pOrigin, pCenter) <= SQ(radius))
+        return sample(u, pdf);
+
+    // Sample sphere uniformly inside subtended cone
+    // Compute φ and θ for sample in cone
+    float sinThetaMax2 = radius * radius / distanceSq(ref.p, pCenter);
+    float cosThetaMax = sqrt(max(0.0f, 1 - sinThetaMax2));
+    float cosTheta = (1 - u[0]) + u[0] * cosThetaMax;
+    float sinTheta = sqrt(max(0.0f, 1 - cosTheta * cosTheta));
+    float phi = u[1] * 2 * PI;
+
+    // Compute angle α from center of sphere to sampled point on surface
+    float dc = distance(ref.p, pCenter);
+    float ds = dc * cosTheta - sqrt(max(0.0f, SQ(radius) - SQ(dc * sinTheta)));
+    float cosAlpha = (SQ(dc) + SQ(radius) - SQ(ds)) / (2 * dc * radius);
+    float sinAlpha = sqrt(max(0.0f, 1 - cosAlpha * cosAlpha));
+
+    // Compute surface normal and sampled point on sphere
+    Vector3f nWorld = sphericalDirection(sinAlpha, cosAlpha, phi, -wcX, -wcY, -wcZ);
+    Point3f pWorld = pCenter + radius * Point3f(nWorld.x, nWorld.y, nWorld.z);
+
+    // Return _Interaction_ for sampled point on sphere
+    Interaction it;
+    it.p = pWorld;
+    it.pError = gamma(5) * abs(Vector3f(pWorld));
+    it.n = Normal3f(nWorld);
+    if (reverseOrientation) it.n *= -1;
+    *pdf = 1 / (2 * PI * (1 - cosThetaMax));
+
+    return it;
+}
+
+float Sphere::pdf(const Interaction &ref, const Vector3f &wi) const {
+    Point3f pCenter = (*objectToWorld)(Point3f());
+    Point3f pOrigin = offsetRayOrigin(ref.p, ref.pError, ref.n, pCenter - ref.p);
+    if (distanceSq(pOrigin, pCenter) <= SQ(radius))
+        return Shape::pdf(ref, wi);
+    float sinThetaMax2 = SQ(radius) / distanceSq(ref.p, pCenter);
+    float cosThetaMax = sqrt(max(0.0f, 1 - sinThetaMax2));
+    return Sampling::uniformConePdf(cosThetaMax);
 }
 
 shared_ptr<Shape> Sphere::create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,

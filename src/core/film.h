@@ -53,9 +53,9 @@ private:
 
 class Film {
 public:
-    Film(const Point2i &resolution, const Bounds2f &cropWindow, unique_ptr<Filter> filter,
+    Film(const Point2i &resolution, const Bounds2f &cropWindow, Filter *filter,
          float diagonal, const string &filename, float scale, float maxSampleLuminance = INFINITY);
-    static Film * create(const ParamSet &params, unique_ptr<Filter> filter);
+    static Film * create(const ParamSet &params, Filter *filter);
 
     Bounds2i getSampleBounds() const;
     Bounds2f getPhysicalExtent() const;
@@ -87,8 +87,8 @@ private:
     };
 
     unique_ptr<Pixel[]> pixels;
-    static constexpr int FILTER_TABLE_WIDTH = 16;
-    float filterTable[SQ(FILTER_TABLE_WIDTH)];
+    static const int FILTER_TABLE_WIDTH;
+    unique_ptr<float[]> filterTable;
     mutex mutex;
     const float scale;
     const float maxSampleLuminance;

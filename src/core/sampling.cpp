@@ -112,23 +112,60 @@ Point2f GlobalSampler::get2D() {
     return p;
 }
 
-namespace Sampling {
+Distribution1D::Distribution1D(const float *f, int n)
+    : func(f, f + n), cdf(n + 1)
+{
+    // Compute step function integral
+    cdf[0] = 0;
+    for (int i = 1; i < n + 1; ++i)
+        cdf[i] = cdf[i - 1] + func[i - 1] / n;
 
-Point2f concentricSampleDisk(const Point2f &u) {
-    // Map uniform random numbers to $[-1,1]^2$
-    Point2f uOffset = 2.f * u - Vector2f(1, 1);
-    // Handle degeneracy at the origin
-    if (uOffset.x == 0 && uOffset.y == 0) return Point2f(0, 0);
-    // Apply concentric mapping to point
-    float theta, r;
-    if (abs(uOffset.x) > abs(uOffset.y)) {
-        r = uOffset.x;
-        theta = PI_OVER_FOUR * (uOffset.y / uOffset.x);
-    } else {
-        r = uOffset.y;
-        theta = PI_OVER_TWO - PI_OVER_FOUR * (uOffset.x / uOffset.y);
-    }
-    return r * Point2f(cos(theta), sin(theta));
+    // Transform step function integral into CDF
+    funcInt = cdf[n];
+    if (funcInt == 0) // Handle degeneracy
+        for (int i = 1; i < n + 1; ++i)
+            cdf[i] = float(i) / float(n); // uniform distribution
+    else
+        for (int i = 1; i < n + 1; ++i)
+            cdf[i] /= funcInt; // normalize CDF
+
 }
 
-};
+float Distribution1D::sampleContinuous(float u, float *pdf, int *off) const {
+    // Find surrounding CDF segments and _offset_
+    int offset = findInterval(int(cdf.size()), [&](int index) { return cdf[index] <= u; });
+    if (off) *off = offset;
+
+    // Compute offset along CDF segment
+    float du = u - cdf[offset];
+    if ((cdf[offset + 1] - cdf[offset]) > 0) {
+        CHECK_GT(cdf[offset + 1], cdf[offset]);
+        du /= (cdf[offset + 1] - cdf[offset]);
+    }
+    DCHECK(!isnan(du));
+
+    if (pdf) *pdf = (funcInt > 0) ? func[offset] / funcInt : 0;
+    return (offset + du) / count();
+}
+
+int Distribution1D::sampleDiscrete(float u, float *pdf, float *uRemapped) const {
+    // Find surrounding CDF segments and _offset_
+    int offset = findInterval(int(cdf.size()), [&] (int index) { return cdf[index] <= u; });
+    if (pdf) *pdf = (funcInt > 0) ? func[offset] / (funcInt * count()) : 0;
+    if (uRemapped)
+        *uRemapped = (u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);
+    if (uRemapped) CHECK(*uRemapped >= 0.f && *uRemapped <= 1.f);
+    return offset;
+}
+
+Distribution2D::Distribution2D(const float *func, int nu, int nv) {
+    pConditionalV.reserve(nv);
+    for (int v = 0; v < nv; ++v)
+        pConditionalV.emplace_back(new Distribution1D(&func[v * nu], nu));
+
+    vector<float> marginalFunc;
+    marginalFunc.reserve(nv);
+    for (int v = 0; v < nv; ++v)
+        marginalFunc.push_back(pConditionalV[v]->funcInt);
+    pMarginal.reset(new Distribution1D(&marginalFunc[0], nv));
+}

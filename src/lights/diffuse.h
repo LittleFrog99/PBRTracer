@@ -20,6 +20,7 @@ public:
 
     Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
                        VisibilityTester *vis) const;
+    float pdf_Li(const Interaction &ref, const Vector3f &wi) const { return shape->pdf(ref, wi); }
 
     Spectrum power() const { return Lemit * area * PI; }
 

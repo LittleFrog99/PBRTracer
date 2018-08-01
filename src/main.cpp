@@ -4,7 +4,7 @@
 
 static void usage(const char *msg = nullptr) {
     if (msg)
-        fprintf(stderr, "pbr-tracer: %s\n\n", msg);
+        fprintf(stderr, "PBRTracer: %s\n\n", msg);
 
     fprintf(stderr, R"(usage: pbr-tacer [<options>] <filename.pbrt...>
 Rendering options:
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         if (sizeof(void *) == 4)
             printf("*** WARNING: This is a 32-bit build of. It will crash "
                    "if used to render highly complex scenes. ***\n");
-        printf("pbr-tracer (built %s at %s) [Detected %d cores]\n",
+        printf("PBRTracer (built %s at %s) [Detected %d cores]\n",
                __DATE__, __TIME__, Parallel::numSystemCores());
         printf( "The source code to this project is covered by the BSD License.\n");
         fflush(stdout);

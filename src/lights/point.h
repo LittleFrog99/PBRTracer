@@ -15,6 +15,8 @@ public:
     Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
                        VisibilityTester *vis) const;
 
+    float pdf_Li(const Interaction &, const Vector3f &) const { return 0; }
+
     Spectrum power() const { return 4 * PI * I; }
 
 protected:

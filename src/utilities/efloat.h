@@ -13,11 +13,6 @@ public:
             low = nextFloatDown(v - err);
             high = nextFloatUp(v + err);
         }
-// Store high precision reference value in _EFloat_
-/* #ifndef NDEBUG
-        vPrecise = v;
-        check();
-#endif  // NDEBUG*/
     }
 
     EFloat(const EFloat &ef) {
@@ -25,39 +20,16 @@ public:
         v = ef.v;
         low = ef.low;
         high = ef.high;
-#ifndef NDEBUG
-        // vPrecise = ef.vPrecise;
-#endif
     }
-
-#ifndef NDEBUG
-    EFloat(float v, long double lD, float err) : EFloat(v, err) {
-        vPrecise = lD;
-        check();
-    }
-#endif  // DEBUG
 
     void check() const {
         if (!isinf(low) && !isnan(low) && !isinf(high) && !isnan(high))
             CHECK_LE(low, high);
-/* #ifndef NDEBUG
-        if (!isinf(v) && !isnan(v)) {
-            CHECK_LE(lowerBound(), vPrecise);
-            CHECK_LE(vPrecise, upperBound());
-        }
-#endif */
     }
 
     float getAbsoluteError() const { return high - low; }
     float upperBound() const { return high; }
     float lowerBound() const { return low; }
-
-#ifndef NDEBUG
-    float getRelativeError() const {
-        return abs((vPrecise - v) / vPrecise);
-    }
-    long double preciseValue() const { return vPrecise; }
-#endif
 
     explicit operator float() const { return v; }
     explicit operator double() const { return v; }
@@ -65,9 +37,6 @@ public:
     EFloat operator + (EFloat ef) const {
         EFloat r;
         r.v = v + ef.v;
-#ifndef NDEBUG
-        // r.vPrecise = vPrecise + ef.vPrecise;
-#endif  // DEBUG
         // Interval arithemetic addition, with the result rounded away from
         // the value r.v in order to be conservative
         r.low = nextFloatDown(lowerBound() + ef.lowerBound());
@@ -79,9 +48,6 @@ public:
     EFloat operator - (EFloat ef) const {
         EFloat r;
         r.v = v - ef.v;
-#ifndef NDEBUG
-        // r.vPrecise = vPrecise - ef.vPrecise;
-#endif
         r.low = nextFloatDown(lowerBound() - ef.upperBound());
         r.high = nextFloatUp(upperBound() - ef.lowerBound());
         r.check();
@@ -91,9 +57,6 @@ public:
     EFloat operator * (EFloat ef) const {
         EFloat r;
         r.v = v * ef.v;
-#ifndef NDEBUG
-        // r.vPrecise = vPrecise * ef.vPrecise;
-#endif
         float prod[4] = {
             lowerBound() * ef.lowerBound(), upperBound() * ef.lowerBound(),
             lowerBound() * ef.upperBound(), upperBound() * ef.upperBound()};
@@ -108,9 +71,6 @@ public:
     EFloat operator / (EFloat ef) const {
         EFloat r;
         r.v = v / ef.v;
-#ifndef NDEBUG
-        // r.vPrecise = vPrecise / ef.vPrecise;
-#endif
         if (ef.low < 0 && ef.high > 0) {
             // Bah. The interval we're dividing by straddles zero, so just
             // return an interval of everything.
@@ -130,9 +90,6 @@ public:
     EFloat operator - () const {
         EFloat r;
         r.v = -v;
-#ifndef NDEBUG
-        // r.vPrecise = -vPrecise;
-#endif
         r.low = -high;
         r.high = -low;
         r.check();
@@ -147,9 +104,6 @@ public:
             v = ef.v;
             low = ef.low;
             high = ef.high;
-#ifndef NDEBUG
-            // vPrecise = ef.vPrecise;
-#endif
         }
         return *this;
     }
@@ -157,18 +111,12 @@ public:
     friend ostream & operator << (ostream &os, const EFloat &ef) {
         os << STRING_PRINTF("v=%f (%a) - [%f, %f]",
                            ef.v, ef.v, ef.low, ef.high);
-#ifndef NDEBUG
-        // os << STRING_PRINTF(", precise=%.30Lf", ef.vPrecise);
-#endif // !NDEBUG
         return os;
     }
 
     friend inline EFloat sqrt(EFloat fe) {
         EFloat r;
         r.v = sqrt(fe.v);
-#ifndef NDEBUG
-        // r.vPrecise = sqrt(fe.vPrecise);
-#endif
         r.low = nextFloatDown(sqrt(fe.low));
         r.high = nextFloatUp(sqrt(fe.high));
         r.check();
@@ -183,9 +131,6 @@ public:
             // The entire interval is less than zero.
             EFloat r;
             r.v = -fe.v;
-#ifndef NDEBUG
-            // r.vPrecise = -fe.vPrecise;
-#endif
             r.low = -fe.high;
             r.high = -fe.low;
             r.check();
@@ -194,9 +139,6 @@ public:
             // The interval straddles zero.
             EFloat r;
             r.v = abs(fe.v);
-#ifndef NDEBUG
-            // r.vPrecise = abs(fe.vPrecise);
-#endif
             r.low = 0;
             r.high = max(-fe.low, fe.high);
             r.check();
@@ -226,10 +168,6 @@ public:
 
 private:
     float v, low, high;
-#ifndef NDEBUG
-    long double vPrecise;
-#endif  // NDEBUG
-
 };
 
 inline EFloat operator * (float f, EFloat fe) { return EFloat(f) * fe; }

@@ -2,6 +2,7 @@
 #define LIGHT_INFINITEAREA
 
 #include "core/light.h"
+#include "core/sampling.h"
 #include "mipmap.h"
 
 class InfiniteAreaLight : public Light {
@@ -17,6 +18,7 @@ public:
 
     Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
                        VisibilityTester *vis) const;
+    float pdf_Li(const Interaction &ref, const Vector3f &wi) const;
 
     Spectrum compute_Le(const RayDifferential &r) const;
 
@@ -28,6 +30,7 @@ private:
     unique_ptr<Mipmap<RGBSpectrum>> Lmap;
     Point3f worldCenter;
     float worldRadius;
+    unique_ptr<Distribution2D> distrib;
 };
 
 #endif // LIGHT_INFINITEAREA

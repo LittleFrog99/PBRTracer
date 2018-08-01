@@ -25,6 +25,10 @@ public:
                    bool testAlphaTexture = true) const;
     bool intersectP(const Ray &ray, bool testAlphaTexture = true) const;
 
+    Interaction sample(const Point2f &u, float *pdf) const;
+    Interaction sample(const Interaction &ref, const Point2f &u, float *pdf) const;
+    float pdf(const Interaction &ref, const Vector3f &wi) const;
+
     float area() const { return phiMax * radius * (zMax - zMin); }
 
 private:
