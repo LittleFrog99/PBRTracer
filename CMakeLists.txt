@@ -29,7 +29,7 @@ SET(SOURCES_ACCELERATORS
     src/accelerators/bvh.cpp src/accelerators/kdtree.cpp)
 
 SET(SOURCES_INTEGRATORS
-    src/integrators/whitted.cpp)
+    src/integrators/whitted.cpp src/integrators/directlighting.cpp)
 
 SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)

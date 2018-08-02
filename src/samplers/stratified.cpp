@@ -1,28 +1,30 @@
 #include "stratified.h"
 #include "core/renderer.h"
+#include "stats.h"
 
 using namespace Sampling;
 
 void StratifiedSampler::startPixel(const Point2i &p) {
-    // Generate single stratified samples
-    for (size_t i = 0; i < samples1D.size(); i++) {
+    ProfilePhase _(Stage::StartPixel);
+    // Generate single stratified samples for the pixel
+    for (size_t i = 0; i < samples1D.size(); ++i) {
         sample1D(&samples1D[i][0], xPixelSamples * yPixelSamples, rng, jitterSamples);
-        Sampling::shuffle(&samples1D[i][0], xPixelSamples * yPixelSamples, 1, rng);
+        shuffle(&samples1D[i][0], xPixelSamples * yPixelSamples, 1, rng);
     }
-    for (size_t i = 0; i < samples2D.size(); i++) {
+    for (size_t i = 0; i < samples2D.size(); ++i) {
         sample2D(&samples2D[i][0], xPixelSamples, yPixelSamples, rng, jitterSamples);
-        Sampling::shuffle(&samples2D[i][0], xPixelSamples * yPixelSamples, 1, rng);
+        shuffle(&samples2D[i][0], xPixelSamples * yPixelSamples, 1, rng);
     }
 
-    // Generate arrays of stratified samples
-    for (size_t i = 0; i < samples1DArraySizes.size(); i++)
-        for (int64_t j = 0; j < samplesPerPixel; j++) {
+    // Generate arrays of stratified samples for the pixel
+    for (size_t i = 0; i < samples1DArraySizes.size(); ++i)
+        for (int64_t j = 0; j < samplesPerPixel; ++j) {
             int count = samples1DArraySizes[i];
             sample1D(&sampleArray1D[i][j * count], count, rng, jitterSamples);
-            Sampling::shuffle(&sampleArray1D[i][j * count], count, 1, rng);
+            shuffle(&sampleArray1D[i][j * count], count, 1, rng);
         }
-    for (size_t i = 0; i < samples2DArraySizes.size(); i++)
-        for (int64_t j = 0; j < samplesPerPixel; j++) {
+    for (size_t i = 0; i < samples2DArraySizes.size(); ++i)
+        for (int64_t j = 0; j < samplesPerPixel; ++j) {
             int count = samples2DArraySizes[i];
             latinHypercube(&sampleArray2D[i][j * count].x, count, 2, rng);
         }
@@ -37,17 +39,17 @@ unique_ptr<Sampler> StratifiedSampler::clone(int seed) {
 }
 
 void StratifiedSampler::sample1D(float *samples, int nSamples, Random &rng, bool jitter) {
-    float invNSamples = 1.0 / nSamples;
-    for (int i = 0; i < nSamples; i++) {
+    float invNSamples = 1.0f / nSamples;
+    for (int i = 0; i < nSamples; ++i) {
         float delta = jitter ? rng.uniformFloat() : 0.5f;
         samples[i] = min((i + delta) * invNSamples, Random::ONE_MINUS_EPSILON);
     }
 }
 
 void StratifiedSampler::sample2D(Point2f *samples, int nx, int ny, Random &rng, bool jitter) {
-    float dx = 1.0 / nx, dy = 1.0 / ny;
-    for (int y = 0; y < ny; y++)
-        for (int x = 0; x < nx; x++) {
+    float dx = 1.0f / nx, dy = 1.0f / ny;
+    for (int y = 0; y < ny; ++y)
+        for (int x = 0; x < nx; ++x) {
             float jx = jitter ? rng.uniformFloat() : 0.5f;
             float jy = jitter ? rng.uniformFloat() : 0.5f;
             samples->x = min((x + jx) * dx, Random::ONE_MINUS_EPSILON);
@@ -58,18 +60,20 @@ void StratifiedSampler::sample2D(Point2f *samples, int nx, int ny, Random &rng, 
 
 void StratifiedSampler::latinHypercube(float *samples, int nSamples, int nDim, Random &rng) {
     // Generate LHS samples along diagonal
-    float invNSamples = 1.0 / nSamples;
-    for (int i = 0; i < nSamples; i++)
-        for (int j = 0; j < nDim; j++) {
-            float sj = (i + rng.uniformFloat()) * invNSamples;
+    float invNSamples = 1.0f / nSamples;
+    for (int i = 0; i < nSamples; ++i)
+        for (int j = 0; j < nDim; ++j) {
+            float sj = (i + (rng.uniformFloat())) * invNSamples;
             samples[nDim * i + j] = min(sj, Random::ONE_MINUS_EPSILON);
         }
-    // Permute samples in each dimension
-    for (int i = 0; i < nDim; i++)
-        for (int j = 0; j < nSamples; j++) {
+
+    // Permute LHS samples in each dimension
+    for (int i = 0; i < nDim; ++i) {
+        for (int j = 0; j < nSamples; ++j) {
             int other = j + rng.uniformUInt32(nSamples - j);
-            swap(samples[nDim * j + i], samples[nDim * other + i]); // permute each dimension's samples independently
+            swap(samples[nDim * j + i], samples[nDim * other + i]);
         }
+    }
 }
 
 StratifiedSampler * StratifiedSampler::create(const ParamSet &params) {

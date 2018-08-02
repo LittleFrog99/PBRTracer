@@ -3,6 +3,7 @@
 #include "sampling.h"
 #include "stats.h"
 #include "bsdf.h"
+#include "primitive.h"
 
 STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);
 
@@ -154,4 +155,129 @@ Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const S
         L = f * compute_Li(rd, scene, sampler, arena, depth + 1) * absDot(wi, ns) / pdf;
     }
     return L;
+}
+
+Spectrum SamplerIntegrator::uniformSampleAllLights(const Interaction &it, const Scene &scene,
+                                                   MemoryArena &arena, Sampler &sampler,
+                                                   const vector<int> &nLightSamples, bool handleMedia)
+{
+    Spectrum L;
+    for (size_t j = 0; j < scene.lights.size(); j++) {
+        const auto &light = scene.lights[j];
+        const int nSamples = nLightSamples[j];
+        const Point2f *uLightArray = sampler.get2DArray(nSamples);
+        const Point2f *uScatteringArray = sampler.get2DArray(nSamples);
+        if (!(uLightArray && uScatteringArray)) { // requested arrays have all been consumed
+            // Use a single sample for illumination
+            Point2f uLight = sampler.get2D();
+            Point2f uScattering = sampler.get2D();
+            L += estimateDirect(it, uScattering, *light, uLight, scene, sampler, handleMedia);
+        } else {
+            // Estimate direct lighting using sample arrays
+            Spectrum Ld;
+            for (int k = 0; k < light->nSamples; k++)
+                Ld += estimateDirect(it, uScatteringArray[k], *light, uLightArray[k], scene, sampler,
+                                     handleMedia);
+            L += Ld / nSamples;
+        }
+    }
+    return L;
+}
+
+Spectrum SamplerIntegrator::uniformSampleOneLight(const Interaction &it, const Scene &scene,
+                                                  MemoryArena &arena, Sampler &sampler, bool handleMedia)
+{
+    int nLights = scene.lights.size();
+    if (nLights == 0) return 0;
+    int lightNum = min(int(sampler.get1D() * nLights), nLights - 1);
+    const auto &light = scene.lights[lightNum];
+    Point2f uLight = sampler.get2D();
+    Point2f uScattering = sampler.get2D();
+    return float(nLights) * estimateDirect(it, uScattering, *light, uLight, scene, sampler, handleMedia);
+}
+
+Spectrum SamplerIntegrator::estimateDirect(const Interaction &it, const Point2f &uScattering,
+                                           const Light &light, const Point2f &uLight, const Scene &scene,
+                                           Sampler &sampler, bool handleMedia, bool specular)
+{
+    BxDFType flags = BxDFType(specular ? BSDF_ALL : (BSDF_ALL & ~BSDF_SPECULAR));
+    Spectrum Ld;
+
+    // Sample light source
+    Vector3f wi;
+    float lightPdf = 0, scatteringPdf = 0;
+    VisibilityTester vis;
+    Spectrum Li = light.sample_Li(it, uLight, &wi, &lightPdf, &vis);
+
+    if (lightPdf > 0 && !Li.isBlack()) {
+        // Compute BSDF or phase function for light sample
+        Spectrum f;
+        if (it.isSurfaceInteraction()) {
+            const auto &isect = static_cast<const SurfaceInteraction &>(it);
+            f = isect.bsdf->compute_f(isect.wo, wi, flags) * absDot(wi, isect.shading.n);
+            scatteringPdf = isect.bsdf->pdf(isect.wo, wi, flags);
+         } // TODO: MediumInteraction to be implemented later
+        if (!f.isBlack()) {
+            // Compute effect of visibility
+            if (handleMedia)
+                Li *= vis.compute_Tr(scene, sampler);
+            else if (!vis.unoccluded(scene))
+                Li = 0;
+
+            // Add light's contribution to reflected radiance
+            if (!Li.isBlack()) {
+                if (light.isDeltaLight())
+                    Ld += f * Li / lightPdf; // can't use MIS in a delta distribution
+                else {
+                    float weight = Sampling::powerHeuristic(1, lightPdf, 1, scatteringPdf);
+                    Ld += f * Li * weight / lightPdf;
+                } // end light.isDeltaLight()
+            } // end !Li.isBlack()
+
+        } // end !f.isBlack()
+    } // end lightPdf > 0 && !Li.isBlack()
+
+    // Sample BSDF
+    if (!light.isDeltaLight()) {
+        Spectrum f;
+        bool sampledSpecular = false;
+        if (it.isSurfaceInteraction()) {
+            BxDFType sampledType;
+            const auto &isect = static_cast<const SurfaceInteraction &>(it);
+            f = isect.bsdf->sample_f(isect.wo, &wi, uScattering, &scatteringPdf, flags, &sampledType);
+            f *= absDot(isect.shading.n, wi);
+            sampledSpecular = sampledType & BSDF_SPECULAR;
+        } // TODO: MediumInteraction to be implemented later
+
+        // Account for light contributions along sampled direction
+        if (!f.isBlack() && scatteringPdf > 0) {
+            float weight = 1;
+            if (!sampledSpecular) {
+                lightPdf = light.pdf_Li(it, wi);
+                if (lightPdf == 0) return Ld;
+                weight = Sampling::powerHeuristic(1, scatteringPdf, 1, lightPdf);
+            }
+
+            // Find intersection and compute transmittance
+            SurfaceInteraction lightIsect;
+            Ray ray = it.spawnRay(wi);
+            Spectrum Tr(1.0f);
+            bool foundSI = handleMedia ? scene.intersectTr(ray, sampler, &lightIsect, &Tr)
+                                       : scene.intersect(ray, &lightIsect);
+
+            // Add light contribution from material sampling
+            Spectrum Li;
+            if (foundSI) {
+                if (lightIsect.primitive->getAreaLight() == &light)
+                    Li = lightIsect.compute_Le(wi);
+            }
+            else
+                Li = light.compute_Le(ray); // for infinite area light
+            if (!Li.isBlack())
+                Ld += f * Li * Tr * weight / scatteringPdf;
+
+        } // end !f.isBlack() && scatteringPdf > 0
+    } // end !light.isDeltaLight()
+
+    return Ld;
 }

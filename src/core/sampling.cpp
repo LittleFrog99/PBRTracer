@@ -1,93 +1,131 @@
 #include "sampling.h"
 #include "core/camera.h"
+#include "stats.h"
 
 using namespace Sampling;
 
+Sampler::Sampler(int64_t samplesPerPixel) : samplesPerPixel(samplesPerPixel) {}
+
 CameraSample Sampler::getCameraSample(const Point2i &pRaster) {
     CameraSample cs;
-    cs.pFilm = Point2f(pRaster) + get2D();
+    cs.pFilm = (Point2f)pRaster + get2D();
     cs.time = get1D();
     cs.pLens = get2D();
     return cs;
 }
 
 void Sampler::startPixel(const Point2i &p) {
-    curPixel = p;
-    curPixelSampleIndex = 0;
+    currentPixel = p;
+    currentPixelSampleIndex = 0;
     array1DOffset = array2DOffset = 0;
 }
 
 bool Sampler::startNextSample() {
     array1DOffset = array2DOffset = 0;
-    return ++curPixelSampleIndex < samplesPerPixel;
+    return ++currentPixelSampleIndex < samplesPerPixel;
 }
 
 bool Sampler::setSampleNumber(int64_t sampleNum) {
     array1DOffset = array2DOffset = 0;
-    curPixelSampleIndex = sampleNum;
-    return curPixelSampleIndex < samplesPerPixel;
+    currentPixelSampleIndex = sampleNum;
+    return currentPixelSampleIndex < samplesPerPixel;
+}
+
+void Sampler::request1DArray(int n) {
+    CHECK_EQ(roundCount(n), n);
+    samples1DArraySizes.push_back(n);
+    sampleArray1D.push_back(vector<float>(n * samplesPerPixel));
+}
+
+void Sampler::request2DArray(int n) {
+    CHECK_EQ(roundCount(n), n);
+    samples2DArraySizes.push_back(n);
+    sampleArray2D.push_back(std::vector<Point2f>(n * samplesPerPixel));
+}
+
+const float *Sampler::get1DArray(int n) {
+    if (array1DOffset == sampleArray1D.size()) return nullptr;
+    CHECK_EQ(samples1DArraySizes[array1DOffset], n);
+    CHECK_LT(currentPixelSampleIndex, samplesPerPixel);
+    return &sampleArray1D[array1DOffset++][currentPixelSampleIndex * n];
+}
+
+const Point2f *Sampler::get2DArray(int n) {
+    if (array2DOffset == sampleArray2D.size()) return nullptr;
+    CHECK_EQ(samples2DArraySizes[array2DOffset], n);
+    CHECK_LT(currentPixelSampleIndex, samplesPerPixel);
+    return &sampleArray2D[array2DOffset++][currentPixelSampleIndex * n];
 }
 
 PixelSampler::PixelSampler(int64_t samplesPerPixel, int nSampledDimensions)
     : Sampler(samplesPerPixel) {
-    for (int i = 0; i < nSampledDimensions; i++) {
+    for (int i = 0; i < nSampledDimensions; ++i) {
         samples1D.push_back(vector<float>(samplesPerPixel));
         samples2D.push_back(vector<Point2f>(samplesPerPixel));
     }
 }
 
 bool PixelSampler::startNextSample() {
-    cur1DDim = cur2DDim = 0;
+    current1DDimension = current2DDimension = 0;
     return Sampler::startNextSample();
 }
 
 bool PixelSampler::setSampleNumber(int64_t sampleNum) {
-    cur1DDim = cur2DDim = 0;
+    current1DDimension = current2DDimension = 0;
     return Sampler::setSampleNumber(sampleNum);
 }
 
 float PixelSampler::get1D() {
-    if (cur1DDim < samples1D.size())
-        return samples1D[cur1DDim][curPixelSampleIndex++];
+    ProfilePhase _(Stage::GetSample);
+    CHECK_LT(currentPixelSampleIndex, samplesPerPixel);
+    if (current1DDimension < samples1D.size())
+        return samples1D[current1DDimension++][currentPixelSampleIndex];
     else
         return rng.uniformFloat();
 }
 
 Point2f PixelSampler::get2D() {
-    if (cur2DDim < samples2D.size())
-        return samples2D[cur2DDim][curPixelSampleIndex++];
+    ProfilePhase _(Stage::GetSample);
+    CHECK_LT(currentPixelSampleIndex, samplesPerPixel);
+    if (current2DDimension < samples2D.size())
+        return samples2D[current2DDimension++][currentPixelSampleIndex];
     else
         return Point2f(rng.uniformFloat(), rng.uniformFloat());
 }
 
 void GlobalSampler::startPixel(const Point2i &p) {
+    ProfilePhase _(Stage::StartPixel);
     Sampler::startPixel(p);
     dimension = 0;
     intervalSampleIndex = getIndexForSample(0);
     arrayEndDim = arrayStartDim + sampleArray1D.size() + 2 * sampleArray2D.size();
 
-    for (size_t i = 0; i < samples1DArraySizes.size(); i++) {
+    // Compute 1D array samples for _GlobalSampler_
+    for (size_t i = 0; i < samples1DArraySizes.size(); ++i) {
         int nSamples = samples1DArraySizes[i] * samplesPerPixel;
-        for (int j = 0; j < nSamples; j++) {
+        for (int j = 0; j < nSamples; ++j) {
             int64_t index = getIndexForSample(j);
             sampleArray1D[i][j] = sampleDimension(index, arrayStartDim + i);
         }
     }
 
+    // Compute 2D array samples for _GlobalSampler_
     int dim = arrayStartDim + samples1DArraySizes.size();
-    for (size_t i = 0; i < samples2DArraySizes.size(); i++) {
+    for (size_t i = 0; i < samples2DArraySizes.size(); ++i) {
         int nSamples = samples2DArraySizes[i] * samplesPerPixel;
-        for (int j = 0; j < nSamples; j++) {
-            int64_t index = getIndexForSample(j);
-            sampleArray2D[i][j] = Point2f(sampleDimension(index, dim), sampleDimension(index, dim + 1));
-            dim += 2;
+        for (int j = 0; j < nSamples; ++j) {
+            int64_t idx = getIndexForSample(j);
+            sampleArray2D[i][j].x = sampleDimension(idx, dim);
+            sampleArray2D[i][j].y = sampleDimension(idx, dim + 1);
         }
+        dim += 2;
     }
+    CHECK_EQ(arrayEndDim, dim);
 }
 
 bool GlobalSampler::startNextSample() {
     dimension = 0;
-    intervalSampleIndex = getIndexForSample(curPixelSampleIndex + 1);
+    intervalSampleIndex = getIndexForSample(currentPixelSampleIndex + 1);
     return Sampler::startNextSample();
 }
 
@@ -98,20 +136,21 @@ bool GlobalSampler::setSampleNumber(int64_t sampleNum) {
 }
 
 float GlobalSampler::get1D() {
+    ProfilePhase _(Stage::GetSample);
     if (dimension >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;
     return sampleDimension(intervalSampleIndex, dimension++);
 }
 
 Point2f GlobalSampler::get2D() {
-    if (dimension >= arrayStartDim && dimension < arrayEndDim)
+    ProfilePhase _(Stage::GetSample);
+    if (dimension + 1 >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;
     Point2f p(sampleDimension(intervalSampleIndex, dimension),
               sampleDimension(intervalSampleIndex, dimension + 1));
     dimension += 2;
     return p;
 }
-
 Distribution1D::Distribution1D(const float *f, int n)
     : func(f, f + n), cdf(n + 1)
 {

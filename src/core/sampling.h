@@ -8,51 +8,34 @@ class CameraSample;
 
 class Sampler {
 public:
-    Sampler(int64_t samplesPerPixel) : samplesPerPixel(samplesPerPixel) {}
+    Sampler(int64_t samplesPerPixel);
     virtual ~Sampler() {}
-
-    virtual float get1D() = 0;
-    virtual Point2f get2D() = 0;
-    virtual unique_ptr<Sampler> clone(int seed) = 0;
 
     virtual void startPixel(const Point2i &p);
     virtual bool startNextSample();
     virtual bool setSampleNumber(int64_t sampleNum);
+    virtual float get1D() = 0;
+    virtual Point2f get2D() = 0;
     virtual int roundCount(int n) const { return n; }
+    virtual unique_ptr<Sampler> clone(int seed) = 0;
 
     CameraSample getCameraSample(const Point2i &pRaster);
-
-    void request1DArray(int n) {
-        samples1DArraySizes.push_back(n);
-        sampleArray1D.push_back(vector<float>(n * samplesPerPixel));
-    }
-
-    void request2DArray(int n) {
-        samples2DArraySizes.push_back(n);
-        sampleArray2D.push_back(vector<Point2f>(n * samplesPerPixel));
-    }
-
-    const float * get1DArray(int n) {
-        if (array1DOffset == sampleArray1D.size()) return nullptr;
-        return &sampleArray1D[array1DOffset++][curPixelSampleIndex * n];
-    }
-
-    const Point2f * get2DArray(int n) {
-        if (array2DOffset == sampleArray2D.size()) return nullptr;
-        return &sampleArray2D[array2DOffset++][curPixelSampleIndex * n];
-    }
+    void request1DArray(int n);
+    void request2DArray(int n);
+    const float * get1DArray(int n);
+    const Point2f * get2DArray(int n);
 
     string stateString() const {
-      return STRING_PRINTF("(%d,%d), sample %" PRId64, curPixel.x, curPixel.y, curPixelSampleIndex);
+      return STRING_PRINTF("(%d,%d), sample %" PRId64, currentPixel.x, currentPixel.y, currentPixelSampleIndex);
     }
 
-    int64_t currentSampleNumber() const { return curPixelSampleIndex; }
+    int64_t currentSampleNumber() const { return currentPixelSampleIndex; }
 
     const int64_t samplesPerPixel;
 
 protected:
-    Point2i curPixel;
-    int64_t curPixelSampleIndex;
+    Point2i currentPixel;
+    int64_t currentPixelSampleIndex;
     vector<int> samples1DArraySizes, samples2DArraySizes;
     vector<vector<float>> sampleArray1D;
     vector<vector<Point2f>> sampleArray2D;
@@ -64,6 +47,7 @@ private:
 class PixelSampler : public Sampler {
 public:
     PixelSampler(int64_t samplesPerPixel, int nSampledDimensions);
+
     bool startNextSample();
     bool setSampleNumber(int64_t);
     float get1D();
@@ -72,15 +56,16 @@ public:
 protected:
     vector<vector<float>> samples1D;
     vector<vector<Point2f>> samples2D;
-    int cur1DDim = 0, cur2DDim = 0;
+    int current1DDimension = 0, current2DDimension = 0;
     Random rng;
 };
 
 class GlobalSampler : public Sampler {
 public:
     GlobalSampler(int64_t samplesPerPixel) : Sampler(samplesPerPixel) {}
+
     bool startNextSample();
-    void startPixel(const Point2i &p);
+    void startPixel(const Point2i &);
     bool setSampleNumber(int64_t sampleNum);
     float get1D();
     Point2f get2D();

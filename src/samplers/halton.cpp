@@ -49,18 +49,18 @@ HaltonSampler::HaltonSampler(int samplePixels, const Bounds2i &sampleBounds)
 }
 
 int64_t HaltonSampler::getIndexForSample(int64_t sampleNum) const {
-    if (curPixel != pixelForOffset) {
+    if (currentPixel != pixelForOffset) {
         // Compute Halton sample offset for _currentPixel_
         offsetForCurrentPixel = 0;
         if (sampleStride > 1) {
-            Point2i pm(mod(curPixel[0], MAX_RESOLUTION), mod(curPixel[1], MAX_RESOLUTION));
+            Point2i pm(mod(currentPixel[0], MAX_RESOLUTION), mod(currentPixel[1], MAX_RESOLUTION));
             for (int i = 0; i < 2; ++i) {
                 uint64_t dimOffset = inverseRadicalInverse(pm[i], baseExponents[i], i);
                 offsetForCurrentPixel += dimOffset * (sampleStride / baseScales[i]) * multInv[i];
             }
             offsetForCurrentPixel %= sampleStride;
         }
-        pixelForOffset = curPixel;
+        pixelForOffset = currentPixel;
     }
     return offsetForCurrentPixel + sampleNum * sampleStride;
 }
@@ -71,8 +71,9 @@ float HaltonSampler::sampleDimension(int64_t index, int dim) const {
         sample = radicalInverse(dim, index >> baseExponents[0]);
     else if (dim == 1)
         sample = radicalInverse(dim, index / baseScales[1]);
-    else
+    else {
         sample = scrambledRadicalInverse(dim, index, permutationForDimension(dim));
+    }
     return sample;
 }
 

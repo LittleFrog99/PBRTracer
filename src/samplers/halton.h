@@ -16,7 +16,7 @@ public:
     int64_t getIndexForSample(int64_t sampleNum) const;
     float sampleDimension(int64_t index, int dim) const;
 
-    unique_ptr<Sampler> clone(int seed) {
+    unique_ptr<Sampler> clone(int) {
         return unique_ptr<Sampler>(new HaltonSampler(*this));
     }
 

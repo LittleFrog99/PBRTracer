@@ -16,7 +16,6 @@ public:
     }
 
     EFloat(const EFloat &ef) {
-        ef.check();
         v = ef.v;
         low = ef.low;
         high = ef.high;
@@ -41,7 +40,7 @@ public:
         // the value r.v in order to be conservative
         r.low = nextFloatDown(lowerBound() + ef.lowerBound());
         r.high = nextFloatUp(upperBound() + ef.upperBound());
-        r.check();
+        // r.check();
         return r;
     }
 
@@ -50,7 +49,7 @@ public:
         r.v = v - ef.v;
         r.low = nextFloatDown(lowerBound() - ef.upperBound());
         r.high = nextFloatUp(upperBound() - ef.lowerBound());
-        r.check();
+        // r.check();
         return r;
     }
 
@@ -64,7 +63,7 @@ public:
             min(min(prod[0], prod[1]), min(prod[2], prod[3])));
         r.high = nextFloatUp(
             max(max(prod[0], prod[1]), max(prod[2], prod[3])));
-        r.check();
+        // r.check();
         return r;
     }
 
@@ -83,7 +82,7 @@ public:
             r.low = nextFloatDown(min(min(div[0], div[1]), min(div[2], div[3])));
             r.high = nextFloatUp(max(max(div[0], div[1]), max(div[2], div[3])));
         }
-        r.check();
+        // r.check();
         return r;
     }
 
@@ -92,14 +91,14 @@ public:
         r.v = -v;
         r.low = -high;
         r.high = -low;
-        r.check();
+        // r.check();
         return r;
     }
 
     inline bool operator == (EFloat fe) const { return v == fe.v; }
 
     EFloat &operator = (const EFloat &ef) {
-        ef.check();
+        // ef.check();
         if (&ef != this) {
             v = ef.v;
             low = ef.low;
@@ -119,7 +118,7 @@ public:
         r.v = sqrt(fe.v);
         r.low = nextFloatDown(sqrt(fe.low));
         r.high = nextFloatUp(sqrt(fe.high));
-        r.check();
+        // r.check();
         return r;
     }
 
@@ -133,7 +132,7 @@ public:
             r.v = -fe.v;
             r.low = -fe.high;
             r.high = -fe.low;
-            r.check();
+            // r.check();
             return r;
         } else {
             // The interval straddles zero.
@@ -141,7 +140,7 @@ public:
             r.v = abs(fe.v);
             r.low = 0;
             r.high = max(-fe.low, fe.high);
-            r.check();
+            // r.check();
             return r;
         }
     }
