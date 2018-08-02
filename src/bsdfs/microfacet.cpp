@@ -159,17 +159,17 @@ Vector3f BeckmannDistribution::beckmannSample(const Vector3f &wi, const Point2f 
 float TrowbridgeReitzDistribution::D(const Vector3f &wh) const {
     float tanTheta2 = tan2Theta(wh);
     if (isinf(tanTheta2)) return 0.0f;
-    const float cos4Theta = SQ(cos2Theta(wh));
+    const float cos4Theta = cos2Theta(wh) * cos2Theta(wh);
     float e = tanTheta2 * (cos2Phi(wh) / SQ(alphaX) + sin2Phi(wh) / SQ(alphaY));
-    return 1.0f / (PI * alphaX * alphaY * cos4Theta * SQ(1 + e));
+    return 1.0f / (PI * alphaX * alphaY * cos4Theta * (1 + e) * (1 + e));
 }
 
 float TrowbridgeReitzDistribution::lambda(const Vector3f &w) const {
     float absTanTheta = abs(tanTheta(w));
     if (isinf(absTanTheta)) return 0.0;
     float alpha = sqrt(cos2Phi(w) * SQ(alphaX) + sin2Phi(w) * SQ(alphaY));
-    float alpha2Tan2Theta = (alpha * absTanTheta) * (alpha * absTanTheta);
-    return (-1 + sqrt(1.f + alpha2Tan2Theta)) / 2;
+    float a = 1.0f / (alpha * absTanTheta);
+    return (1 - 1.259f * a + 0.396f * a * a) / (3.535f * a + 2.181f * a * a);
 }
 
 Vector3f TrowbridgeReitzDistribution::sample_wh(const Vector3f &wo, const Point2f &u) const {
@@ -183,7 +183,7 @@ Vector3f TrowbridgeReitzDistribution::sample_wh(const Vector3f &wo, const Point2
             phi = atan(alphaY / alphaX * tan(2 * PI * u[1] + .5f * PI));
             if (u[1] > .5f) phi += PI;
             float sinPhi = sin(phi), cosPhi = cos(phi);
-            const float alpha2 = 1 / (SQ(cosPhi) / SQ(alphaX) + SQ(sinPhi) / SQ(alphaY));
+            const float alpha2 = 1.0f / (SQ(cosPhi / alphaX) + SQ(sinPhi / alphaY));
             float tanTheta2 = alpha2 * u[0] / (1 - u[0]);
             cosTheta = 1 / sqrt(1 + tanTheta2);
         }
@@ -204,13 +204,13 @@ void TrowbridgeReitzDistribution::trowbridgeReitzSample11(float cosTheta, Point2
     // Normal incidence
     if (cosTheta > .9999f) {
         float r = sqrt(u[0] / (1 - u[0]));
-        float phi = 6.28318530718f * u[1];
+        float phi = 2 * PI * u[1];
         *slope_x = r * cos(phi);
         *slope_y = r * sin(phi);
         return;
     }
 
-    float sinTheta = sqrt(max(0.0f, 1 - cosTheta * cosTheta));
+    float sinTheta = sqrt(max(0.0f, 1 - SQ(cosTheta)));
     float tanTheta = sinTheta / cosTheta;
     float a = 1 / tanTheta;
     float G1 = 2 / (1 + sqrt(1.f + 1.f / (a * a)));
@@ -220,8 +220,7 @@ void TrowbridgeReitzDistribution::trowbridgeReitzSample11(float cosTheta, Point2
     float tmp = 1.f / (A * A - 1.f);
     if (tmp > 1e10) tmp = 1e10f;
     float B = tanTheta;
-    float D = sqrt(
-        max(float(B * B * tmp * tmp - (A * A - B * B) * tmp), 0.0f));
+    float D = sqrt(max(float(B * B * tmp * tmp - (A * A - B * B) * tmp), 0.0f));
     float slope_x_1 = B * tmp - D;
     float slope_x_2 = B * tmp + D;
     *slope_x = (A < 0 || slope_x_2 > 1.f / tanTheta) ? slope_x_1 : slope_x_2;
@@ -272,13 +271,15 @@ Spectrum MicrofacetReflection::compute_f(const Vector3f &wo, const Vector3f &wi)
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.0f); // degenerate cases
     if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.0f);
     wh = normalize(wh);
-    Spectrum F = fresnel->evaluate(dot(wi, wh));
-    return R * distrib->D(wh) * distrib->G(wo, wi) * F / (4 * cosThetaI * cosThetaO);
+    Spectrum Fr = fresnel->evaluate(dot(wi, wh));
+    Spectrum f = R * distrib->D(wh) * distrib->G(wo, wi) * Fr / (4 * cosThetaI * cosThetaO);
+    return f;
 }
 
 Spectrum MicrofacetReflection::sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u, float *pdf,
                                         BxDFType *sampledType) const
 {
+    if (wo.z == 0) return 0;
     Vector3f wh = distrib->sample_wh(wo, u);
     *wi = reflect(wo, Normal3f(wh));
     if (!sameHemisphere(wo, *wi)) return 0.0f;

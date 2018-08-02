@@ -102,7 +102,7 @@ struct RenderOptions {
     Camera * makeCamera() const;
 
     float transformStartTime = 0, transformEndTime = 1;
-    string filterName = "box";
+    string filterName = "sinc";
     ParamSet filterParams;
     string filmName = "image";
     ParamSet filmParams;

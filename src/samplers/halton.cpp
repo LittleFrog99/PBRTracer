@@ -66,12 +66,14 @@ int64_t HaltonSampler::getIndexForSample(int64_t sampleNum) const {
 }
 
 float HaltonSampler::sampleDimension(int64_t index, int dim) const {
+    float sample;
     if (dim == 0) // discard first two dimensions of sample vector
-        return radicalInverse(dim, index >> baseExponents[0]);
+        sample = radicalInverse(dim, index >> baseExponents[0]);
     else if (dim == 1)
-        return radicalInverse(dim, index / baseScales[1]);
+        sample = radicalInverse(dim, index / baseScales[1]);
     else
-        return scrambledRadicalInverse(dim, index, permutationForDimension(dim));
+        sample = scrambledRadicalInverse(dim, index, permutationForDimension(dim));
+    return sample;
 }
 
 float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
@@ -90,7 +92,8 @@ float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
             invBaseN *= invBase;
             a = next;
         }
-        return min(reversedDigits * invBaseN, Random::ONE_MINUS_EPSILON);
+        float sample = min(reversedDigits * invBaseN, Random::ONE_MINUS_EPSILON);
+        return sample;
     } else
         LOG(FATAL) << STRING_PRINTF("Base %d is >= 1024, the limit of RadicalInverse", baseIndex);
     return 0;
@@ -125,10 +128,10 @@ vector<uint16_t> HaltonSampler::computeRadicalInversePermutations(Random &rng) {
 
 float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm) {
     if (baseIndex >= 0 && baseIndex < PRIME_TABLE_SIZE) {
-        int base = PRIMES[baseIndex];
+        unsigned base = PRIMES[baseIndex];
         const float invBase = invPrimes[baseIndex];
         uint64_t reversedDigits = 0;
-        float invBaseN = 0;
+        float invBaseN = 1;
         while (a) {
             uint64_t next = integerDivide(a, baseIndex);
             uint64_t digit = a - next * base;
@@ -136,8 +139,9 @@ float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const ui
             invBaseN *= invBase;
             a = next;
         }
-        return min(invBaseN * (reversedDigits + invBase * perm[0] / (1 - invBase)),
+        float sample = min(invBaseN * (reversedDigits + invBase * perm[0] / (1 - invBase)),
                 Random::ONE_MINUS_EPSILON);
+        return sample;
     } else
         LOG(FATAL) << STRING_PRINTF("Base %d is >= 1024, the limit of scrambledRadicalInverse", baseIndex);
 }
