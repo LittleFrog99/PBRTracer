@@ -38,6 +38,7 @@
 #include "lights/distant.h"
 #include "integrators/whitted.h"
 #include "integrators/directlighting.h"
+#include "integrators/path.h"
 
 namespace Renderer {
 
@@ -486,6 +487,8 @@ Integrator * RenderOptions::makeIntegrator() const {
         integrator = WhittedIntegrator::create(integratorParams, sampler, camera);
     else if (integratorName == "directlighting")
         integrator = DirectLightingIntegrator::create(integratorParams, sampler, camera);
+    else if (integratorName == "path")
+        integrator = PathIntegrator::create(integratorParams, sampler, camera);
     else {
         ERROR("Integrator \"%s\" unknown.", integratorName.c_str());
         return nullptr;
