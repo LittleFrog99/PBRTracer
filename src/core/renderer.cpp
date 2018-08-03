@@ -15,6 +15,7 @@
 #include "cameras/perspective.h"
 #include "samplers/stratified.h"
 #include "samplers/halton.h"
+#include "samplers/sobol.h"
 #include "core/filter.h"
 #include "core/film.h"
 #include "materials/matte.h"
@@ -126,6 +127,8 @@ shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, co
         sampler = HaltonSampler::create(paramSet, film->getSampleBounds());
     else if (name == "stratified")
         sampler = StratifiedSampler::create(paramSet);
+    else if (name == "sobol")
+        sampler = SobolSampler::create(paramSet, film->getSampleBounds());
     else
         WARNING("Sampler \"%s\" unknown.", name.c_str());
     paramSet.reportUnused();

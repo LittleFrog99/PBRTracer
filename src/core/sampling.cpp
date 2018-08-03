@@ -40,7 +40,7 @@ void Sampler::request1DArray(int n) {
 void Sampler::request2DArray(int n) {
     CHECK_EQ(roundCount(n), n);
     samples2DArraySizes.push_back(n);
-    sampleArray2D.push_back(std::vector<Point2f>(n * samplesPerPixel));
+    sampleArray2D.push_back(vector<Point2f>(n * samplesPerPixel));
 }
 
 const float *Sampler::get1DArray(int n) {

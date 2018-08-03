@@ -35,7 +35,7 @@ SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)
 
 SET(SOURCES_SAMPLERS
-    src/samplers/stratified.cpp src/samplers/halton.cpp)
+    src/samplers/stratified.cpp src/samplers/halton.cpp src/samplers/sobol.cpp)
 
 SET(SOURCES_BSDFS
     src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp)

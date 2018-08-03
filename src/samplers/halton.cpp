@@ -22,7 +22,7 @@ HaltonSampler::HaltonSampler(int samplePixels, const Bounds2i &sampleBounds)
     }
 
     // Generate random digit permutations for halton sampler
-    if (radicalInvPerms.size() == 0) {
+    if (radicalInvPerms.empty()) {
         Random rng;
         radicalInvPerms = computeRadicalInversePermutations(rng);
     }
@@ -53,7 +53,7 @@ int64_t HaltonSampler::getIndexForSample(int64_t sampleNum) const {
         // Compute Halton sample offset for _currentPixel_
         offsetForCurrentPixel = 0;
         if (sampleStride > 1) {
-            Point2i pm(mod(currentPixel[0], MAX_RESOLUTION), mod(currentPixel[1], MAX_RESOLUTION));
+            Point2i pm(Math::mod(currentPixel[0], MAX_RESOLUTION), Math::mod(currentPixel[1], MAX_RESOLUTION));
             for (int i = 0; i < 2; ++i) {
                 uint64_t dimOffset = inverseRadicalInverse(pm[i], baseExponents[i], i);
                 offsetForCurrentPixel += dimOffset * (sampleStride / baseScales[i]) * multInv[i];
@@ -102,7 +102,7 @@ float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
 
 uint64_t HaltonSampler::inverseRadicalInverse(uint64_t inverse, int nDigits, int baseIndex) {
     int base = PRIMES[baseIndex];
-    uint64_t index= 0;
+    uint64_t index = 0;
     for (int i = 0; i < nDigits; i++) {
         uint64_t digit = inverse % base;
         inverse = integerDivide(inverse, baseIndex);
@@ -129,7 +129,7 @@ vector<uint16_t> HaltonSampler::computeRadicalInversePermutations(Random &rng) {
 
 float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm) {
     if (baseIndex >= 0 && baseIndex < PRIME_TABLE_SIZE) {
-        unsigned base = PRIMES[baseIndex];
+        int base = PRIMES[baseIndex];
         const float invBase = invPrimes[baseIndex];
         uint64_t reversedDigits = 0;
         float invBaseN = 1;
@@ -161,8 +161,6 @@ void HaltonSampler::extendedGCD(uint64_t a, uint64_t b, int64_t *x, int64_t *y) 
 
 HaltonSampler * HaltonSampler::create(const ParamSet &params, const Bounds2i &sampleBounds) {
     int nsamp = params.findOneInt("pixelsamples", 16);
-    if (Renderer::options.quickRender) nsamp = 1;
-    bool sampleAtCenter = params.findOneBool("samplepixelcenter", false);
     return new HaltonSampler(nsamp, sampleBounds);
 }
 
