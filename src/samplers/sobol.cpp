@@ -13,14 +13,18 @@ int64_t SobolSampler::getIndexForSample(int64_t sampleNum) const {
 }
 
 float SobolSampler::sampleDimension(int64_t index, int dim) const {
-    if (dim >= NumSobolDimensions)
-        LOG(FATAL) << STRING_PRINTF("SobolSampler can only sample up to %d dimensions! Exiting.",
-                                   NumSobolDimensions);
+    if (dim >= NUM_DIMENSION) {
+        LOG(ERROR) << STRING_PRINTF("SobolSampler can only sample up to %d dimensions!",
+                                   NUM_DIMENSION);
+        Random rng(index);
+        return rng.uniformFloat();
+    }
+
     float s = sampleFloat(index, dim);
-    // Remap Sobol$'$ dimensions used for pixel samples
+    // Remap Sobol' dimensions used for pixel samples
     if (dim == 0 || dim == 1) {
         s = s * resolution + sampleBounds.pMin[dim];
-        s = clamp(s - currentPixel[dim], 0.0f, Random::ONE_MINUS_EPSILON);
+        s = clamp(s - currentPixel[dim], 0.0f, Random::OneMinusEpsilon);
     }
     return s;
 }
@@ -37,24 +41,24 @@ inline uint64_t SobolSampler::intervalToIndex(const uint32_t m, uint64_t frame, 
     uint64_t delta = 0;
     for (int c = 0; frame; frame >>= 1, ++c)
         if (frame & 1)  // Add flipped column m + c + 1.
-            delta ^= VdCSobolMatrices[m - 1][c];
+            delta ^= VdC_MATRICES[m - 1][c];
 
     // flipped b
     uint64_t b = (((uint64_t)((uint32_t)p.x) << m) | ((uint32_t)p.y)) ^ delta;
     for (int c = 0; b; b >>= 1, ++c)
         if (b & 1)  // Add column 2 * m - c.
-            index ^= VdCSobolMatricesInv[m - 1][c];
+            index ^= VdC_MATRICES_INV[m - 1][c];
 
     return index;
 }
 
 float SobolSampler::sampleFloat(int64_t a, int dimension, uint32_t scramble) {
-    CHECK_LT(dimension, NumSobolDimensions) << "Integrator has consumed too many Sobol' dimensions;";
+    CHECK_LT(dimension, NUM_DIMENSION) << "Integrator has consumed too many Sobol' dimensions;";
     uint32_t v = scramble;
-    for (int i = dimension * SobolMatrixSize; a != 0; a >>= 1, i++)
-        if (a & 1) v ^= SobolMatrices32[i];
+    for (int i = dimension * MATRIX_SIZE; a != 0; a >>= 1, i++)
+        if (a & 1) v ^= MATRICES_32[i];
 
-    return min(v * 0x1p-32f, Random::ONE_MINUS_EPSILON);
+    return min(v * 0x1p-32f, Random::OneMinusEpsilon);
 }
 
 SobolSampler * SobolSampler::create(const ParamSet &params, const Bounds2i &sampleBounds) {
@@ -63,7 +67,7 @@ SobolSampler * SobolSampler::create(const ParamSet &params, const Bounds2i &samp
     return new SobolSampler(nsamp, sampleBounds);
 }
 
-const uint32_t SobolSampler::SobolMatrices32[NumSobolDimensions * SobolMatrixSize] = {
+const uint32_t SobolSampler::MATRICES_32[NUM_DIMENSION * MATRIX_SIZE] = {
     0x80000000, 0x40000000, 0x20000000, 0x10000000, 0x08000000, 0x04000000,
     0x02000000, 0x01000000, 0x00800000, 0x00400000, 0x00200000, 0x00100000,
     0x00080000, 0x00040000, 0x00020000, 0x00010000, 0x00008000, 0x00004000,
@@ -8941,7 +8945,7 @@ const uint32_t SobolSampler::SobolMatrices32[NumSobolDimensions * SobolMatrixSiz
     0x6d8253b0, 0x59c0d35a, 0x34a32b93, 0x1397876e,
 };
 
-const uint64_t SobolSampler::VdCSobolMatrices[][SobolMatrixSize] = {
+const uint64_t SobolSampler::VdC_MATRICES[][MATRIX_SIZE] = {
     {// m = 1
      0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL,
      0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL, 0x1ULL,
@@ -9067,7 +9071,7 @@ const uint64_t SobolSampler::VdCSobolMatrices[][SobolMatrixSize] = {
     {// m = 25
      0x1400140ULL, 0x1e001e0ULL}};
 
-const uint64_t SobolSampler::VdCSobolMatricesInv[][SobolMatrixSize] = {
+const uint64_t SobolSampler::VdC_MATRICES_INV[][MATRIX_SIZE] = {
     {// m = 1
      0x2ULL, 0x3ULL},
     {// m = 2

@@ -21,6 +21,8 @@
 #include "materials/matte.h"
 #include "materials/plastic.h"
 #include "materials/mix.h"
+#include "materials/glass.h"
+#include "materials/metal.h"
 #include "textures/mix.h"
 #include "textures/imagemap.h"
 #include "textures/uv.h"
@@ -40,6 +42,7 @@
 #include "integrators/whitted.h"
 #include "integrators/directlighting.h"
 #include "integrators/path.h"
+#include "integrators/volpath.h"
 
 namespace Renderer {
 
@@ -77,6 +80,9 @@ vector<shared_ptr<Shape>> makeShapes(const string &name, const Transform *object
     else if (name == "trianglemesh")
         shapes = TriangleMesh::create(object2world, world2object, reverseOrientation, paramSet,
                                       &*graphicsState.floatTextures);
+    else if (name == "plymesh")
+        shapes = PLYMesh::create(object2world, world2object, reverseOrientation, paramSet,
+                                 &*graphicsState.floatTextures);
     else if (name == "loopsubdiv")
         shapes = Subdivision::create(object2world, world2object, reverseOrientation, paramSet);
     else
@@ -173,6 +179,10 @@ shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
         material = MatteMaterial::create(mp);
     else if (name == "plastic")
         material = PlasticMaterial::create(mp);
+    else if (name == "glass")
+        material = GlassMaterial::create(mp);
+    else if (name == "metal")
+        material = MetalMaterial::create(mp);
     else if (name == "mix") {
         string m1 = mp.findString("namedmaterial1", "");
         string m2 = mp.findString("namedmaterial2", "");
@@ -492,6 +502,8 @@ Integrator * RenderOptions::makeIntegrator() const {
         integrator = DirectLightingIntegrator::create(integratorParams, sampler, camera);
     else if (integratorName == "path")
         integrator = PathIntegrator::create(integratorParams, sampler, camera);
+    else if (integratorName == "volpath")
+        integrator = VolPathIntegrator::create(integratorParams, sampler, camera);
     else {
         ERROR("Integrator \"%s\" unknown.", integratorName.c_str());
         return nullptr;

@@ -16,7 +16,6 @@ Scene::Scene(shared_ptr<Primitive> aggregate, const vector<shared_ptr<Light>> &l
     }
 }
 
-
 bool Scene::intersect(const Ray &ray, SurfaceInteraction *isect) const {
     ++nIntersectionTests;
     DCHECK_NE(ray.d, Vector3f(0,0,0));

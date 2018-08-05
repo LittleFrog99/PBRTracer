@@ -147,21 +147,21 @@ public:
     template <int n>
     inline friend CoefficientSpectrum<n> sqrt(const CoefficientSpectrum<n> &s) {
         CoefficientSpectrum ret;
-        for (int i = 0; i < n; ++i) ret.channels[i] = sqrt(s.channels[i]);
+        for (int i = 0; i < n; ++i) ret.channels[i] = sqrtf(s.channels[i]);
         return ret;
     }
 
     template <int n>
     inline friend CoefficientSpectrum<n> pow(const CoefficientSpectrum<n> &s, float e) {
         CoefficientSpectrum ret;
-        for (int i = 0; i < n; ++i) ret.channels[i] = pow(s.channels[i], e);
+        for (int i = 0; i < n; ++i) ret.channels[i] = powf(s.channels[i], e);
         return ret;
     }
 
     template <int n>
     inline friend CoefficientSpectrum<n> exp(const CoefficientSpectrum<n> &s) {
         CoefficientSpectrum ret;
-        for (int i = 0; i < n; ++i) ret.channels[i] = exp(s.channels[i]);
+        for (int i = 0; i < n; ++i) ret.channels[i] = expf(s.channels[i]);
         return ret;
     }
 
@@ -223,7 +223,7 @@ public:
     float & operator [] (int i) { return channels[i]; }
     float operator [] (int i) const { return channels[i]; }
 
-    static constexpr int NUM_SAMPLES = nSpectrumSamples;
+    static constexpr int nSamples = nSpectrumSamples;
 
 protected:
     float channels[nSpectrumSamples];

@@ -42,7 +42,7 @@ void StratifiedSampler::sample1D(float *samples, int nSamples, Random &rng, bool
     float invNSamples = 1.0f / nSamples;
     for (int i = 0; i < nSamples; ++i) {
         float delta = jitter ? rng.uniformFloat() : 0.5f;
-        samples[i] = min((i + delta) * invNSamples, Random::ONE_MINUS_EPSILON);
+        samples[i] = min((i + delta) * invNSamples, Random::OneMinusEpsilon);
     }
 }
 
@@ -52,8 +52,8 @@ void StratifiedSampler::sample2D(Point2f *samples, int nx, int ny, Random &rng, 
         for (int x = 0; x < nx; ++x) {
             float jx = jitter ? rng.uniformFloat() : 0.5f;
             float jy = jitter ? rng.uniformFloat() : 0.5f;
-            samples->x = min((x + jx) * dx, Random::ONE_MINUS_EPSILON);
-            samples->y = min((y + jy) * dy, Random::ONE_MINUS_EPSILON);
+            samples->x = min((x + jx) * dx, Random::OneMinusEpsilon);
+            samples->y = min((y + jy) * dy, Random::OneMinusEpsilon);
             ++samples;
         }
 }
@@ -64,7 +64,7 @@ void StratifiedSampler::latinHypercube(float *samples, int nSamples, int nDim, R
     for (int i = 0; i < nSamples; ++i)
         for (int j = 0; j < nDim; ++j) {
             float sj = (i + (rng.uniformFloat())) * invNSamples;
-            samples[nDim * i + j] = min(sj, Random::ONE_MINUS_EPSILON);
+            samples[nDim * i + j] = min(sj, Random::OneMinusEpsilon);
         }
 
     // Permute LHS samples in each dimension
@@ -80,7 +80,7 @@ StratifiedSampler * StratifiedSampler::create(const ParamSet &params) {
     bool jitter = params.findOneBool("jitter", true);
     int xsamp = params.findOneInt("xsamples", 4);
     int ysamp = params.findOneInt("ysamples", 4);
-    int sd = params.findOneInt("dimensions", 4);
+    int sd = params.findOneInt("dimensions", 20);
     if (Renderer::options.quickRender) xsamp = ysamp = 1;
     return new StratifiedSampler(xsamp, ysamp, jitter, sd);
 }

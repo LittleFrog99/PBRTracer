@@ -13,7 +13,7 @@ SET(SOURCES_CORE
     src/core/shape.cpp src/core/primitive.cpp src/core/camera.cpp
     src/core/api.cpp src/core/sampling.cpp src/core/film.cpp
     src/core/bsdf.cpp src/core/scene.cpp src/core/material.cpp
-    src/core/texture.cpp src/core/light.cpp)
+    src/core/texture.cpp src/core/light.cpp src/core/medium.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
@@ -29,7 +29,8 @@ SET(SOURCES_ACCELERATORS
     src/accelerators/bvh.cpp src/accelerators/kdtree.cpp)
 
 SET(SOURCES_INTEGRATORS
-    src/integrators/whitted.cpp src/integrators/directlighting.cpp src/integrators/path.cpp)
+    src/integrators/whitted.cpp src/integrators/directlighting.cpp src/integrators/path.cpp
+    src/integrators/volpath.cpp)
 
 SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)
@@ -41,13 +42,14 @@ SET(SOURCES_BSDFS
     src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp)
 
 SET(SOURCES_MATERIALS
-    src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp)
+    src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp
+    src/materials/glass.cpp src/materials/metal.cpp)
 
 SET(SOURCES_TEXTURES
     src/textures/imagemap.cpp src/textures/checkerboard.cpp src/textures/dots.cpp)
 
 SET(SOURCES_MEDIA
-    src/media/grid.cpp)
+    src/media/grid.cpp src/media/homogeneous.cpp)
 
 SET(SOURCES_LIGHTS
     src/lights/point.cpp src/lights/spot.cpp src/lights/projection.cpp
@@ -55,7 +57,7 @@ SET(SOURCES_LIGHTS
     src/lights/infinite.cpp)
 
 SET(SOURCES_EXTENSIONS
-    src/ext/lodepng.cpp src/ext/targa.cpp)
+    src/ext/lodepng.cpp src/ext/targa.cpp src/ext/rply.cpp)
 
 SET(ALL_LIBS
     ${SOURCES_CORE} ${SOURCES_UTILITIES} ${SOURCES_SHAPES} ${SOURCES_ACCELERATORS}

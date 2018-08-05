@@ -93,7 +93,7 @@ float HaltonSampler::radicalInverse(int baseIndex, uint64_t a) {
             invBaseN *= invBase;
             a = next;
         }
-        float sample = min(reversedDigits * invBaseN, Random::ONE_MINUS_EPSILON);
+        float sample = min(reversedDigits * invBaseN, Random::OneMinusEpsilon);
         return sample;
     } else
         LOG(FATAL) << STRING_PRINTF("Base %d is >= 1024, the limit of RadicalInverse", baseIndex);
@@ -141,7 +141,7 @@ float HaltonSampler::scrambledRadicalInverse(int baseIndex, uint64_t a, const ui
             a = next;
         }
         float sample = min(invBaseN * (reversedDigits + invBase * perm[0] / (1 - invBase)),
-                Random::ONE_MINUS_EPSILON);
+                Random::OneMinusEpsilon);
         return sample;
     } else
         LOG(FATAL) << STRING_PRINTF("Base %d is >= 1024, the limit of scrambledRadicalInverse", baseIndex);

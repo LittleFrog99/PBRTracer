@@ -216,7 +216,12 @@ Spectrum SamplerIntegrator::estimateDirect(const Interaction &it, const Point2f 
             const auto &isect = static_cast<const SurfaceInteraction &>(it);
             f = isect.bsdf->compute_f(isect.wo, wi, flags) * absDot(wi, isect.shading.n);
             scatteringPdf = isect.bsdf->pdf(isect.wo, wi, flags);
-         } // TODO: MediumInteraction to be implemented later
+        } else {
+            const auto &mi = static_cast<const MediumInteraction &>(it);
+            float p = mi.phase->compute_p(mi.wo, wi);
+            f = Spectrum(p);
+            scatteringPdf = p;
+        }
         if (!f.isBlack()) {
             // Compute effect of visibility
             if (handleMedia)
@@ -247,7 +252,12 @@ Spectrum SamplerIntegrator::estimateDirect(const Interaction &it, const Point2f 
             f = isect.bsdf->sample_f(isect.wo, &wi, uScattering, &scatteringPdf, flags, &sampledType);
             f *= absDot(isect.shading.n, wi);
             sampledSpecular = sampledType & BSDF_SPECULAR;
-        } // TODO: MediumInteraction to be implemented later
+        } else {
+            const auto &mi = static_cast<const MediumInteraction &>(it);
+            float p = mi.phase->sample_p(mi.wo, &wi, uScattering);
+            f = Spectrum(p);
+            scatteringPdf = p;
+        }
 
         // Account for light contributions along sampled direction
         if (!f.isBlack() && scatteringPdf > 0) {

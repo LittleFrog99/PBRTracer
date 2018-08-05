@@ -38,7 +38,7 @@ public:
     }
 
     float evaluate(const Point2f &p) const {
-        return min(0.0f, radius.x - abs(p.x)) * min(0.0f, radius.y - abs(p.y));
+        return max(0.0f, radius.x - abs(p.x)) * max(0.0f, radius.y - abs(p.y));
     }
 };
 

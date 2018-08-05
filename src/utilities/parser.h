@@ -68,7 +68,7 @@ private:
 
     static string_view dequoteString(string_view str);
     static bool isQuotedString(string_view str) {
-        return str.size() >= 3 && str[0] == '"' && str.back() == '"';
+        return str.size() >= 2 && str[0] == '"' && str.back() == '"';
     }
 
 };

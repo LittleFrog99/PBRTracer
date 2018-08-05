@@ -36,3 +36,12 @@ Chapter 9 Materials
 9.1 (B) Avoid evaluating the same texture twice
 9.2 (B) Disney Material
 
+TO BE FIXED
+HaltonSampler
+
+HISTORY BUGS
+Shape::sample()
+BVH
+Sphere::intersect()
+File::dequoteString()
+

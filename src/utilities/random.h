@@ -5,7 +5,7 @@
 
 class Random { // implements PCG pseudo-number generator
 public:
-    static constexpr float ONE_MINUS_EPSILON = 0x1.fffffep-1;
+    static constexpr float OneMinusEpsilon = 0x1.fffffep-1;
 
     Random() : state(PCG32_DEFAULT_STATE), inc(PCG32_DEFAULT_STREAM) {}
     Random(uint32_t sequence) { setSequence(sequence); }
@@ -16,7 +16,7 @@ public:
     void advance(int64_t idelta);
 
     float uniformFloat() {
-        return min(ONE_MINUS_EPSILON, float(uniformUInt32() * 0x1p-32f));
+        return min(OneMinusEpsilon, float(uniformUInt32() * 0x1p-32f));
     }
 
     template <class Iterator>

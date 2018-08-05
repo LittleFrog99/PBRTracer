@@ -9,7 +9,7 @@ class Ray {
 public:
     Ray() : tMax(INFINITY), time(0.f), medium(nullptr) {}
 
-    Ray(const Point3f &o, const Vector3f &d, float tMax = INFINITY,
+    Ray(const Point3f &o, const Vector3f &d, float tMax = FLOAT_INFINITY,
         float time = 0.f, const Medium *medium = nullptr)
         : o(o), d(d), tMax(tMax), time(time), medium(medium) {}
 

@@ -49,7 +49,7 @@ private:
     static ImageTexture<Tmem, Tret> * create(const Transform &tex2world, const TextureParams &tp);
 
     static void convertIn(const RGBSpectrum &from, RGBSpectrum *to, float scale, bool gamma) {
-        for (int i = 0; i < RGBSpectrum::NUM_SAMPLES; i++)
+        for (int i = 0; i < RGBSpectrum::nSamples; i++)
             (*to)[i] = scale * (gamma ? ImageIO::inverseGammaCorrect(from[i]) : from[i]);
     }
 

@@ -20,12 +20,11 @@ private:
     const Bounds2i &sampleBounds;
     int resolution, log2Res;
 
-    static constexpr int NumSobolDimensions = 1024;
-    static constexpr int SobolMatrixSize = 52;
-    static const uint32_t SobolMatrices32[NumSobolDimensions * SobolMatrixSize];
-    static const uint64_t SobolMatrices64[NumSobolDimensions * SobolMatrixSize];
-    static const uint64_t VdCSobolMatrices[][SobolMatrixSize];
-    static const uint64_t VdCSobolMatricesInv[][SobolMatrixSize];
+    static constexpr int NUM_DIMENSION = 1024;
+    static constexpr int MATRIX_SIZE = 52;
+    static const uint32_t MATRICES_32[NUM_DIMENSION * MATRIX_SIZE];
+    static const uint64_t VdC_MATRICES[][MATRIX_SIZE];
+    static const uint64_t VdC_MATRICES_INV[][MATRIX_SIZE];
 };
 
 #endif // SAMPLER_SOBOL

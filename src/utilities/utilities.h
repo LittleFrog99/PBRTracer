@@ -58,6 +58,8 @@ static constexpr float PI_OVER_FOUR = 0.78539816339744830961;
 static constexpr float SQRT_TWO = 1.41421356237309504880;
 static constexpr float MACHINE_EPSILON = numeric_limits<float>::epsilon() * 0.5f;
 static constexpr float SHADOW_EPSILON = 0.0001f;
+static constexpr float MAX_FLOAT = numeric_limits<float>::max();
+static constexpr float FLOAT_INFINITY = numeric_limits<float>::infinity();
 
 /* Utility Inline Funtions */
 template <class T, class U, class V>

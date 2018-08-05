@@ -23,9 +23,7 @@ public:
     virtual Interaction sample(const Point2f &u, float *pdf) const = 0;
     virtual float pdf(const Interaction &) const { return 1 / area(); }
 
-    virtual Interaction sample(const Interaction &ref, const Point2f &u, float *pdf) const {
-        return sample(u, pdf);
-    }
+    virtual Interaction sample(const Interaction &ref, const Point2f &u, float *pdf) const;
     virtual float pdf(const Interaction &ref, const Vector3f &wi) const;
 
     // virtual float solidAngle(const Point3f &p, int nSamples = 512) const;

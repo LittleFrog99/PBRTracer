@@ -1,6 +1,7 @@
 #include "grid.h"
 #include "log.h"
 #include "core/sampling.h"
+#include "core/interaction.h"
 
 GridDensityMedium::GridDensityMedium(const Spectrum &sigma_a, const Spectrum &sigma_s, float g,
                                      int nx, int ny, int nz, const Transform &mediumToWorld, const float *d)
@@ -8,6 +9,7 @@ GridDensityMedium::GridDensityMedium(const Spectrum &sigma_a, const Spectrum &si
       density(new float[nx * ny * nz])
 {
     memcpy(density.get(), d, sizeof(float) * nx * ny * nz);
+
     // Precompute values for Monte Carlo sampling of _GridDensityMedium_
     sigma_t = (sigma_a + sigma_s)[0];
     if (Spectrum(sigma_t) != sigma_a + sigma_s)
@@ -20,7 +22,7 @@ GridDensityMedium::GridDensityMedium(const Spectrum &sigma_a, const Spectrum &si
 
 Spectrum GridDensityMedium::compute_Tr(const Ray &rWorld, Sampler &sampler) const {
     Ray ray = worldToMedium(Ray(rWorld.o, normalize(rWorld.d), rWorld.tMax * rWorld.d.length()));
-    // Compute $[\tmin, \tmax]$ interval of _ray_'s overlap with medium bounds
+    // Compute [tMin, tMax] interval of ray's overlap with medium bounds
     const Bounds3f b(Point3f(0, 0, 0), Point3f(1, 1, 1));
     float tMin, tMax;
     if (!b.intersectP(ray, &tMin, &tMax)) return Spectrum(1.f);
@@ -32,8 +34,7 @@ Spectrum GridDensityMedium::compute_Tr(const Ray &rWorld, Sampler &sampler) cons
         if (t >= tMax) break;
         float density = estimateDensity(ray(t));
         Tr *= 1 - max(0.0f, density * invMaxDensity);
-        // Added after book publication: when transmittance gets low,
-        // start applying Russian roulette to terminate sampling.
+        // Apply Russian roulette to terminate sampling.
         constexpr float rrThreshold = 0.1f;
         if (Tr < rrThreshold) {
             float q = max(0.05f, 1 - Tr);
@@ -41,7 +42,30 @@ Spectrum GridDensityMedium::compute_Tr(const Ray &rWorld, Sampler &sampler) cons
             Tr /= 1 - q;
         }
     }
-    return Spectrum(Tr);
+    return Tr;
+}
+
+Spectrum GridDensityMedium::sample(const Ray &rWorld, Sampler &sampler, MemoryArena &arena,
+                                   MediumInteraction *mi) const
+{
+    Ray ray = worldToMedium(Ray(rWorld.o, normalize(rWorld.d), rWorld.tMax * rWorld.d.length()));
+    // Compute [tMin, tMax] interval of ray's overlap with medium bounds
+    const Bounds3f b(Point3f(0, 0, 0), Point3f(1, 1, 1));
+    float tMin, tMax;
+    if (!b.intersectP(ray, &tMin, &tMax)) return Spectrum(1.f);
+
+    // Run delta tracking iterations to sample a medium interaction
+    float t = tMin;
+    while (true) {
+        t -= log(1 - sampler.get1D()) * invMaxDensity / sigma_t;
+        if (t >= tMax) break; // criteria 1: left media without an iteraction
+        if (sampler.get1D() < estimateDensity(ray(t)) * invMaxDensity) {
+            PhaseFunction *phase = ARENA_ALLOC(arena, HenyeyGreenstein)(g);
+            *mi = MediumInteraction(rWorld(t), -rWorld.d, rWorld.time, this, phase);
+            return sigma_s / sigma_t; // sampling medium
+        }
+    }
+    return 1.0f; // sampling surface
 }
 
 float GridDensityMedium::estimateDensity(const Point3f &p) const {

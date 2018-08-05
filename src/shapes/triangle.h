@@ -148,4 +148,12 @@ private:
 
 };
 
+class PLYMesh {
+public:
+    typedef map<string, shared_ptr<Texture<float>>> FloatTextureMap;
+
+    static vector<shared_ptr<Shape>> create(const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+                                            const ParamSet &params, FloatTextureMap *floatTextures = nullptr);
+};
+
 #endif // SHAPE_TRIANGLE

@@ -12,6 +12,8 @@ public:
         return exp(-sigma_t * min(ray.tMax * ray.d.length(), numeric_limits<float>::max()));
     }
 
+    Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena, MediumInteraction *mi) const;
+
 private:
     const Spectrum sigma_a, sigma_s, sigma_t;
     const float g;

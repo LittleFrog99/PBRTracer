@@ -13,7 +13,7 @@ class PhaseFunction {
 public:
     virtual ~PhaseFunction() {}
     virtual float compute_p(const Vector3f &wo, const Vector3f &wi) const = 0;
-    // virtual float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
+    virtual float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const = 0;
     virtual string toString() const = 0;
 };
 
@@ -25,7 +25,7 @@ public:
         return phaseHG(dot(wo, wi), g);
     }
 
-    // float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &sample) const;
+    float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const;
 
     string toString() const {
         return STRING_PRINTF("[ HenyeyGreenstein g: %f ]", g);
@@ -33,7 +33,7 @@ public:
 
     inline static float phaseHG(float cosTheta, float g) {
         float denom = 1 + g * g + 2 * g * cosTheta;
-        return INV_PI * (1 - g * g) / (denom * sqrt(denom));
+        return INV_FOUR_PI * (1 - g * g) / (denom * sqrt(denom));
     }
 
 private:
@@ -44,8 +44,8 @@ class Medium {
 public:
     virtual ~Medium() {}
     virtual Spectrum compute_Tr(const Ray &ray, Sampler &sampler) const = 0;
-    /* virtual Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
-                            MediumInteraction *mi) const = 0; */
+    virtual Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
+                            MediumInteraction *mi) const = 0;
 };
 
 struct MediumInterface {
