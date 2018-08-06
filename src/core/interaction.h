@@ -9,6 +9,7 @@
 class Shape;
 class BSDF;
 class Primitive;
+class BSSRDF;
 
 struct Interaction {
     Interaction() : time(0) {}
@@ -99,7 +100,7 @@ struct SurfaceInteraction : public Interaction {
     } shading;
     const Primitive *primitive = nullptr;
     BSDF *bsdf = nullptr;
-    // BSSRDF *bssrdf = nullptr; to be added later
+    BSSRDF *bssrdf = nullptr;
     mutable Vector3f dpdx, dpdy;
     mutable float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
 

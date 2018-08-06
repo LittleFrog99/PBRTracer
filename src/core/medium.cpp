@@ -1,6 +1,8 @@
 #include "medium.h"
+#include "stats.h"
 
 float HenyeyGreenstein::sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const {
+    ProfilePhase _(Stage::PhaseFuncSampling);
     // Compute cosθ for Henyey-Greenstein sample
     float cosTheta;
     if (abs(g) < 1e-3f)
@@ -17,5 +19,5 @@ float HenyeyGreenstein::sample_p(const Vector3f &wo, Vector3f *wi, const Point2f
     coordinateSystem(wo, &v1, &v2);
     *wi = sphericalDirection(sinTheta, cosTheta, phi, v1, v2, -wo);
 
-    return phaseHG(cosTheta, g);
+    return phaseHG(-cosTheta, g);
 }

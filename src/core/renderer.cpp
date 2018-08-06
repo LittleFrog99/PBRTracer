@@ -23,6 +23,7 @@
 #include "materials/mix.h"
 #include "materials/glass.h"
 #include "materials/metal.h"
+#include "materials/subsurface.h"
 #include "textures/mix.h"
 #include "textures/imagemap.h"
 #include "textures/uv.h"
@@ -183,6 +184,10 @@ shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
         material = GlassMaterial::create(mp);
     else if (name == "metal")
         material = MetalMaterial::create(mp);
+    else if (name == "subsurface")
+        material = SubsurfaceMaterial::create(mp);
+    else if (name == "kdsubsurface")
+        material = KdSubsurfaceMaterial::create(mp);
     else if (name == "mix") {
         string m1 = mp.findString("namedmaterial1", "");
         string m2 = mp.findString("namedmaterial2", "");

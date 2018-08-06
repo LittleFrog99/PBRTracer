@@ -1,14 +1,16 @@
 #include "homogeneous.h"
 #include "core/sampling.h"
 #include "core/interaction.h"
+#include "stats.h"
 
 Spectrum HomogeneousMedium::sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
                                    MediumInteraction *mi) const
 {
+    ProfilePhase _(Stage::MediumSample);
     // Sample a channel and distance along the ray
     int channel = min(int(sampler.get1D() * Spectrum::nSamples), Spectrum::nSamples - 1);
-    float dist = -log(1 - sampler.get1D()) / sigma_t[channel];
-    float t = min(ray.d.length() * dist, ray.tMax);
+    float dist = -logf(1 - sampler.get1D()) / sigma_t[channel];
+    float t = min(dist / ray.d.length(), ray.tMax);
     bool sampledMedium = t < ray.tMax;
     if (sampledMedium)
         *mi = MediumInteraction(ray(t), -ray.d, ray.time, this, ARENA_ALLOC(arena, HenyeyGreenstein)(g));

@@ -13,13 +13,15 @@ SET(SOURCES_CORE
     src/core/shape.cpp src/core/primitive.cpp src/core/camera.cpp
     src/core/api.cpp src/core/sampling.cpp src/core/film.cpp
     src/core/bsdf.cpp src/core/scene.cpp src/core/material.cpp
-    src/core/texture.cpp src/core/light.cpp src/core/medium.cpp)
+    src/core/texture.cpp src/core/light.cpp src/core/medium.cpp
+    src/core/bssrdf.cpp)
 
 SET(SOURCES_UTILITIES
     src/utilities/random.cpp src/utilities/quaternion.cpp src/utilities/log.cpp
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
     src/utilities/imageio.cpp src/utilities/parallel.cpp src/utilities/stats.cpp
-    src/utilities/paramset.cpp src/utilities/parser.cpp src/utilities/mipmap.cpp)
+    src/utilities/paramset.cpp src/utilities/parser.cpp src/utilities/mipmap.cpp
+    src/utilities/interpolation.cpp)
 
 SET(SOURCES_SHAPES
     src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp
@@ -39,11 +41,11 @@ SET(SOURCES_SAMPLERS
     src/samplers/stratified.cpp src/samplers/halton.cpp src/samplers/sobol.cpp)
 
 SET(SOURCES_BSDFS
-    src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp)
+    src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp src/bsdfs/diffusion.cpp)
 
 SET(SOURCES_MATERIALS
     src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp
-    src/materials/glass.cpp src/materials/metal.cpp)
+    src/materials/glass.cpp src/materials/metal.cpp src/materials/subsurface.cpp)
 
 SET(SOURCES_TEXTURES
     src/textures/imagemap.cpp src/textures/checkerboard.cpp src/textures/dots.cpp)

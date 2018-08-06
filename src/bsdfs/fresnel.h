@@ -11,6 +11,8 @@ public:
     static float dielectric_Fr(float cosThetaI, float etaI, float etaT);
     static Spectrum conductor_Fr(float cosThetaI, const Spectrum &etaI, const Spectrum &etaT,
                                  const Spectrum &k);
+    static float moment1(float eta);
+    static float moment2(float eta);
 };
 
 class FresnelConductor : public Fresnel {

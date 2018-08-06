@@ -187,9 +187,10 @@ Spectrum SamplerIntegrator::uniformSampleAllLights(const Interaction &it, const 
 Spectrum SamplerIntegrator::uniformSampleOneLight(const Interaction &it, const Scene &scene,
                                                   MemoryArena &arena, Sampler &sampler, bool handleMedia)
 {
-    int nLights = scene.lights.size();
+    ProfilePhase _(Stage::DirectLighting);
+    size_t nLights = scene.lights.size();
     if (nLights == 0) return 0;
-    int lightNum = min(int(sampler.get1D() * nLights), nLights - 1);
+    size_t lightNum = min(size_t(sampler.get1D() * nLights), nLights - 1);
     const auto &light = scene.lights[lightNum];
     Point2f uLight = sampler.get2D();
     Point2f uScattering = sampler.get2D();

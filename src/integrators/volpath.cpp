@@ -1,13 +1,17 @@
 #include "volpath.h"
 #include "core/bsdf.h"
+#include "stats.h"
 
 Spectrum VolPathIntegrator::compute_Li(const RayDifferential &r, const Scene &scene, Sampler &sampler,
                                        MemoryArena &arena, int depth) const
 {
+    ProfilePhase p(Stage::SamplerIntegratorLi);
     Spectrum L;
     Spectrum beta(1.0f); // path throughput weight
     RayDifferential ray(r);
+    float etaScale = 1;
     bool specularBounce = false;
+
     for (int bounce = 0; ; bounce++) {
         // Intersect ray with scene and store in isect
         SurfaceInteraction isect;
@@ -22,10 +26,12 @@ Spectrum VolPathIntegrator::compute_Li(const RayDifferential &r, const Scene &sc
 
         // Handle an interaction with a medium or a surface
         if (mi.isValid()) {
+            if (bounce > maxDepth) break;
             L += beta * uniformSampleOneLight(mi, scene, arena, sampler, true);
             Vector3f wo = -ray.d, wi;
             mi.phase->sample_p(wo, &wi, sampler.get2D());
             ray = mi.spawnRay(wi);
+            specularBounce = false;
         } else {
             // Add light emission at intersection
             if (bounce == 0 || specularBounce) {
@@ -48,7 +54,7 @@ Spectrum VolPathIntegrator::compute_Li(const RayDifferential &r, const Scene &sc
             }
 
             // Sample illumination from lights to find path contribution
-            L += beta * uniformSampleOneLight(isect, scene, arena, sampler);
+            L += beta * uniformSampleOneLight(isect, scene, arena, sampler, true);
 
             // Sample BSDF to get new path direction
             Vector3f wo = -ray.d, wi;
@@ -58,21 +64,25 @@ Spectrum VolPathIntegrator::compute_Li(const RayDifferential &r, const Scene &sc
             if (f.isBlack() || pdf == 0) break;
             beta *= f * absDot(wi, isect.shading.n) / pdf;
             specularBounce = (flags & BSDF_SPECULAR) != 0;
+            if ((flags & BSDF_SPECULAR) && (flags & BSDF_TRANSMISSION)) {
+                float eta = isect.bsdf->eta;
+                etaScale *= dot(wo, isect.n) > 0 ? SQ(eta) : 1 / SQ(eta);
+            }
             ray = isect.spawnRay(wi);
 
             // TODO:: Account for BSSRDF
         }
 
         // Possibly terminate the path with Russian roulette
-        if (bounce > 3) {
-            float q = max(0.05f, 1 - beta.luminance());
+        Spectrum rrBeta = beta * etaScale;
+        if (bounce > 3 && rrBeta.maxComp() < 0.05f) {
+            float q = max(0.05f, 1 - rrBeta.maxComp());
             if (sampler.get1D() < q) break;
             beta /= 1 - q;
         }
     }
     return L;
 }
-
 
 VolPathIntegrator *VolPathIntegrator::create(const ParamSet &params, shared_ptr<Sampler> sampler,
                                              shared_ptr<const Camera> camera)
