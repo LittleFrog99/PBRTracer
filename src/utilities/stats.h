@@ -282,8 +282,7 @@ namespace Stats {                                                  \
     static thread_local double var##min = (STATS_DBL_T_MIN);            \
     static thread_local double var##max = (STATS_DBL_T_MAX);            \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                   \
-        accum.reportFloatDistrib(title, var##sum, var##count, var##min, \
-                                      var##max);                             \
+        accum.reportFloatDistrib(title, var##sum, var##count, var##min, var##max); \
         var##sum = 0;                                                        \
         var##count = 0;                                                      \
         var##min = numeric_limits<double>::max();                       \

@@ -46,7 +46,6 @@ public:
 
     Interaction sample(const Point2f &u, float *) const {
         LOG(FATAL) << "Curve::sample() not implemented.";
-        return Interaction();
     }
 
 private:

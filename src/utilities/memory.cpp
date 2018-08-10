@@ -16,8 +16,7 @@ void * MemoryArena::alloc(size_t nBytes) {
         // Get new block of memory for _MemoryArena_
 
         // Try to get memory block from _availableBlocks_
-        for (auto iter = availableBlocks.begin();
-             iter != availableBlocks.end(); ++iter) {
+        for (auto iter = availableBlocks.begin(); iter != availableBlocks.end(); ++iter) {
             if (iter->first >= nBytes) {
                 currentAllocSize = iter->first;
                 currentBlock = iter->second;
