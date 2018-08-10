@@ -2,6 +2,7 @@
 #include "bsdfs/microfacet.h"
 #include "core/texture.h"
 #include "paramset.h"
+#include "interpolation.h"
 
 SubsurfaceMaterial::SubsurfaceMaterial(float scale, const shared_ptr<Texture<Spectrum>> &Kr,
                                        const shared_ptr<Texture<Spectrum>> &Kt,
@@ -15,7 +16,9 @@ SubsurfaceMaterial::SubsurfaceMaterial(float scale, const shared_ptr<Texture<Spe
     : scale(scale), Kr(Kr), Kt(Kt), sigma_a(sigma_a), sigma_s(sigma_s),
       uRoughness(uRoughness), vRoughness(vRoughness), bumpMap(bumpMap), eta(eta), remapRoughness(remapRoughness),
       table(100, 64)
-{}
+{
+    BeamDiffusionSSS::fillTable(g, eta, &table);
+}
 
 void SubsurfaceMaterial::computeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                                     TransportMode mode, bool allowMultipleLobes) const
@@ -43,8 +46,7 @@ void SubsurfaceMaterial::computeScatteringFunctions(SurfaceInteraction *si, Memo
             vrough = TrowbridgeReitzDistribution::roughnessToAlpha(vrough);
         }
         MicrofacetDistribution *distrib =
-            isSpecular ? nullptr
-                       : ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(urough, vrough);
+            isSpecular ? nullptr : ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(urough, vrough);
         if (!R.isBlack()) {
             Fresnel *fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, eta);
             if (isSpecular)
@@ -59,10 +61,9 @@ void SubsurfaceMaterial::computeScatteringFunctions(SurfaceInteraction *si, Memo
                 si->bsdf->add(ARENA_ALLOC(arena, MicrofacetTransmission)(T, distrib, 1.f, eta, mode));
         }
     }
-
     Spectrum sig_a = scale * sigma_a->evaluate(*si).clamp();
     Spectrum sig_s = scale * sigma_s->evaluate(*si).clamp();
-    si->bssrdf = ARENA_ALLOC(arena, DiffusionSSS)(*si, this, mode, eta, sig_a, sig_s, table);
+    si->bssrdf = ARENA_ALLOC(arena, BeamDiffusionSSS)(*si, this, mode, eta, sig_a, sig_s, table);
 }
 
 SubsurfaceMaterial * SubsurfaceMaterial::create(const TextureParams &mp) {
@@ -104,7 +105,9 @@ KdSubsurfaceMaterial::KdSubsurfaceMaterial(float scale, const shared_ptr<Texture
     : scale(scale), Kd(Kd), Kr(Kr), Kt(Kt), mfp(mfp),
       uRoughness(uRoughness), vRoughness(vRoughness), bumpMap(bumpMap), eta(eta), remapRoughness(remapRoughness),
       table(100, 64)
-{}
+{
+    BeamDiffusionSSS::fillTable(g, eta, &table);
+}
 
 void KdSubsurfaceMaterial::computeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                                       TransportMode mode, bool allowMultipleLobes) const
@@ -150,8 +153,19 @@ void KdSubsurfaceMaterial::computeScatteringFunctions(SurfaceInteraction *si, Me
     Spectrum mfree = scale * mfp->evaluate(*si).clamp();
     Spectrum kd = Kd->evaluate(*si).clamp();
     Spectrum sig_a, sig_s;
-    // SubsurfaceFromDiffuse(table, kd, mfree, &sig_a, &sig_s); to be added later
-    si->bssrdf = ARENA_ALLOC(arena, DiffusionSSS)(*si, this, mode, eta, sig_a, sig_s, table);
+    fromDiffuse(kd, mfree, &sig_a, &sig_s);
+    si->bssrdf = ARENA_ALLOC(arena, BeamDiffusionSSS)(*si, this, mode, eta, sig_a, sig_s, table);
+}
+
+void KdSubsurfaceMaterial::fromDiffuse(const Spectrum &rhoEff, const Spectrum &mfp, Spectrum *sigma_a,
+                                       Spectrum *sigma_s) const
+{
+    using namespace Interpolation;
+    for (int c = 0; c < Spectrum::nSamples; ++c) {
+        float rho = invertCatmullRom(table.nRhoSamples, table.rhoSamples.get(), table.rhoEff.get(), rhoEff[c]);
+        (*sigma_s)[c] = rho / mfp[c];
+        (*sigma_a)[c] = (1 - rho) / mfp[c];
+    }
 }
 
 KdSubsurfaceMaterial * KdSubsurfaceMaterial::create(const TextureParams &mp) {

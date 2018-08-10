@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-#define NDEBUG
 #include <glog/logging.h>
 
 /* Macros */

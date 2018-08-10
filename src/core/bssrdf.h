@@ -31,14 +31,16 @@ public:
           material(material), mode(mode) {}
 
     virtual Spectrum compute_Sr(float d) const = 0;
+    virtual float sample_Sr(int channel, float u) const = 0;
+    virtual float pdf_Sr(int channel, float u) const = 0;
 
     Spectrum compute_S(const SurfaceInteraction &pi, const Vector3f &wi) {
-        float Ft = 1 - Fresnel::dielectric_Fr(dot(po.wo, po.shading.n), 1, eta);
-        return Ft * compute_Sp(pi) * compute_Sw(wi);
+        float Ft = Fresnel::dielectric_Fr(cosTheta(po.wo), 1, eta);
+        return (1 - Ft) * compute_Sp(pi) * compute_Sw(wi);
     }
 
     Spectrum sample_S(const Scene &scene, float u1, const Point2f &u2, MemoryArena &arena,
-                      SurfaceInteraction *pi, float *pdf) const;
+                      SurfaceInteraction *pi, float *pdf) const; // returns Sp
 
     Spectrum compute_Sw(const Vector3f &wi) const {
         float c = 1 - 2 * Fresnel::moment1(1.0f / eta);
@@ -51,6 +53,7 @@ public:
 
     Spectrum sample_Sp(const Scene &scene, float u1, const Point2f &u2, MemoryArena &arena,
                        SurfaceInteraction *pi, float *pdf) const;
+    float pdf_Sp(const SurfaceInteraction &pi) const;
 
 private:
     const Normal3f ns;

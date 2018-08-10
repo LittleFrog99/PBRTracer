@@ -21,7 +21,7 @@ SET(SOURCES_UTILITIES
     src/utilities/matrix.cpp src/utilities/memory.cpp src/utilities/file.cpp
     src/utilities/imageio.cpp src/utilities/parallel.cpp src/utilities/stats.cpp
     src/utilities/paramset.cpp src/utilities/parser.cpp src/utilities/mipmap.cpp
-    src/utilities/interpolation.cpp)
+    src/utilities/interpolation.cpp src/utilities/lowdiscrep.cpp)
 
 SET(SOURCES_SHAPES
     src/shapes/sphere.cpp src/shapes/cylinder.cpp src/shapes/disk.cpp

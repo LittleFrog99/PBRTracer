@@ -22,7 +22,7 @@ public:
     HenyeyGreenstein(float g) : g(g) {}
 
     float compute_p(const Vector3f &wo, const Vector3f &wi) const {
-        return phaseHG(dot(wo, wi), g);
+        return phase(dot(wo, wi), g);
     }
 
     float sample_p(const Vector3f &wo, Vector3f *wi, const Point2f &u) const;
@@ -31,7 +31,7 @@ public:
         return STRING_PRINTF("[ HenyeyGreenstein g: %f ]", g);
     }
 
-    inline static float phaseHG(float cosTheta, float g) {
+    inline static float phase(float cosTheta, float g) {
         float denom = 1 + g * g + 2 * g * cosTheta;
         return INV_FOUR_PI * (1 - g * g) / (denom * sqrt(denom));
     }

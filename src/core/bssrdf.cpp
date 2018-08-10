@@ -1,4 +1,6 @@
 #include "bssrdf.h"
+#include "core/primitive.h"
+#include "stats.h"
 
 Spectrum SeparableBSSRDF::sample_S(const Scene &scene, float u1, const Point2f &u2, MemoryArena &arena,
                                    SurfaceInteraction *pi, float *pdf) const
@@ -10,6 +12,107 @@ Spectrum SeparableBSSRDF::sample_S(const Scene &scene, float u1, const Point2f &
         pi->wo = Vector3f(pi->shading.n);
     }
     return Sp;
+}
+
+Spectrum SeparableBSSRDF::sample_Sp(const Scene &scene, float u1, const Point2f &u2, MemoryArena &arena,
+                                    SurfaceInteraction *pi, float *pdf) const
+{
+    // Choose projection axis for BSSRDF sampling
+    Vector3f vx, vy, vz;
+    if (u1 < .5f) {
+        vx = ss;
+        vy = ts;
+        vz = Vector3f(ns);
+        u1 *= 2;
+    } else if (u1 < .75f) {
+        // Prepare for sampling rays with respect to _ss_
+        vx = ts;
+        vy = Vector3f(ns);
+        vz = ss;
+        u1 = (u1 - .5f) * 4;
+    } else {
+        // Prepare for sampling rays with respect to _ts_
+        vx = Vector3f(ns);
+        vy = ss;
+        vz = ts;
+        u1 = (u1 - .75f) * 4;
+    }
+
+    // Choose spectral channel for BSSRDF sampling
+    int ch = clamp(int(u1 * Spectrum::nSamples), 0, Spectrum::nSamples - 1);
+    u1 = u1 * Spectrum::nSamples - ch;
+
+    // Sample BSSRDF profile in polar coordinates
+    float r = sample_Sr(ch, u2[0]);
+    if (r < 0) return Spectrum(0.f);
+    float phi = 2 * PI * u2[1];
+
+    // Compute BSSRDF profile bounds and intersection height
+    float rMax = sample_Sr(ch, 0.999f);
+    if (r >= rMax) return Spectrum(0.f);
+    float l = 2 * sqrt(rMax * rMax - r * r);
+
+    // Compute BSSRDF sampling ray segment
+    Interaction base;
+    base.p = po.p + r * (vx * cos(phi) + vy * sin(phi)) - l * vz * 0.5f;
+    base.time = po.time;
+    Point3f pTarget = base.p + l * vz;
+
+    // Intersect BSSRDF sampling ray against the scene geometry
+    struct IntersectionChain {
+        SurfaceInteraction si;
+        IntersectionChain *next = nullptr;
+    };
+    IntersectionChain *chain = ARENA_ALLOC(arena, IntersectionChain)();
+
+    // Accumulate chain of intersections along ray
+    IntersectionChain *ptr = chain;
+    int nFound = 0;
+    while (true) {
+        Ray r = base.spawnRayTo(pTarget);
+        if (r.d == Vector3f(0, 0, 0) || !scene.intersect(r, &ptr->si))
+            break;
+
+        base = ptr->si;
+        // Append admissible intersection to _IntersectionChain_
+        if (ptr->si.primitive->getMaterial() == material) {
+            IntersectionChain *next = ARENA_ALLOC(arena, IntersectionChain)();
+            ptr->next = next;
+            ptr = next;
+            nFound++;
+        }
+    }
+
+    // Randomly choose one of several intersections during BSSRDF sampling
+    if (nFound == 0) return Spectrum(0.0f);
+    int selected = clamp(int(u1 * nFound), 0, nFound - 1);
+    while (selected-- > 0) chain = chain->next;
+    *pi = chain->si;
+
+    // Compute sample PDF and return the spatial term
+    *pdf = pdf_Sp(*pi) / nFound;
+    return compute_Sp(*pi);
+}
+
+float SeparableBSSRDF::pdf_Sp(const SurfaceInteraction &pi) const {
+    // Express difference vector and surface normal at pi with local coordinates at po
+    Vector3f d = po.p - pi.p;
+    Vector3f dLocal(dot(ss, d), dot(ts, d), dot(ns, d));
+    Normal3f nLocal(dot(ss, pi.n), dot(ts, pi.n), dot(ns, pi.n));
+
+    // Compute BSSRDF profile radius under projection along each axis
+    float rProj[3] = {sqrt(dLocal.y * dLocal.y + dLocal.z * dLocal.z),
+                      sqrt(dLocal.z * dLocal.z + dLocal.x * dLocal.x),
+                      sqrt(dLocal.x * dLocal.x + dLocal.y * dLocal.y)};
+
+    // Return combined probability from all BSSRDF sampling strategies
+    float pdf = 0, axisProb[3] = {.25f, .25f, .5f};
+    constexpr float chProb = 1.0f / Spectrum::nSamples;
+    for (int axis = 0; axis < 3; ++axis)
+        for (int ch = 0; ch < Spectrum::nSamples; ++ch)
+            pdf += pdf_Sr(ch, rProj[axis]) * abs(nLocal[axis]) * chProb * axisProb[axis];
+
+    return pdf;
 }
 
 struct BSSRDF::MeasuredSS {

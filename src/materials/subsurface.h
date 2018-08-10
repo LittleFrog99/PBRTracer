@@ -48,6 +48,8 @@ public:
                                     bool allowMultipleLobes) const;
 
 private:
+    void fromDiffuse(const Spectrum &rhoEff, const Spectrum &mfp, Spectrum *sigma_a, Spectrum *sigma_s) const;
+
     float scale;
     shared_ptr<Texture<Spectrum>> Kd, Kr, Kt, mfp;
     shared_ptr<Texture<float>> uRoughness, vRoughness, bumpMap;

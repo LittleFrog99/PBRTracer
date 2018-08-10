@@ -1,6 +1,8 @@
 #include "path.h"
 #include "paramset.h"
 #include "core/bsdf.h"
+#include "core/bssrdf.h"
+#include "stats.h"
 
 Spectrum PathIntegrator::compute_Li(const RayDifferential &r, const Scene &scene, Sampler &sampler,
                                     MemoryArena &arena, int depth) const
@@ -47,7 +49,25 @@ Spectrum PathIntegrator::compute_Li(const RayDifferential &r, const Scene &scene
         specularBounce = (flags & BSDF_SPECULAR) != 0;
         ray = isect.spawnRay(wi);
 
-        // TODO:: Account for BSSRDF
+        // Account for BSSRDF
+        if (isect.bssrdf && (flags & BSDF_TRANSMISSION)) {
+            // Importance sample the BSSRDF
+            SurfaceInteraction pi;
+            Spectrum S = isect.bssrdf->sample_S(scene, sampler.get1D(), sampler.get2D(), arena, &pi, &pdf);
+            if (S.isBlack() || pdf == 0) break;
+            beta *= S / pdf; // the spatial component
+
+            // Account for direct lighting
+            L += beta * uniformSampleOneLight(pi, scene, arena, sampler);
+
+            // Indirect lighting
+            Spectrum f = pi.bsdf->sample_f(pi.wo, &wi, sampler.get2D(), &pdf, BSDF_ALL, &flags);
+            if (f.isBlack() || pdf == 0) break;
+            beta *= f * absDot(wi, pi.shading.n) / pdf; // the direction component
+            specularBounce = (flags & BSDF_SPECULAR) != 0;
+            ray = pi.spawnRay(wi);
+        }
+
         // Possibly terminate the path with Russian roulette
         if (bounce > 3) {
             float q = max(0.05f, 1 - beta.luminance());
