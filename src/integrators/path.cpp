@@ -50,7 +50,7 @@ Spectrum PathIntegrator::compute_Li(const RayDifferential &r, const Scene &scene
         ray = isect.spawnRay(wi);
 
         // Account for BSSRDF
-        if (isect.bssrdf && (flags & BSDF_TRANSMISSION)) {
+        if (isect.bssrdf && (flags & BSDF_TRANSMISSION)) { // first transmission term already handled in BSDF
             // Importance sample the BSSRDF
             SurfaceInteraction pi;
             Spectrum S = isect.bssrdf->sample_S(scene, sampler.get1D(), sampler.get2D(), arena, &pi, &pdf);

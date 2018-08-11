@@ -77,7 +77,9 @@ Spectrum SpecularTransmission::sample_f(const Vector3f &wo, Vector3f *wi, const 
     if (!refract(wo, faceforward(Normal3f(0, 0, 1), wo), etaI / etaT, wi)) return 0.0f;
     *pdf = 1;
     Spectrum ft = T * (Spectrum(1.0f) - fresnel.evaluate(cosTheta(*wi)));
-    // TODO: Account for non-symmetry with transmission to different medium
+    // Account for non-symmetry with transmission to different medium
+    if (mode == TransportMode::Radiance)
+        ft *= SQ(etaI) / SQ(etaT);
     return ft / absCosTheta(*wi);
 }
 
@@ -98,7 +100,9 @@ Spectrum FresnelSpecular::sample_f(const Vector3f &wo, Vector3f *wi, const Point
         if (!refract(wo, faceforward(Normal3f(0, 0, 1), wo), etaI / etaT, wi))
             return 0;
         Spectrum ft = T * (1 - F);
-        // TODO: Account for non-symmetry with transmission to different medium
+        // Account for non-symmetry with transmission to different medium
+        if (mode == TransportMode::Radiance)
+            ft *= SQ(etaI) / SQ(etaT);
         if (sampledType)
             *sampledType = BxDFType(BSDF_SPECULAR | BSDF_TRANSMISSION);
         *pdf = 1 - F;
