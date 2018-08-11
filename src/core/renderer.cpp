@@ -143,21 +143,16 @@ shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, co
 }
 
 Filter * makeFilter(const string &name, const ParamSet &paramSet) {
-    Filter *filter = nullptr;
-    if (name == "box")
-        filter = BoxFilter::create(paramSet);
-    else if (name == "gaussian")
-        filter = GaussianFilter::create(paramSet);
-    else if (name == "mitchell")
-        filter = MitchellFilter::create(paramSet);
-    else if (name == "sinc")
-        filter = LanczosSincFilter::create(paramSet);
-    else if (name == "triangle")
-        filter = TriangleFilter::create(paramSet);
-    else {
-        ERROR("Filter \"%s\" unknown.", name.c_str());
-        exit(1);
-    }
+    static map<string, function<Filter *(const ParamSet &)>> catalog;
+    catalog = {{ "box", BoxFilter::create }, { "gaussian", GaussianFilter::create },
+               { "mitchell", MitchellFilter::create }, {"sinc", LanczosSincFilter::create },
+               { "triangle", TriangleFilter::create } };
+
+    Filter *filter;
+    if (catalog.find(name) == catalog.end())
+        LOG(FATAL) << STRING_PRINTF("Filter \"%s\" unknown.", name.c_str());
+    else
+        filter = catalog[name](paramSet);
     paramSet.reportUnused();
     return filter;
 }
@@ -218,31 +213,19 @@ shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
 template <class T>
 shared_ptr<Texture<T>> makeTexture(const string &name, const Transform &tex2world, const TextureParams &tp)
 {
+    static map<string, function<Texture<T>*(const Transform &, const TextureParams &)>> catalog;
+    catalog = { {"constant", ConstantTexture<T>::create}, {"scale", ScaleTexture<T, T>::create},
+                {"mix", MixTexture<T>::create}, {"bilerp", BilerpTexture<T>::create},
+                {"uv", UVTexture<T>::create}, {"checkerboard", CheckerboardTextureCreator<T>::create},
+                {"dots", DotsTexture<T>::create}, {"fbm", FBmTexture<T>::create},
+                {"wrinkled", WrinkledTexture<T>::create}, {"windy", WindyTexture<T>::create}};
+
     Texture<T> *tex = nullptr;
-    if (name == "constant")
-        tex = ConstantTexture<T>::create(tex2world, tp);
-    else if (name == "scale")
-        tex = ScaleTexture<T, T>::create(tex2world, tp);
-    else if (name == "mix")
-        tex = MixTexture<T>::create(tex2world, tp);
-    else if (name == "bilerp")
-        tex = BilerpTexture<T>::create(tex2world, tp);
-    else if (name == "imagemap")
-        tex = ImageTextureCreator<T>::create(tex2world, tp);
-    else if (name == "uv")
-        tex = UVTexture<T>::create(tex2world, tp);
-    else if (name == "checkerboard")
-        tex = CheckerboardTextureCreator<T>::create(tex2world, tp);
-    else if (name == "dots")
-        tex = DotsTexture<T>::create(tex2world, tp);
-    else if (name == "fbm")
-        tex = FBmTexture<T>::create(tex2world, tp);
-    else if (name == "wrinkled")
-        tex = WrinkledTexture<T>::create(tex2world, tp);
-    else if (name == "windy")
-        tex = WindyTexture<T>::create(tex2world, tp);
-    else
+    if (name == "imagemap") tex = ImageTextureCreator<T>::create(tex2world, tp);
+    if (catalog.find(name) == catalog.end())
         WARNING("Float texture \"%s\" unknown.", name.c_str());
+    else
+        tex = catalog[name](tex2world, tp);
     tp.reportUnused();
     return shared_ptr<Texture<T>>(tex);
 }

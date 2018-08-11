@@ -4,7 +4,7 @@
 #include "vector.h"
 #include "ray.h"
 
-template <typename T>
+template <class T>
 class Bounds2 {
 public:
     Bounds2() {
@@ -20,7 +20,7 @@ public:
         pMax = Point2<T>(max(p1.x, p2.x), max(p1.y, p2.y));
     }
 
-    template <typename U>
+    template <class U>
     explicit operator Bounds2<U>() const {
         return Bounds2<U>(Point2<U>(pMin), Point2<U>(pMax));
     }
@@ -55,7 +55,7 @@ public:
     Point2<T> pMin, pMax;
 };
 
-template <typename T>
+template <class T>
 class Bounds3 {
   public:
     // Bounds3 Public Methods
@@ -121,7 +121,7 @@ class Bounds3 {
 
     inline void boundingSphere(Point3<T> *center, float *radius) const;
 
-    template <typename U>
+    template <class U>
     explicit operator Bounds3<U>() const {
         return Bounds3<U>(Point3<U>(pMin), Point3<U>(pMax));
     }
@@ -172,7 +172,7 @@ private:
     const Bounds2i *bounds;
 };
 
-template <typename T>
+template <class T>
 bool Bounds3<T>::intersectP(const Ray &ray, float *hitt0, float *hitt1) const {
     float t0 = 0, t1 = ray.tMax;
     for (int i = 0; i < 3; ++i) {
@@ -193,7 +193,7 @@ bool Bounds3<T>::intersectP(const Ray &ray, float *hitt0, float *hitt1) const {
     return true;
 }
 
-template <typename T>
+template <class T>
 inline bool Bounds3<T>::intersectP(const Ray &ray, const Vector3f &invDir,
                                    const int dirIsNeg[3]) const {
     const Bounds3f &bounds = *this;
@@ -224,7 +224,7 @@ inline bool Bounds3<T>::intersectP(const Ray &ray, const Vector3f &invDir,
 
 namespace Math {
 
-template <typename T>
+template <class T>
 inline Bounds3<T> unionOf(const Bounds3<T> &b, const Point3<T> &p) {
     Bounds3<T> ret;
     ret.pMin = min(b.pMin, p);
@@ -232,7 +232,7 @@ inline Bounds3<T> unionOf(const Bounds3<T> &b, const Point3<T> &p) {
     return ret;
 }
 
-template <typename T>
+template <class T>
 inline Bounds3<T> unionOf(const Bounds3<T> &b1, const Bounds3<T> &b2) {
     Bounds3<T> ret;
     ret.pMin = min(b1.pMin, b2.pMin);
@@ -240,7 +240,7 @@ inline Bounds3<T> unionOf(const Bounds3<T> &b1, const Bounds3<T> &b2) {
     return ret;
 }
 
-template <typename T>
+template <class T>
 inline Bounds3<T> intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
     Bounds3<T> ret;
     ret.pMin = max(b1.pMin, b2.pMin);
@@ -248,7 +248,7 @@ inline Bounds3<T> intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
     return ret;
 }
 
-template <typename T>
+template <class T>
 inline bool overlaps(const Bounds3<T> &b1, const Bounds3<T> &b2) {
     bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
     bool y = (b1.pMax.y >= b2.pMin.y) && (b1.pMin.y <= b2.pMax.y);
@@ -256,19 +256,29 @@ inline bool overlaps(const Bounds3<T> &b1, const Bounds3<T> &b2) {
     return (x && y && z);
 }
 
-template <typename T>
+template <class T>
+inline bool inside(const Point2<T> &p, const Bounds2<T> &b) {
+    return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y && p.y <= b.pMax.y);
+}
+
+template <class T>
+inline bool insideExclusive(const Point2<T> &p, const Bounds2<T> &b) {
+    return (p.x >= b.pMin.x && p.x < b.pMax.x && p.y >= b.pMin.y && p.y < b.pMax.y);
+}
+
+template <class T>
 inline bool inside(const Point3<T> &p, const Bounds3<T> &b) {
     return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y &&
             p.y <= b.pMax.y && p.z >= b.pMin.z && p.z <= b.pMax.z);
 }
 
-template <typename T>
+template <class T>
 inline bool insideExclusive(const Point3<T> &p, const Bounds3<T> &b) {
     return (p.x >= b.pMin.x && p.x < b.pMax.x && p.y >= b.pMin.y &&
             p.y < b.pMax.y && p.z >= b.pMin.z && p.z < b.pMax.z);
 }
 
-template <typename T, typename U>
+template <class T, class U>
 inline Bounds3<T> expand(const Bounds3<T> &b, U delta) {
     return Bounds3<T>(b.pMin - Vector3<T>(delta, delta, delta),
                       b.pMax + Vector3<T>(delta, delta, delta));
@@ -276,7 +286,7 @@ inline Bounds3<T> expand(const Bounds3<T> &b, U delta) {
 
 // Minimum squared distance from point to box; returns zero if point is
 // inside.
-template <typename T, typename U>
+template <class T, class U>
 inline float distanceSq(const Point3<T> &p, const Bounds3<U> &b) {
     float dx = std::max({float(0), b.pMin.x - p.x, p.x - b.pMax.x});
     float dy = std::max({float(0), b.pMin.y - p.y, p.y - b.pMax.y});
@@ -284,12 +294,12 @@ inline float distanceSq(const Point3<T> &p, const Bounds3<U> &b) {
     return dx * dx + dy * dy + dz * dz;
 }
 
-template <typename T, typename U>
+template <class T, class U>
 inline float distance(const Point3<T> &p, const Bounds3<U> &b) {
     return sqrt(distanceSq(p, b));
 }
 
-template <typename T>
+template <class T>
 inline Bounds2<T> unionOf(const Bounds2<T> &b, const Point2<T> &p) {
     Bounds2<T> ret;
     ret.pMin = min(b.pMin, p);
@@ -297,7 +307,7 @@ inline Bounds2<T> unionOf(const Bounds2<T> &b, const Point2<T> &p) {
     return ret;
 }
 
-template <typename T>
+template <class T>
 inline Bounds2<T> unionOf(const Bounds2<T> &b, const Bounds2<T> &b2) {
     Bounds2<T> ret;
     ret.pMin = min(b.pMin, b2.pMin);
@@ -305,7 +315,7 @@ inline Bounds2<T> unionOf(const Bounds2<T> &b, const Bounds2<T> &b2) {
     return ret;
 }
 
-template <typename T>
+template <class T>
 inline Bounds2<T> intersect(const Bounds2<T> &b1, const Bounds2<T> &b2) {
     // Important: assign to pMin/pMax directly and don't run the Bounds2()
     // constructor, since it takes min/max of the points passed to it.  In
@@ -317,24 +327,14 @@ inline Bounds2<T> intersect(const Bounds2<T> &b1, const Bounds2<T> &b2) {
     return ret;
 }
 
-template <typename T>
+template <class T>
 inline bool overlaps(const Bounds2<T> &ba, const Bounds2<T> &bb) {
     bool x = (ba.pMax.x >= bb.pMin.x) && (ba.pMin.x <= bb.pMax.x);
     bool y = (ba.pMax.y >= bb.pMin.y) && (ba.pMin.y <= bb.pMax.y);
     return (x && y);
 }
 
-template <typename T>
-inline bool inside(const Point2<T> &pt, const Bounds2<T> &b) {
-    return (pt.x >= b.pMin.x && pt.x <= b.pMax.x && pt.y >= b.pMin.y && pt.y <= b.pMax.y);
-}
-
-template <typename T>
-inline bool insideExclusive(const Point2<T> &pt, const Bounds2<T> &b) {
-    return (pt.x >= b.pMin.x && pt.x < b.pMax.x && pt.y >= b.pMin.y && pt.y < b.pMax.y);
-}
-
-template <typename T, typename U>
+template <class T, class U>
 inline Bounds2<T> expand(const Bounds2<T> &b, U delta) {
     return Bounds2<T>(b.pMin - Vector2<T>(delta, delta), b.pMax + Vector2<T>(delta, delta));
 }

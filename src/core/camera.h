@@ -20,10 +20,20 @@ public:
 
     virtual float generateRay(const CameraSample &sample, Ray *ray) const = 0;
     virtual float generateRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
-    // virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const;
-    // virtual void pdf_We(const Ray &ray, float *pdfPos, float *pdfDir) const;
-    // virtual Spectrum sample_Wi(const Interaction &ref, const Point2f &u,Vector3f *wi, float *pdf,
-                               // Point2f *pRaster, VisibilityTester *vis) const;
+
+    virtual Spectrum compute_We(const Ray &ray, Point2f *pRaster2 = nullptr) const {
+        LOG(FATAL) << "Camera::compute_We() is not implemented!";
+    }
+
+    virtual void pdf_We(const Ray &ray, float *pdfPos, float *pdfDir) const {
+        LOG(FATAL) << "Camera::pdf_We() is not implemented!";
+    }
+
+    virtual Spectrum sample_Wi(const Interaction &ref, const Point2f &u,Vector3f *wi, float *pdf,
+                               Point2f *pRaster, VisibilityTester *vis) const {
+        LOG(FATAL) << "Camera::sample_Wi() is not implemented!";
+    }
+
     virtual ~Camera() { delete film; }
 
     AnimatedTransform cameraToWorld;

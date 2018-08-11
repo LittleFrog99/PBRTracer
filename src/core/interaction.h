@@ -85,7 +85,7 @@ struct SurfaceInteraction : public Interaction {
     void setShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv, const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
     void computeScatteringFunctions(const RayDifferential &ray, MemoryArena &arena, bool allowMultipleLobes = false,
-                                TransportMode mode = TransportMode::Radiance);
+                                    TransportMode mode = TransportMode::Radiance);
     void computeDifferentials(const RayDifferential &r) const;
     Spectrum compute_Le(const Vector3f &w) const; // is calculated when intersecting an emissive surface
 

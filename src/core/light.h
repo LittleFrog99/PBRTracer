@@ -30,9 +30,9 @@ public:
     virtual float pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
 
     virtual Spectrum compute_Le(const RayDifferential &r) const { return Spectrum(0.0f); }
-    /* virtual Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray,
+    virtual Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray,
                                Normal3f *nLight, float *pdfPos, float *pdfDir) const = 0;
-    virtual void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const = 0; */
+    virtual void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const = 0;
 
     bool isDeltaLight() const {
         return flags & (int(LightFlags::DeltaPosition) | int(LightFlags::DeltaDirection));

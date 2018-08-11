@@ -1,5 +1,6 @@
 #include "spot.h"
 #include "paramset.h"
+#include "core/sampling.h"
 
 float SpotLight::falloff(const Vector3f &w) const {
     Vector3f wl = normalize(worldToLight(w));
@@ -8,6 +9,23 @@ float SpotLight::falloff(const Vector3f &w) const {
     if (cosTheta > cosFalloffStart) return 1;
     float delta = (cosTheta - cosTotalWidth) / (cosFalloffStart - cosTotalWidth);
     return QUAD(delta);
+}
+
+Spectrum SpotLight::sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray, Normal3f *nLight,
+                              float *pdfPos, float *pdfDir) const
+{
+    Vector3f w = Sampling::uniformSampleCone(u1, cosTotalWidth);
+    *ray = Ray(pLight, lightToWorld(w), INFINITY, time, mediumInterface.inside);
+    *nLight = Normal3f(ray->d);
+    *pdfPos = 1;
+    *pdfDir = Sampling::uniformConePdf(cosTotalWidth);
+    return I * falloff(ray->d);
+}
+
+void SpotLight::pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const
+{
+    *pdfPos = 0;
+    *pdfDir = cosTheta(worldToLight(ray.d)) >= cosTotalWidth ? Sampling::uniformConePdf(cosTotalWidth) : 0;
 }
 
 shared_ptr<SpotLight> SpotLight::create(const Transform &l2w,const Medium *medium,

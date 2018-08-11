@@ -13,16 +13,14 @@ public:
                                                     const ParamSet &paramSet);
 
     Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
-                       VisibilityTester *vis) const {
-        Spectrum Li = PointLight::sample_Li(ref, u, wi, pdf, vis);
-        return Li * scale(-*wi);
-    }
-
+                       VisibilityTester *vis) const;
     float pdf_Li(const Interaction &, const Vector3f &) const { return 0; }
 
-    Spectrum power() const {
-        return 4 * PI * I * (mipmap ? mipmap->lookup(Point2f(0.5f, 0.5f), 0.5f) : 1.0f);
-    }
+    Spectrum power() const;
+
+    Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray, Normal3f *nLight,
+                       float *pdfPos, float *pdfDir) const;
+    void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const;
 
 private:
     Spectrum scale(const Vector3f &w) const;

@@ -19,6 +19,10 @@ public:
 
     Spectrum power() const { return 4 * PI * I; }
 
+    Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray, Normal3f *nLight,
+                       float *pdfPos, float *pdfDir) const;
+    void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const;
+
 protected:
     const Point3f pLight;
     const Spectrum I; // radiant intensity

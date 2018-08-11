@@ -23,6 +23,10 @@ public:
 
     Spectrum power() const { return I * 2 * PI * (1.0f - 0.5f * (cosFalloffStart + cosTotalWidth)); }
 
+    Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray, Normal3f *nLight,
+                       float *pdfPos, float *pdfDir) const;
+    void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const;
+
 private:
     float falloff(const Vector3f &w) const;
 

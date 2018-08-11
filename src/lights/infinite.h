@@ -12,9 +12,7 @@ public:
 
     static shared_ptr<InfiniteAreaLight> create(const Transform &light2world, const ParamSet &paramSet);
 
-    void preprocess(const Scene &scene) {
-        scene.getWorldBound().boundingSphere(&worldCenter, &worldRadius);
-    }
+    void preprocess(const Scene &scene);
 
     Spectrum sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
                        VisibilityTester *vis) const;
@@ -22,9 +20,11 @@ public:
 
     Spectrum compute_Le(const RayDifferential &r) const;
 
-    Spectrum power() const {
-        return Lmap->lookup(Point2f(0.5f, 0.5f), 0.5f) * PI * SQ(worldRadius);
-    }
+    Spectrum power() const;
+
+    Spectrum sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray, Normal3f *nLight,
+                       float *pdfPos, float *pdfDir) const;
+    void pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const;
 
 private:
     unique_ptr<Mipmap<RGBSpectrum>> Lmap;

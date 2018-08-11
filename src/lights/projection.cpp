@@ -1,6 +1,7 @@
 #include "projection.h"
 #include "imageio.h"
 #include "paramset.h"
+#include "core/sampling.h"
 
 ProjectionLight::ProjectionLight(const Transform &lightToWorld, const MediumInterface &interface, const Spectrum &I,
                 const string &texname, float fov)
@@ -23,6 +24,35 @@ ProjectionLight::ProjectionLight(const Transform &lightToWorld, const MediumInte
     float opposite = tan(radians(fov) / 2.0f);
     float tanDiag = opposite * sqrt(1.0f + 1.0f / SQ(aspect));
     cosTotalWidth = cos(atan(tanDiag));
+}
+
+Spectrum ProjectionLight::sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wi, float *pdf,
+                                    VisibilityTester *vis) const
+{
+    Spectrum Li = PointLight::sample_Li(ref, u, wi, pdf, vis);
+    return Li * projection(-*wi);
+}
+
+Spectrum ProjectionLight::power() const {
+    return (projMap ? projMap->lookup(Point2f(0.5f, 0.5f), 0.5f) : Spectrum(1.0f)) * I * 2 * PI *
+            (1.0f - cosTotalWidth);
+}
+
+Spectrum ProjectionLight::sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray, Normal3f *nLight,
+                                    float *pdfPos, float *pdfDir) const
+{
+    Vector3f w = Sampling::uniformSampleCone(u1, cosTotalWidth);
+    *ray = Ray(pLight, lightToWorld(w), INFINITY, time, mediumInterface.inside);
+    *nLight = Normal3f(ray->d);
+    *pdfPos = 1;
+    *pdfDir = Sampling::uniformConePdf(cosTotalWidth);
+    return I * projection(ray->d);
+}
+
+void ProjectionLight::pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const
+{
+    *pdfPos = 0;
+    *pdfDir = cosTheta(worldToLight(ray.d)) >= cosTotalWidth ? Sampling::uniformConePdf(cosTotalWidth) : 0;
 }
 
 Spectrum ProjectionLight::projection(const Vector3f &w) const {
