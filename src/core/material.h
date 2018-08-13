@@ -7,6 +7,9 @@ struct SurfaceInteraction;
 class TextureParams;
 template <class T> class Texture;
 
+typedef shared_ptr<Texture<float>> FloatTexture;
+typedef shared_ptr<Texture<Spectrum>> SpectrumTexture;
+
 enum class TransportMode { Radiance, Importance };
 
 namespace std {

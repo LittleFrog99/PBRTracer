@@ -10,6 +10,18 @@ class Integrator {
 public:
     virtual ~Integrator() { }
     virtual void render(const Scene &scene) = 0;
+
+protected:
+    static unique_ptr<Distribution1D> computeLightPowerDistribution(const vector<shared_ptr<Light>> lights);
+
+    static Spectrum uniformSampleAllLights(const Interaction &it, const Scene &scene,
+                                           MemoryArena &arena, Sampler &sampler,
+                                           const vector<int> &nLightSamples, bool handleMedia = false);
+    static Spectrum uniformSampleOneLight(const Interaction &it, const Scene &scene,
+                                          MemoryArena &arena, Sampler &sampler, bool handleMedia = false);
+    static Spectrum estimateDirect(const Interaction &it, const Point2f &uScattering,
+                                   const Light &light, const Point2f &uLight, const Scene &scene,
+                                   Sampler &sampler, bool handleMedia = false, bool specular = false);
 };
 
 class SamplerIntegrator : public Integrator {
@@ -28,15 +40,6 @@ protected:
                              Sampler &sampler, MemoryArena &arena, int depth) const;
     Spectrum specularTransmit(const RayDifferential &ray, const SurfaceInteraction &isect,
                               const Scene &scene, Sampler &sampler, MemoryArena &arena, int depth) const;
-
-    static Spectrum uniformSampleAllLights(const Interaction &it, const Scene &scene,
-                                           MemoryArena &arena, Sampler &sampler,
-                                           const vector<int> &nLightSamples, bool handleMedia = false);
-    static Spectrum uniformSampleOneLight(const Interaction &it, const Scene &scene,
-                                          MemoryArena &arena, Sampler &sampler, bool handleMedia = false);
-    static Spectrum estimateDirect(const Interaction &it, const Point2f &uScattering,
-                                   const Light &light, const Point2f &uLight, const Scene &scene,
-                                   Sampler &sampler, bool handleMedia = false, bool specular = false);
 
     shared_ptr<const Camera> camera;
 

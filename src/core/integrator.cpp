@@ -49,21 +49,21 @@ void SamplerIntegrator::render(const Scene &scene) {
                 // Issue warning if unexpected radiance value returned
                 if (L.hasNaNs()) {
                     LOG(ERROR) << STRING_PRINTF(
-                        "Not-a-number radiance value returned "
-                        "for pixel (%d, %d), sample %d. Setting to black.",
-                        pixel.x, pixel.y, tileSampler->currentSampleNumber());
+                                      "Not-a-number radiance value returned "
+                                      "for pixel (%d, %d), sample %d. Setting to black.",
+                                      pixel.x, pixel.y, tileSampler->currentSampleNumber());
                     L = Spectrum(0.f);
                 } else if (L.luminance() < -1e-5) {
                     LOG(ERROR) << STRING_PRINTF(
-                        "Negative luminance value, %f, returned "
-                        "for pixel (%d, %d), sample %d. Setting to black.",
-                        L.luminance(), pixel.x, pixel.y, tileSampler->currentSampleNumber());
+                                      "Negative luminance value, %f, returned "
+                                      "for pixel (%d, %d), sample %d. Setting to black.",
+                                      L.luminance(), pixel.x, pixel.y, tileSampler->currentSampleNumber());
                     L = Spectrum(0.f);
                 } else if (isinf(L.luminance())) {
-                      LOG(ERROR) << STRING_PRINTF(
-                        "Infinite luminance value returned "
-                        "for pixel (%d, %d), sample %d. Setting to black.",
-                        pixel.x, pixel.y, tileSampler->currentSampleNumber());
+                    LOG(ERROR) << STRING_PRINTF(
+                                      "Infinite luminance value returned "
+                                      "for pixel (%d, %d), sample %d. Setting to black.",
+                                      pixel.x, pixel.y, tileSampler->currentSampleNumber());
                     L = Spectrum(0.f);
                 }
 
@@ -157,9 +157,9 @@ Spectrum SamplerIntegrator::specularTransmit(const RayDifferential &ray, const S
     return L;
 }
 
-Spectrum SamplerIntegrator::uniformSampleAllLights(const Interaction &it, const Scene &scene,
-                                                   MemoryArena &arena, Sampler &sampler,
-                                                   const vector<int> &nLightSamples, bool handleMedia)
+Spectrum Integrator::uniformSampleAllLights(const Interaction &it, const Scene &scene,
+                                            MemoryArena &arena, Sampler &sampler,
+                                            const vector<int> &nLightSamples, bool handleMedia)
 {
     Spectrum L;
     for (size_t j = 0; j < scene.lights.size(); j++) {
@@ -184,8 +184,8 @@ Spectrum SamplerIntegrator::uniformSampleAllLights(const Interaction &it, const 
     return L;
 }
 
-Spectrum SamplerIntegrator::uniformSampleOneLight(const Interaction &it, const Scene &scene,
-                                                  MemoryArena &arena, Sampler &sampler, bool handleMedia)
+Spectrum Integrator::uniformSampleOneLight(const Interaction &it, const Scene &scene,
+                                           MemoryArena &arena, Sampler &sampler, bool handleMedia)
 {
     ProfilePhase _(Stage::DirectLighting);
     size_t nLights = scene.lights.size();
@@ -197,9 +197,9 @@ Spectrum SamplerIntegrator::uniformSampleOneLight(const Interaction &it, const S
     return float(nLights) * estimateDirect(it, uScattering, *light, uLight, scene, sampler, handleMedia);
 }
 
-Spectrum SamplerIntegrator::estimateDirect(const Interaction &it, const Point2f &uScattering,
-                                           const Light &light, const Point2f &uLight, const Scene &scene,
-                                           Sampler &sampler, bool handleMedia, bool specular)
+Spectrum Integrator::estimateDirect(const Interaction &it, const Point2f &uScattering,
+                                    const Light &light, const Point2f &uLight, const Scene &scene,
+                                    Sampler &sampler, bool handleMedia, bool specular)
 {
     BxDFType flags = BxDFType(specular ? BSDF_ALL : (BSDF_ALL & ~BSDF_SPECULAR));
     Spectrum Ld;
@@ -291,4 +291,12 @@ Spectrum SamplerIntegrator::estimateDirect(const Interaction &it, const Point2f 
     } // end !light.isDeltaLight()
 
     return Ld;
+}
+
+unique_ptr<Distribution1D> Integrator::computeLightPowerDistribution(const vector<shared_ptr<Light>> lights) {
+    if (lights.empty()) return nullptr;
+    vector<float> lightPower;
+    for (const auto &light : lights)
+        lightPower.push_back(light->power().luminance());
+    return make_unique<Distribution1D>(&lightPower[0], lightPower.size());
 }

@@ -32,7 +32,7 @@ SET(SOURCES_ACCELERATORS
 
 SET(SOURCES_INTEGRATORS
     src/integrators/whitted.cpp src/integrators/directlighting.cpp src/integrators/path.cpp
-    src/integrators/volpath.cpp)
+    src/integrators/volpath.cpp src/integrators/sppm.cpp)
 
 SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)
@@ -45,7 +45,8 @@ SET(SOURCES_BSDFS
 
 SET(SOURCES_MATERIALS
     src/materials/matte.cpp src/materials/plastic.cpp src/materials/mix.cpp
-    src/materials/glass.cpp src/materials/metal.cpp src/materials/subsurface.cpp)
+    src/materials/glass.cpp src/materials/metal.cpp src/materials/subsurface.cpp
+    src/materials/uber.cpp)
 
 SET(SOURCES_TEXTURES
     src/textures/imagemap.cpp src/textures/checkerboard.cpp src/textures/dots.cpp)

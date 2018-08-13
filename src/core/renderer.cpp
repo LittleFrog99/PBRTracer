@@ -24,6 +24,7 @@
 #include "materials/glass.h"
 #include "materials/metal.h"
 #include "materials/subsurface.h"
+#include "materials/uber.h"
 #include "textures/mix.h"
 #include "textures/imagemap.h"
 #include "textures/uv.h"
@@ -44,6 +45,7 @@
 #include "integrators/directlighting.h"
 #include "integrators/path.h"
 #include "integrators/volpath.h"
+#include "integrators/sppm.h"
 
 namespace Renderer {
 
@@ -108,6 +110,11 @@ shared_ptr<Primitive> makeAccelerator(const string &name, vector<shared_ptr<Prim
 Camera * makeCamera(const string &name, const ParamSet &paramSet, const TransformSet &cam2worldSet,
                     float transformStart, float transformEnd, Film *film)
 {
+    static map<string, function<Camera *(const ParamSet &, const AnimatedTransform &, Film *,
+                                         const Medium *)>> catalog;
+    catalog = { {"perspective", PerspectiveCamera::create}, {"orthographic", OrthographicCamera::create},
+                {"environment", EnvironmentCamera::create} };
+
     Camera *camera = nullptr;
     MediumInterface mediumInterface = graphicsState.createMediumInterface();
     static_assert(TransformSet::MAX_TRANSFORMS == 2, "TransformCache assumes only two transforms");
@@ -116,28 +123,27 @@ Camera * makeCamera(const string &name, const ParamSet &paramSet, const Transfor
         transformCache.lookup(cam2worldSet[1])
     };
     AnimatedTransform animatedCam2World(cam2world[0], transformStart, cam2world[1], transformEnd);
-    if (name == "perspective")
-        camera = PerspectiveCamera::create(paramSet, animatedCam2World, film, mediumInterface.outside);
-    else if (name == "orthographic")
-        camera = OrthographicCamera::create(paramSet, animatedCam2World, film, mediumInterface.outside);
-    else if (name == "environment")
-        camera = EnvironmentCamera::create(paramSet, animatedCam2World, film, mediumInterface.outside);
+
+    if (catalog.find(name) != catalog.end())
+        camera = catalog[name](paramSet, animatedCam2World, film, mediumInterface.outside);
     else
         WARNING("Camera \"%s\" unknown.", name.c_str());
+
     paramSet.reportUnused();
     return camera;
 }
 
 shared_ptr<Sampler> makeSampler(const string &name, const ParamSet &paramSet, const Film *film) {
+    static map<string, function<Sampler *(const ParamSet &, const Bounds2i &)>> catalog;
+    catalog = { {"halton", HaltonSampler::create}, {"stratified", StratifiedSampler::create},
+                {"sobol", SobolSampler::create} };
+
     Sampler *sampler = nullptr;
-    if (name == "halton")
-        sampler = HaltonSampler::create(paramSet, film->getSampleBounds());
-    else if (name == "stratified")
-        sampler = StratifiedSampler::create(paramSet);
-    else if (name == "sobol")
-        sampler = SobolSampler::create(paramSet, film->getSampleBounds());
+    if (catalog.find(name) != catalog.end())
+        sampler = catalog[name](paramSet, film->getSampleBounds());
     else
         WARNING("Sampler \"%s\" unknown.", name.c_str());
+
     paramSet.reportUnused();
     return shared_ptr<Sampler>(sampler);
 }
@@ -168,21 +174,15 @@ Film * makeFilm(const string &name, const ParamSet &paramSet, Filter *filter) {
 }
 
 shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
+    static map<string, function<Material *(const TextureParams &)>> catalog;
+    catalog = { {"matte", MatteMaterial::create}, {"plastic", PlasticMaterial::create},
+                {"glass", GlassMaterial::create}, {"metal", MetalMaterial::create},
+                {"subsurface", SubsurfaceMaterial::create}, {"kdsubsurface", KdSubsurfaceMaterial::create},
+                {"uber", UberMaterial::create} };
+
     Material *material = nullptr;
-    if (name == "" || name == "none")
-        return nullptr;
-    else if (name == "matte")
-        material = MatteMaterial::create(mp);
-    else if (name == "plastic")
-        material = PlasticMaterial::create(mp);
-    else if (name == "glass")
-        material = GlassMaterial::create(mp);
-    else if (name == "metal")
-        material = MetalMaterial::create(mp);
-    else if (name == "subsurface")
-        material = SubsurfaceMaterial::create(mp);
-    else if (name == "kdsubsurface")
-        material = KdSubsurfaceMaterial::create(mp);
+    if (catalog.find(name) != catalog.end())
+        material = catalog[name](mp);
     else if (name == "mix") {
         string m1 = mp.findString("namedmaterial1", "");
         string m2 = mp.findString("namedmaterial2", "");
@@ -471,6 +471,11 @@ Camera * RenderOptions::makeCamera() const {
 }
 
 Integrator * RenderOptions::makeIntegrator() const {
+    map<string, function<Integrator *(const ParamSet &, shared_ptr<Sampler>, shared_ptr<const Camera>)>> catalog;
+    catalog = { {"whitted", WhittedIntegrator::create}, {"directlighting", DirectLightingIntegrator::create},
+                {"path", PathIntegrator::create}, {"volpath", VolPathIntegrator::create},
+                {"sppm", SPPMIntegrator::create} };
+
     shared_ptr<const Camera> camera(makeCamera());
     if (!camera) {
         ERROR("Unable to create camera");
@@ -478,20 +483,14 @@ Integrator * RenderOptions::makeIntegrator() const {
     }
 
     shared_ptr<Sampler> sampler = Renderer::makeSampler(samplerName, samplerParams, camera->film);
-    if (!sampler) {
+    if (!sampler && integratorName != "sppm") {
         ERROR("Unable to create sampler.");
         return nullptr;
     }
 
     Integrator *integrator = nullptr;
-    if (integratorName == "whitted")
-        integrator = WhittedIntegrator::create(integratorParams, sampler, camera);
-    else if (integratorName == "directlighting")
-        integrator = DirectLightingIntegrator::create(integratorParams, sampler, camera);
-    else if (integratorName == "path")
-        integrator = PathIntegrator::create(integratorParams, sampler, camera);
-    else if (integratorName == "volpath")
-        integrator = VolPathIntegrator::create(integratorParams, sampler, camera);
+    if (catalog.find(integratorName) != catalog.end())
+        integrator = catalog[integratorName](integratorParams, sampler, camera);
     else {
         ERROR("Integrator \"%s\" unknown.", integratorName.c_str());
         return nullptr;

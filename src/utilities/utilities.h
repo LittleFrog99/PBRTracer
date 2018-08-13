@@ -36,7 +36,7 @@ struct Options {
         cropWindow[1][0] = 0;
         cropWindow[1][1] = 1;
     }
-    int nThreads = 0;
+    unsigned nThreads = 0;
     bool quickRender = false;
     bool quiet = false;
     bool cat = false, toPly = false;

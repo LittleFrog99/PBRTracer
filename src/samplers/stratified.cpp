@@ -76,7 +76,7 @@ void StratifiedSampler::latinHypercube(float *samples, int nSamples, int nDim, R
     }
 }
 
-StratifiedSampler * StratifiedSampler::create(const ParamSet &params) {
+StratifiedSampler * StratifiedSampler::create(const ParamSet &params, const Bounds2i &sampleBounds) {
     bool jitter = params.findOneBool("jitter", true);
     int xsamp = params.findOneInt("xsamples", 4);
     int ysamp = params.findOneInt("ysamples", 4);

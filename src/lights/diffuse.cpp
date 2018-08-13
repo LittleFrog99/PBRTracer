@@ -1,6 +1,7 @@
 #include "diffuse.h"
 #include "core/renderer.h"
 #include "core/sampling.h"
+#include "stats.h"
 
 Spectrum DiffuseAreaLight::compute_L(const Interaction &intr, const Vector3f &w) const {
     return dot(intr.n, w) > 0 ? Lemit : 0.0f;
@@ -18,6 +19,7 @@ Spectrum DiffuseAreaLight::sample_Li(const Interaction &ref, const Point2f &u, V
 Spectrum DiffuseAreaLight::sample_Le(const Point2f &u1, const Point2f &u2, float time, Ray *ray,
                                      Normal3f *nLight, float *pdfPos, float *pdfDir) const
 {
+    ProfilePhase _(Stage::LightSample);
     // Sample a point on the shape
     Interaction pShape = shape->sample(u1, pdfPos);
     pShape.mediumInterface = this->mediumInterface;
@@ -36,6 +38,7 @@ Spectrum DiffuseAreaLight::sample_Le(const Point2f &u1, const Point2f &u2, float
 
 void DiffuseAreaLight::pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const
 {
+    ProfilePhase _(Stage::LightPdf);
     Interaction itr(ray.o, nLight, Vector3f(), Vector3f(nLight), ray.time, mediumInterface);
     *pdfPos = shape->pdf(itr);
     *pdfDir = Sampling::cosineHemispherePdf(dot(ray.d, nLight));

@@ -25,8 +25,8 @@ public:
     static void forLoop2D(function<void(Point2i)> func, const Point2i &count);
 
     static unsigned numSystemCores() { return max(1u, thread::hardware_concurrency()); }
-    static int maxThreadIndex();
-    static int getThreadIndex() { return threadIndex; }
+    static unsigned maxThreadIndex();
+    static unsigned getThreadIndex() { return threadIndex; }
 
 private:
     struct ForLoop {
@@ -63,9 +63,9 @@ private:
     static condition_variable reportDoneCondition;
     static mutex reportDoneMutex;
 
-    static thread_local int threadIndex;
+    static thread_local unsigned threadIndex;
 
-    static void workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier);
+    static void workerThreadFunc(unsigned tIndex, shared_ptr<Barrier> barrier);
 };
 
 class AtomicFloat {

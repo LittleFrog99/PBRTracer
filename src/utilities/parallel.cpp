@@ -11,7 +11,7 @@ atomic<bool> Parallel::reportWorkerStats(false);
 atomic<int> Parallel::reporterCount;
 condition_variable Parallel::reportDoneCondition;
 mutex Parallel::reportDoneMutex;
-thread_local int Parallel::threadIndex;
+thread_local unsigned Parallel::threadIndex;
 
 void Parallel::forLoop(function<void(int64_t)> func, int64_t count, int chunkSize)
 {
@@ -112,8 +112,7 @@ void Parallel::forLoop2D(function<void(Point2i)> func, const Point2i &count)
     }
 }
 
-void Parallel::workerThreadFunc(int tIndex, shared_ptr<Barrier> barrier)
-{
+void Parallel::workerThreadFunc(unsigned tIndex, shared_ptr<Barrier> barrier) {
     LOG(INFO) << "Started execution in worker thread " << tIndex;
     threadIndex = tIndex;
     Profiler::workerThreadInit();
@@ -183,13 +182,13 @@ void Barrier::wait() {
 }
 
 void Parallel::init() {
-    int nThreads = maxThreadIndex();
+    unsigned nThreads = maxThreadIndex();
     threadIndex = 0;
 
     shared_ptr<Barrier> barrier = make_shared<Barrier>(nThreads);
 
     // Launch one fewer worker thread than the total number
-    for (int i = 0; i < nThreads - 1; ++i)
+    for (unsigned i = 0; i < nThreads - 1; ++i)
         threads.push_back(thread(workerThreadFunc, i + 1, barrier));
 
     barrier->wait();
@@ -221,6 +220,6 @@ void Parallel::mergeWorkerThreadStats() {
     reportWorkerStats = false;
 }
 
-int Parallel::maxThreadIndex() {
+unsigned Parallel::maxThreadIndex() {
     return Renderer::options.nThreads == 0 ? numSystemCores() : Renderer::options.nThreads;
 }

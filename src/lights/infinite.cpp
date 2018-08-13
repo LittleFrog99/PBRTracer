@@ -8,9 +8,14 @@ InfiniteAreaLight::InfiniteAreaLight(const Transform &lightToWorld, const Spectr
     : Light(int(LightFlags::Infinite), lightToWorld, MediumInterface(), nSamples)
 {
     // Read data from _texmap_
-    Point2i resolution;
-    auto texels = ImageIO::readImage(texmap, &resolution);
-    Lmap.reset(new Mipmap<RGBSpectrum>(resolution, texels.get()));
+    if (texmap == "") {
+        RGBSpectrum texel(1.0f);
+        Lmap.reset(new Mipmap<RGBSpectrum>(Point2i(1, 1), &texel));
+    } else {
+        Point2i resolution;
+        auto texels = ImageIO::readImage(texmap, &resolution);
+        Lmap.reset(new Mipmap<RGBSpectrum>(resolution, texels.get()));
+    }
 
     // Initialize sampling PDFs
     // Compute scalar-valued image _img_ from environment map

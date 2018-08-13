@@ -71,8 +71,10 @@ float HaltonSampler::sampleDimension(int64_t index, int dim) const {
         return radicalInverse(dim, index >> baseExponents[0]);
     else if (dim == 1)
         return radicalInverse(dim, index / baseScales[1]);
-    else
+    else if (dim < 1024)
         return scrambledRadicalInverse(dim, index, permutationForDimension(dim));
+    else
+        return sampleDimension(index, dim % 1024);
 }
 
 vector<uint16_t> HaltonSampler::computeRadicalInversePermutations(Random &rng) {
