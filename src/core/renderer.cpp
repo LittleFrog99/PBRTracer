@@ -46,6 +46,7 @@
 #include "integrators/path.h"
 #include "integrators/volpath.h"
 #include "integrators/sppm.h"
+#include "integrators/bdpt.h"
 
 namespace Renderer {
 
@@ -180,6 +181,7 @@ shared_ptr<Material> makeMaterial(const string &name, const TextureParams &mp) {
                 {"subsurface", SubsurfaceMaterial::create}, {"kdsubsurface", KdSubsurfaceMaterial::create},
                 {"uber", UberMaterial::create} };
 
+    if (name == "" || name == "none") return nullptr;
     Material *material = nullptr;
     if (catalog.find(name) != catalog.end())
         material = catalog[name](mp);
@@ -474,7 +476,7 @@ Integrator * RenderOptions::makeIntegrator() const {
     map<string, function<Integrator *(const ParamSet &, shared_ptr<Sampler>, shared_ptr<const Camera>)>> catalog;
     catalog = { {"whitted", WhittedIntegrator::create}, {"directlighting", DirectLightingIntegrator::create},
                 {"path", PathIntegrator::create}, {"volpath", VolPathIntegrator::create},
-                {"sppm", SPPMIntegrator::create} };
+                {"sppm", SPPMIntegrator::create}, {"bdpt", BDPTIntegrator::create} };
 
     shared_ptr<const Camera> camera(makeCamera());
     if (!camera) {

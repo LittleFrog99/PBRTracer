@@ -32,7 +32,7 @@ SET(SOURCES_ACCELERATORS
 
 SET(SOURCES_INTEGRATORS
     src/integrators/whitted.cpp src/integrators/directlighting.cpp src/integrators/path.cpp
-    src/integrators/volpath.cpp src/integrators/sppm.cpp)
+    src/integrators/volpath.cpp src/integrators/sppm.cpp src/integrators/bdpt.cpp)
 
 SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)

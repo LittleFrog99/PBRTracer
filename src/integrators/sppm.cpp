@@ -381,7 +381,7 @@ Integrator * SPPMIntegrator::create(const ParamSet &params, shared_ptr<Sampler> 
 {
     int nIterations = params.findOneInt("iterations", params.findOneInt("numiterations", 64));
     int maxDepth = params.findOneInt("maxdepth", 5);
-    int photonsPerIter = params.findOneInt("photonsperiteration", 1000000);
+    int photonsPerIter = params.findOneInt("photonsperiteration", 500000);
     int writeFreq = params.findOneInt("imagewritefrequency", 1 << 5);
     float radius = params.findOneFloat("radius", 1.f);
     if (Renderer::options.quickRender) nIterations = max(1, nIterations / 16);
