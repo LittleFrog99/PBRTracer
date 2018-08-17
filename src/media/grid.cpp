@@ -68,6 +68,10 @@ Spectrum GridDensityMedium::sample(const Ray &rWorld, Sampler &sampler, MemoryAr
     return 1.0f; // sampling surface
 }
 
+Spectrum GridDensityMedium::get_sigma_s(const MediumInteraction *mi) const {
+    return sigma_s * estimateDensity(worldToMedium(mi->p)) * invMaxDensity;
+}
+
 float GridDensityMedium::estimateDensity(const Point3f &p) const {
     // Compute voxel coordinates and offsets for _p_
     Point3f pSamples(p.x * nx - .5f, p.y * ny - .5f, p.z * nz - .5f);

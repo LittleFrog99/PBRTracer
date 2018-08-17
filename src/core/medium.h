@@ -46,6 +46,7 @@ public:
     virtual Spectrum compute_Tr(const Ray &ray, Sampler &sampler) const = 0;
     virtual Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
                             MediumInteraction *mi) const = 0;
+    virtual Spectrum get_sigma_s(const MediumInteraction *mi) const = 0;
 };
 
 struct MediumInterface {

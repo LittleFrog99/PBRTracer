@@ -47,6 +47,7 @@
 #include "integrators/volpath.h"
 #include "integrators/sppm.h"
 #include "integrators/bdpt.h"
+#include "integrators/vcm.h"
 
 namespace Renderer {
 
@@ -476,7 +477,8 @@ Integrator * RenderOptions::makeIntegrator() const {
     map<string, function<Integrator *(const ParamSet &, shared_ptr<Sampler>, shared_ptr<const Camera>)>> catalog;
     catalog = { {"whitted", WhittedIntegrator::create}, {"directlighting", DirectLightingIntegrator::create},
                 {"path", PathIntegrator::create}, {"volpath", VolPathIntegrator::create},
-                {"sppm", SPPMIntegrator::create}, {"bdpt", BDPTIntegrator::create} };
+                {"sppm", SPPMIntegrator::create}, {"bdpt", BDPTIntegrator::create},
+                {"vcm", VCMIntegrator::create} };
 
     shared_ptr<const Camera> camera(makeCamera());
     if (!camera) {

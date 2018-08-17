@@ -11,6 +11,7 @@ public:
 
     Spectrum compute_Tr(const Ray &ray, Sampler &sampler) const;
     Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena, MediumInteraction *mi) const;
+    Spectrum get_sigma_s(const MediumInteraction *mi) const;
 
 private:
     float estimateDensity(const Point3f &p) const;

@@ -14,6 +14,8 @@ public:
 
     Spectrum sample(const Ray &ray, Sampler &sampler, MemoryArena &arena, MediumInteraction *mi) const;
 
+    Spectrum get_sigma_s(const MediumInteraction *) const { return sigma_s; }
+
 private:
     const Spectrum sigma_a, sigma_s, sigma_t;
     const float g;
