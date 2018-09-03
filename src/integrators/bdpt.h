@@ -21,7 +21,6 @@ public:
     enum class VertexType { Camera, Light, Surface, Medium };
     struct Vertex;
     struct EndpointInteraction;
-    template <class T> class ScopedAssignment;
     typedef unordered_map<const Light *, size_t> LightIndexMap;
 
     static int generateCameraSubpath(const Scene &scene, Sampler &sampler, MemoryArena &arena, int maxDepth,
@@ -289,7 +288,6 @@ struct BDPTIntegrator::Vertex {
     };
     bool delta = false;
     float pdfFwd = 0, pdfRev = 0; // unit area
-    int pathIndex; // for VCM
 };
 
 inline Spectrum BDPTIntegrator::compute_G(const Scene &scene, Sampler &sampler, const Vertex &v0, const Vertex &v1)

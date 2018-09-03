@@ -1,6 +1,7 @@
 #include "bdpt.h"
 #include "stats.h"
 #include "paramset.h"
+#include "scoped.h"
 
 STAT_PERCENT("Integrator/Zero-radiance paths", zeroRadiancePaths, totalPaths);
 STAT_INT_DISTRIB("Integrator/Path length", pathLength);
@@ -215,23 +216,6 @@ Spectrum BDPTIntegrator::connectVertices(const Scene &scene, Vertex *lightVertic
     return L;
 }
 
-template <class T>
-class BDPTIntegrator::ScopedAssignment {
-public:
-    ScopedAssignment(T *target = nullptr, T value = T()) : target(target) {
-        if (target) {
-            backup = *target;
-            *target = value;
-        }
-    }
-
-    ~ScopedAssignment() { if (target) *target = backup; }
-
-private:
-    T *target;
-    T backup;
-};
-
 #define REMAP0(f) ((f) == 0 ? 1 : (f))
 
 float BDPTIntegrator::MISweight(const Scene &scene, Vertex *lightVertices, Vertex *cameraVertices,
@@ -258,7 +242,7 @@ float BDPTIntegrator::MISweight(const Scene &scene, Vertex *lightVertices, Verte
     if (pt) a2 = { &pt->delta, false };
     if (qs) a3 = { &qs->delta, false };
 
-    // Upate reverse density of p[t-1], p[t-2], q[s-1], q[s-2]
+    // Update reverse density of p[t-1], p[t-2], q[s-1], q[s-2]
     ScopedAssignment<float> a4, a5, a6, a7;
     if (pt) a4 = { &pt->pdfRev, s > 0 ? qs->pdf(scene, qsMinus, *pt)
                                       : pt->pdfLightOrigin(scene, *ptMinus, lightDistrib, lightToIndex)};
