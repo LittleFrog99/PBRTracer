@@ -1,9 +1,51 @@
 #include "vcm.h"
 #include "stats.h"
-#include "scoped.h"
 #include "samplers/sobol.h"
 
-STAT_RATIO("VCM/Light vertices per iteration", storedLightVertices, nIterations)
+class VCMIntegrator::RangeQuery {
+public:
+    RangeQuery(const VCMIntegrator &vcm, const Vertex &cameraVertex)
+        : vcm(vcm), cameraVertex(cameraVertex) {}
+
+    const Spectrum & getContribution() const { return contrib; }
+
+    const Point3f & getPosition() const { return cameraVertex.p(); }
+
+    void process(const Vertex &lightVertex, float radius) {
+        // Reject if full path length not in range
+        int depth = lightVertex.pathLength + cameraVertex.pathLength;
+        if (depth > vcm.getMaxDepth() || depth < 2) return;
+
+        // Compute forward and reverse pdf w.r.t solid angle
+        Vector3f dirCam = cameraVertex.wo(), dirLight = lightVertex.wo();
+        Spectrum f = cameraVertex.compute_f(dirLight, TransportMode::Radiance);
+        if (f.isBlack()) return;
+        float pdfFwdW = cameraVertex.pdfSolidAngle(dirCam, dirLight); // equation 38
+        float pdfRevW = lightVertex.pdfSolidAngle(dirLight, dirCam); // equation 39
+
+        // Compute MIS weight
+        float wLight = lightVertex.dVCM * vcm.getVCWeightFactor() + lightVertex.dVM * pdfFwdW;
+        float wCam = cameraVertex.dVCM * vcm.getVCWeightFactor() + cameraVertex.dVM * pdfRevW;
+        float weight = vcm.doPPM() ? 1.0f : 1.0f / (wLight + 1.0f + wCam); // equation 37
+
+        // Compute normalization factor
+        Spectrum norm = 1;
+        int nLightSubpaths = vcm.getLightSubpathNumber();
+        if (lightVertex.type == VertexType::Surface)
+            norm = 1.0f / (nLightSubpaths * PI * SQ(radius));
+        else {
+            Spectrum sigma_s = lightVertex.mi.getMedium()->get_sigma_s(&lightVertex.mi);
+            norm = Spectrum(1.0f) / (nLightSubpaths * 4.0f / 3.0f * PI * CUB(radius) * sigma_s);
+        }
+
+        contrib += weight * norm * cameraVertex.beta * f * lightVertex.beta;
+    }
+
+private:
+    const VCMIntegrator &vcm;
+    const Vertex &cameraVertex;
+    Spectrum contrib;
+};
 
 class VCMIntegrator::LightVerticesGrid {
 public:
@@ -30,16 +72,9 @@ public:
             Vertex *path = vertices[pixelIndex];
             int pathLength = pathLengths[pixelIndex];
 
-            for (int i = 1; i < pathLength; i++) {
+            for (int i = 0; i < pathLength; i++) {
                 Vertex *vertex = path + i;
                 if (vertex->beta.isBlack()) continue;
-                if (vertex->isOnSurface() && vertex->si.bsdf) {
-                    bool isDiffuse = vertex->si.bsdf->numComponents(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION
-                                                                        | BSDF_TRANSMISSION)) > 0;
-                    bool isGlossy = vertex->si.bsdf->numComponents(BxDFType(BSDF_GLOSSY | BSDF_REFLECTION
-                                                                       | BSDF_TRANSMISSION)) > 0;
-                    if (!isDiffuse && !(isGlossy && i == (maxDepth - 1) )) continue;
-                }
 
                 Point3i pGrid;
                 toGridIndex(vertex->p(), &pGrid);
@@ -48,17 +83,16 @@ public:
                 node->vertex = vertex;
                 node->next = grid[h];
                 while (!grid[h].compare_exchange_weak(node->next, node));
-
-                storedLightVertices++;
             }
 
         }, hashSize, 4096);
     }
 
-    void query(const Vertex *pt, vector<Vertex *> &lightVertices) const {
+    void process(RangeQuery &query) const {
+        Point3f center = query.getPosition();
         Point3i pMin, pMax;
-        toGridIndex(pt->p() - Vector3f(searchRadius), &pMin);
-        toGridIndex(pt->p() + Vector3f(searchRadius), &pMax);
+        toGridIndex(center - Vector3f(searchRadius), &pMin);
+        toGridIndex(center + Vector3f(searchRadius), &pMax);
 
         Spectrum L;
         for (int px = pMin.x; px <= pMax.x; px++)
@@ -67,8 +101,8 @@ public:
                     Point3i index(px, py, pz);
                     for (auto *node = grid[hash(index)].load(memory_order_relaxed); node; node = node->next) {
                         auto *vertex = node->vertex;
-                        if (distanceSq(pt->p(), vertex->p()) > SQ(searchRadius)) continue;
-                        lightVertices.push_back(vertex);
+                        if (distanceSq(center, vertex->p()) > SQ(searchRadius)) continue;
+                        query.process(*vertex, searchRadius);
                     }
                 }
     }
@@ -99,74 +133,100 @@ private:
     int resolution[3];
 };
 
-int VCMIntegrator::generateCameraSubpath(const Scene &scene, Sampler &sampler, MemoryArena &arena,
-                                         const Camera &camera, const Point2f &pFilm, Vertex *path)
+VCMIntegrator::VCMIntegrator(shared_ptr<const Camera> &camera, AlgorithmType algorithm, int nIterations,
+                             int maxDepth, float initialRadius, float alpha)
+    : camera(camera), nIterations(nIterations), maxDepth(maxDepth), initialRadius(initialRadius), alpha(alpha)
 {
-    if (maxDepth == 0) return 0;
-    ProfilePhase _(Stage::BDPTGenerateSubpath);
-
-    // Sample initial ray for camera subpath
-    CameraSample camSample;
-    camSample.pFilm = pFilm;
-    camSample.pLens = sampler.get2D();
-    camSample.time = sampler.get1D();
-    RayDifferential ray;
-    Spectrum beta = camera.generateRayDifferential(camSample, &ray);
-    ray.scaleDifferentials(1 / sqrtf(sampler.samplesPerPixel));
-
-    // Generate first vertex on camera subpath and start random walk
-    float pdfPos, pdfDir;
-    path[0] = Vertex::createCamera(&camera, ray, beta);
-    camera.pdf_We(ray, &pdfPos, &pdfDir);
-    return randomWalk(PathType::Camera, scene, ray, sampler, arena, beta, pdfDir, maxDepth - 1, 
-                      TransportMode::Radiance, path + 1) + 1;
+    switch (algorithm) {
+    case AlgorithmType::LightTrace:
+        lightTraceOnly = true;
+        break;
+    case AlgorithmType::PPM:
+        usePPM = true;
+        useVM = true;
+        break;
+    case AlgorithmType::BPM:
+        useVM = true;
+        break;
+    case AlgorithmType::BDPT:
+        useVC = true;
+        break;
+    case AlgorithmType::VCM:
+        useVC = true;
+        useVM = true;
+        break;
+    }
 }
 
-int VCMIntegrator::generateLightSubpath(const Scene &scene, Sampler &sampler, MemoryArena &arena,
-                                        float time, const Distribution1D &lightDistrib, 
-                                        const LightIndexMap &lightToIndex, Vertex *path)
+void VCMIntegrator::lightPDFs(const Light *light, float pdfChoice, float pdfPos, float pdfDir, float *pdfTrace,
+                              float *pdfConnect) const
 {
-    if (maxDepth == 0) return 0;
-    ProfilePhase _(Stage::BDPTGenerateSubpath);
+    switch (LightFlags(light->flags)) {
+    case LightFlags::Area:
+        *pdfTrace = pdfChoice * pdfPos * pdfDir;
+        *pdfConnect = pdfChoice * pdfPos;
+        break;
+    case LightFlags::DeltaDirection:
+        *pdfTrace = pdfChoice * pdfPos;
+        *pdfConnect = pdfChoice;
+        break;
+    case LightFlags::DeltaPosition:
+        *pdfTrace = pdfChoice * pdfDir;
+        *pdfConnect = pdfChoice;
+        break;
+    case LightFlags::Infinite:
+        *pdfTrace = pdfChoice * pdfPos * pdfDir;
+        *pdfConnect = pdfChoice * pdfDir;
+    }
+}
+
+VCMIntegrator::SubpathState
+VCMIntegrator::generateLightSample(const Scene &scene, Sampler &sampler) const
+{
+    SubpathState lightState;
 
     // Sample initial ray for light subpath
     float pdfChoice;
-    int lightNum = lightDistrib.sampleDiscrete(sampler.get1D(), &pdfChoice);
+    int lightNum = lightDistrib->sampleDiscrete(sampler.get1D(), &pdfChoice);
     const auto &light = scene.lights[lightNum];
     RayDifferential ray;
     Normal3f nLight;
     float pdfPos, pdfDir;
-    Spectrum Le = light->sample_Le(sampler.get2D(), sampler.get2D(), time, &ray, &nLight, &pdfPos, &pdfDir);
-    if (Le.isBlack() || pdfPos == 0 || pdfDir == 0) return 0;
+    Spectrum Le = light->sample_Le(sampler.get2D(), sampler.get2D(), sampler.get1D(), &ray, &nLight,
+                                   &pdfPos, &pdfDir);
+    if (Le.isBlack() || pdfPos == 0 || pdfDir == 0) return lightState; // beta == 0 indicates invalid sample
 
-    // Generate first vertex on light subpath and start random walk
-    path[0] = Vertex::createLight(light.get(), ray, nLight, Le, pdfPos * pdfChoice);
-    Spectrum beta = Le * absDot(nLight, ray.d) / (pdfChoice * pdfPos * pdfDir);
-    int nVertices = randomWalk(PathType::Light, scene, ray, sampler, arena, beta, pdfDir, maxDepth - 1, 
-                               TransportMode::Importance, path + 1);
+    // Compute tracing and connection pdfs
+    float pdfTrace, pdfConnect;
+    lightPDFs(light.get(), pdfChoice, pdfPos, pdfDir, &pdfTrace, &pdfConnect);
 
-    // Correct subpath sampling densities for infinite area lights
-    if (path[0].isInfiniteLight()) {
-        if (nVertices > 0) {
-            path[1].pdfFwd = pdfPos;
-            if (path[1].isOnSurface())
-                path[1].pdfFwd *= absDot(ray.d, path[1].ns());
-        }
-        path[0].pdfFwd = BDPTIntegrator::infiniteLightDensity(scene.lights, lightDistrib, lightToIndex, ray.d);
+    // Initialize light subpath state
+    lightState.ray = ray;
+    lightState.beta = Le * absDot(nLight, ray.d) / pdfTrace;
+    lightState.pathLength = 1;
+    lightState.isInfiniteLight = light->isInfiniteLight();
+
+    // Compute MIS quantities
+    lightState.dVCM = pdfConnect / pdfTrace;
+    if (light->isDeltaLight())
+        lightState.dVC = 0.0f;
+    else {
+        float usedCosLight = light->isInfiniteLight() ? 1.0f : absDot(nLight, ray.d);
+        lightState.dVC = usedCosLight / pdfTrace;
     }
+    lightState.dVM = lightState.dVC * wVC;
 
-    return nVertices + 1;
+    return lightState;
 }
 
-#define REMAP0(f) ((f) == 0 ? 1 : (f))
-
-int VCMIntegrator::randomWalk(const PathType type, const Scene &scene, RayDifferential &ray, Sampler &sampler,
-                              MemoryArena &arena, Spectrum beta, float pdf, int maxDepth, TransportMode mode,
-                              Vertex *path)
+int VCMIntegrator::lightRandomWalk(const Scene &scene, Sampler &sampler, MemoryArena &arena,
+                                   SubpathState &lightState, Vertex *path, Film *film) const
 {
-    if (maxDepth == 0) return 0;
-    float pdfFwd = pdf, pdfRev = 0; // w.r.t. solid angle
-    int bounces = 0;
+    RayDifferential &ray = lightState.ray;
+    Spectrum &beta = lightState.beta;
+    int &length = lightState.pathLength;
+    int stored = 0;
+
     while (true) {
         MediumInteraction mi;
         // Trace a ray and sample the medium, if any
@@ -175,284 +235,274 @@ int VCMIntegrator::randomWalk(const PathType type, const Scene &scene, RayDiffer
         if (ray.medium)
             beta *= ray.medium->sample(ray, sampler, arena, &mi);
         if (beta.isBlack()) break;
-        Vertex &vertex = path[bounces], &prev = path[bounces - 1];
+        bool isMediumInteraction = mi.isValid();
 
-        if (mi.isValid()) {
-            // Record medium interaction in path and compute forward density
-            vertex = Vertex::createMedium(mi, beta, pdfFwd, prev);
-            if (++bounces >= maxDepth) break;
-
-            // Sample direction and compute reverse density at preceding vertex
-            Vector3f wi;
-            pdfFwd = pdfRev = mi.phase->sample_p(-ray.d, &wi, sampler.get2D());
-            ray = mi.spawnRay(wi);
-        }
-        else {
-            // Handle surface interaction for path generation
-            if (!foundIsect) {
-                // Capture escaped ray when tracing from the camera
-                if (mode == TransportMode::Radiance) {
-                    vertex = Vertex::createLight(EndpointInteraction(ray), beta, pdfFwd);
-                    ++bounces;
-                }
-                break;
-            }
-
-            // Compute scattering functions for mode and skip over medium boundaries
-            isect.computeScatteringFunctions(ray, arena, true, mode);
+        // Compute scattering functions for mode and skip over medium boundaries
+        if (!isMediumInteraction) {
+            if (!foundIsect) break;
+            isect.computeScatteringFunctions(ray, arena, true, TransportMode::Importance);
             if (!isect.bsdf) {
                 ray = isect.spawnRay(ray.d);
                 continue;
             }
-
-            // Initiaize vertex with surface intersection information
-            vertex = Vertex::createSurface(isect, beta, pdfFwd, prev);
-            if (++bounces >= maxDepth) break;
-
-            // Sample BSDF at current vertex and compute reverse probability
-            Vector3f wi, wo = isect.wo;
-            BxDFType flags;
-            Spectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdfFwd, BSDF_ALL, &flags);
-            if (f.isBlack() || pdfFwd == 0) break;
-            beta *= f * absDot(wi, isect.shading.n) / pdfFwd;
-            pdfRev = isect.bsdf->pdf(wi, wo, BSDF_ALL);
-            if (flags & BSDF_SPECULAR) {
-                vertex.delta = true;
-                pdfRev = pdfFwd = 0;
-            }
-            beta *= BDPTIntegrator::correctShadingNormal(isect, wo, wi, mode);
-            ray = isect.spawnRay(wi);
         }
 
-        // Compute quantities for MIS
-        prev.pdfRev = vertex.convertDensity(pdfRev, prev); // reverse area density
-        float gRev = vertex.solidAngleToArea(prev);
-        if (bounces == 1) {
-            if (type == PathType::Light) {
-                vertex.dVCM = REMAP0(prev.pdfRev) / (REMAP0(prev.pdfFwd) * REMAP0(vertex.pdfFwd));
-                vertex.dVC = gRev / (REMAP0(prev.pdfFwd) * REMAP0(vertex.pdfFwd));
-                vertex.dVM = vertex.dVC / etaVCM;
+        // Complete MIS quantities evaluation
+        if (lightState.pathLength > 1 || !lightState.isInfiniteLight) {
+            float distSq = SQ(ray.tMax);
+            lightState.dVCM *= distSq;
+            if (!isMediumInteraction) { // cosine fix only applies to surface interaction
+                float cosTheta = dot(isect.wo, isect.shading.n);
+                lightState.dVCM /= cosTheta;
+                lightState.dVC /= cosTheta;
+                lightState.dVM /= cosTheta;
             }
-            else
-                vertex.dVCM = REMAP0(prev.pdfRev) / (REMAP0(prev.pdfFwd) * REMAP0(vertex.pdfFwd));
+        }
+
+        // Store light vertices
+        if (isMediumInteraction)
+            path[stored++] = Vertex(lightState, mi);
+        else
+            if (!lightState.isDelta() && (useVC || useVM))
+                path[stored++] = Vertex(lightState, isect);
+
+        if (++length >= maxDepth) break;
+
+        // Connect to camera
+        connectToCamera(scene, sampler, path[stored - 1], film);
+
+        // Sample scattering functions and continue random walk
+        if (!sampleScattering(sampler, path[stored - 1], lightState, TransportMode::Importance)) break;
+    }
+
+    return stored;
+}
+
+void VCMIntegrator::connectToCamera(const Scene &scene, Sampler &sampler, const Vertex &lightVertex,
+                                    Film *film) const
+{
+    VisibilityTester visib;
+    Vector3f wi;
+    Point2f pRaster;
+    float camPdfA;
+    Spectrum L;
+
+    // Sample camera importance
+    Spectrum Wi = camera->sample_Wi(lightVertex.getInteraction(), sampler.get2D(), &wi, &camPdfA, &pRaster,
+                                    &visib);
+    if (camPdfA == 0 || Wi.isBlack()) return;
+    Spectrum beta = Wi / camPdfA;
+    L = beta * lightVertex.compute_f(wi, TransportMode::Importance) * lightVertex.beta;
+    if (L.isBlack()) return;
+    if (!visib.unoccluded(scene)) return;
+    L *= visib.compute_Tr(scene, sampler);
+    if (lightVertex.isOnSurface())
+        L *= absDot(wi, lightVertex.ns());
+
+    // Compute MIS weight
+    float bsdfRevPdfW = lightVertex.pdfSolidAngle(wi, lightVertex.wo());
+    float wLight = (camPdfA / nLightSubpaths) * (wVM + lightVertex.dVCM + lightVertex.dVC * bsdfRevPdfW);
+    float weight = lightTraceOnly ? 1.0f : 1.0f / (wLight + 1.0f);
+    Spectrum contrib = weight * L * camPdfA / nLightSubpaths;
+
+    // Add splat to film
+    film->addSplat(pRaster, contrib);
+}
+
+bool VCMIntegrator::sampleScattering(Sampler &sampler, const Vertex &vertex, SubpathState &state,
+                                     TransportMode mode) const
+{
+    RayDifferential &ray = state.ray;
+    Spectrum &beta = state.beta;
+    float pdfFwdW = 0, pdfRevW = 0;
+    Vector3f wi;
+
+    if (vertex.type == VertexType::Medium) {
+        // Sample phase function
+        auto mi = vertex.mi;
+        pdfFwdW = pdfRevW = vertex.mi.phase->sample_p(vertex.wo(), &wi, sampler.get2D());
+        if (pdfFwdW == 0) return false;
+        ray = mi.spawnRay(wi);
+
+        // Compute MIS quantities
+        state.dVC = (state.dVC * pdfRevW + state.dVCM + wVM) / pdfFwdW;
+        state.dVM = (state.dVM * pdfRevW + state.dVCM * wVC + 1.0f) / pdfFwdW;
+        state.dVCM = 1.0f / pdfFwdW;
+        state.isSpecularPath &= 0;
+    } else {
+        // Sample BSDF
+        auto &isect = vertex.si;
+        auto wo = isect.wo;
+        Spectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdfFwdW, BSDF_ALL, &state.flags);
+        if (f.isBlack() || pdfFwdW == 0) return false;
+
+        // Compute MIS quantities
+        float cosTheta = absDot(wi, isect.shading.n);
+        if (state.isDelta()) {
+            pdfRevW = pdfFwdW;
+            state.dVCM = 0;
+            state.dVC *= cosTheta;
+            state.dVM *= cosTheta;
+            state.isSpecularPath &= 1;
         } else {
-            float gRp = gRev / REMAP0(vertex.pdfFwd);
-            float revPdf = REMAP0(prev.pdfSolidAngle(scene, &vertex, *(&prev - 1)));
-            if (vertex.delta) {
-                vertex.dVCM = 0;
-                vertex.dVC = gRp * revPdf * prev.dVC;
-                vertex.dVM = gRp * revPdf * prev.dVM;
-            } else {
-                vertex.dVCM = 1.0f / vertex.pdfFwd;
-                vertex.dVC = gRp * (etaVCM + prev.dVCM + revPdf * prev.dVC);
-                vertex.dVM = gRp * (1.0f + prev.dVCM / etaVCM + revPdf * prev.dVM);
-            }
+            pdfRevW = vertex.pdfSolidAngle(wi, wo);
+            state.dVC = (cosTheta / pdfFwdW) * (state.dVC * pdfRevW + state.dVCM + wVM);
+            state.dVM = (cosTheta / pdfFwdW) * (state.dVM * pdfRevW + state.dVCM * wVC + 1.0f);
+            state.dVCM = 1.0f / pdfFwdW;
+            state.isSpecularPath &= 0;
         }
+
+        // Update path throughput and generate new ray
+        beta *= (f * cosTheta / pdfFwdW);
+        beta *= BDPTIntegrator::correctShadingNormal(isect, wo, wi, mode);
+        ray = isect.spawnRay(wi);
     }
 
-    return bounces;
+    return true;
 }
 
-Spectrum VCMIntegrator::connectVertices(const Scene &scene, Vertex *lightVertices, Vertex *cameraVertices, 
-                                        int s, int t, const Distribution1D &lightDistrib, 
-                                        const LightIndexMap &lightToIndex, const Camera &camera, Sampler &sampler, Point2f *pRaster)
+VCMIntegrator::SubpathState VCMIntegrator::generateCameraSample(Sampler &sampler, const Point2f &pFilm) const
 {
-    ProfilePhase _(Stage::BDPTConnectSubpaths);
-    Spectrum L;
-    // Ignore invalid connections related to infinite area lights
-    if (t > 1 && s != 0 && cameraVertices[t - 1].type == VertexType::Light)
-        return 0;
+    // Sample initial ray for camera subpath
+    CameraSample camSample;
+    camSample.pFilm = pFilm;
+    camSample.pLens = sampler.get2D();
+    camSample.time = sampler.get1D();
+    RayDifferential ray;
+    Spectrum beta = camera->generateRayDifferential(camSample, &ray);
+    ray.scaleDifferentials(1.0f / sqrtf(sampler.samplesPerPixel));
+    float pdfPos, pdfDirW;
+    camera->pdf_We(ray, &pdfPos, &pdfDirW);
 
-    // Perform connection and write contribution to L
-    Vertex sampled;
-    if (s == 0) // no light vertex
-    {
-        // Interpret the camera subpath as a complete path
-        const Vertex &pt = cameraVertices[t - 1]; // last camera vertice
-        if (pt.isLight())
-            L = pt.compute_Le(scene, cameraVertices[t - 2]) * pt.beta;
-    }
-    else if (t == 1) // only one camera vertex
-    {
-        // Sample a point on the camera and connect it to the light subpath
-        const Vertex &qs = lightVertices[s - 1];
-        if (!qs.isConnectible()) return 0;
-        VisibilityTester visib;
-        Vector3f wi;
-        float pdf;
-        Spectrum Wi = camera.sample_Wi(qs.getInteraction(), sampler.get2D(), &wi, &pdf, pRaster, &visib);
-        if (pdf == 0 || Wi.isBlack()) return 0;
-        sampled = Vertex::createCamera(&camera, visib.getP1(), Wi / pdf);
-        L = qs.beta * qs.compute_f(sampled, TransportMode::Importance) * sampled.beta;
-        if (!L.isBlack()) L *= visib.compute_Tr(scene, sampler);
-        if (qs.isOnSurface()) L *= absDot(wi, qs.ns());
-    }
-    else if (s == 1) // only one light vertex
-    {
-        // Sample a point on the light and connect it to the camera subpath
-        const Vertex &pt = cameraVertices[t - 1];
-        if (pt.isConnectible()) {
-            float lightPdf;
-            VisibilityTester visib;
-            Vector3f wi;
-            float pdf;
-            int lightNum = lightDistrib.sampleDiscrete(sampler.get1D(), &lightPdf);
-            const auto &light = scene.lights[lightNum];
-            Spectrum lightWeight = light->sample_Li(pt.getInteraction(), sampler.get2D(), &wi, &pdf, &visib);
-            if (pdf == 0 || lightWeight.isBlack()) return 0;
+    // Initialize camera subpath state
+    SubpathState camState;
+    camState.ray = ray;
+    camState.beta = beta;
+    camState.pathLength = 1;
+    camState.isSpecularPath = 1;
+    camState.dVCM = nLightSubpaths / pdfDirW;
+    camState.dVC = camState.dVM = 0;
 
-            EndpointInteraction ei(visib.getP1(), light.get());
-            sampled = Vertex::createLight(ei, lightWeight / (pdf * lightPdf), 0);
-            sampled.pdfFwd = sampled.pdfLightOrigin(scene, pt, lightDistrib, lightToIndex);
-            L = pt.beta * pt.compute_f(sampled, TransportMode::Radiance) * sampled.beta;
-            if (pt.isOnSurface())
-                L *= absDot(wi, pt.ns());
-            if (!L.isBlack())
-                L *= visib.compute_Tr(scene, sampler);
-        }
-    }
-    else
-    {
-        // Handle all other bidirectional connection cases
-        const Vertex &qs = lightVertices[s - 1], &pt = cameraVertices[t - 1];
-        if (qs.isConnectible() && pt.isConnectible()) {
-            L = qs.beta * qs.compute_f(pt, TransportMode::Radiance) *
-                pt.compute_f(qs, TransportMode::Importance) * pt.beta;
-            if (!L.isBlack())
-                L *= BDPTIntegrator::compute_G(scene, sampler, qs, pt);
-        }
-    }
-
-    // Compute MIS weight for connection strategy
-    float weight = L.isBlack() ? 0 : MISweight(scene, Technique::Connection, lightVertices[s - 1], 
-                                               cameraVertices[t - 1], s, t, lightDistrib, lightToIndex, &sampled);
-
-    return weight * L;
+    return camState;
 }
 
-#define SPHERE_VOLUME(r) ((4.0f / 3.0f) * PI * CUB(r))
-
-Spectrum VCMIntegrator::mergeVertices(const Scene &scene, const LightVerticesGrid &grid, Vertex **lightPaths,
-                                      Vertex *cameraVertices, int t, const Distribution1D &lightDistrib,
-                                      const LightIndexMap &lightToIndex)
+Spectrum VCMIntegrator::getLightRadiance(const Light *light, SubpathState &camState, SurfaceInteraction *isect) const
 {
-    Vertex *pt = &cameraVertices[t - 1];
-    if (pt->type == VertexType::Light) return 0;
-    if (pt->isOnSurface()) {
-        bool isDiffuse = pt->si.bsdf->numComponents(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION
-                                                            | BSDF_TRANSMISSION)) > 0;
-        bool isGlossy = pt->si.bsdf->numComponents(BxDFType(BSDF_GLOSSY | BSDF_REFLECTION
-                                                           | BSDF_TRANSMISSION)) > 0;
-        if (!isDiffuse && !(isGlossy && t == (maxDepth - 1) )) return 0;
+    Spectrum Le;
+    float pdfChoice = lightDistrib->discretePDF(lightToIndex.find(light)->second);
+    float pdfPos, pdfDir;
+    Ray lightRay(camState.ray.o, -camState.ray.d, INFINITY, camState.ray.time);
+
+    // Compute radiance carried by ray
+    if (light->flags & int(LightFlags::Infinite)) {  // infinite area light
+        Le = light->compute_Le(camState.ray);
+        light->pdf_Le(lightRay, Normal3f(), &pdfPos, &pdfDir);
+    }
+    else { // area light
+        Le = isect->compute_Le(-camState.ray.d);
+        light->pdf_Le(lightRay, isect->n, &pdfPos, &pdfDir);
     }
 
-    // Precompute camera weight
-    float camPdf = 1;
-    for (int i = 1; i < t; i++)
-        camPdf *= REMAP0(cameraVertices[i].pdfFwd);
+    // Handle special cases
+    if (Le.isBlack()) return 0;
+    if (camState.pathLength == 1) return Le; // light source directly seen from camera
+    if (useVM && !useVC) // using only VM
+        return camState.isSpecularPath ? Le : 0; // purely specular paths give radiance
 
-    Spectrum L;
-    vector<Vertex *> lightVertices;
-    grid.query(pt, lightVertices);
+    // Compute tracing and connection pdfs
+    float pdfTrace, pdfConnect;
+    lightPDFs(light, pdfChoice, pdfPos, pdfDir, &pdfTrace, &pdfConnect);
 
-    for (auto vertex : lightVertices) {
-        Vertex *path = lightPaths[vertex->pathIndex];
-        Spectrum Lpath;
-        if (vertex->isLight()) continue; // ignore light vertex
+    // Compute MIS quantities
+    float wCam = pdfConnect * camState.dVCM + pdfTrace * camState.dVC;
+    float weight = 1.0f / (1.0f + wCam);
 
-        if (pt->type == VertexType::Surface) // Surface estimate
-        {
-            Spectrum phi = pt->beta * pt->si.bsdf->compute_f(pt->wo(), vertex->wo()) * vertex->beta;
-            Lpath = phi / (nPixels * PI * SQ(searchRadius));
-        }
-        else if (pt->type == VertexType::Medium) // Volume estimate
-        {
-            Spectrum phi = pt->beta * pt->mi.phase->compute_p(pt->wo(), vertex->wo()) * vertex->beta;
-            Spectrum sigma_s = vertex->mi.getMedium(Vector3f(vertex->ns()))->get_sigma_s(&vertex->mi);
-            Lpath = phi / (nPixels * sigma_s * SPHERE_VOLUME(searchRadius));
-        }
-        else continue;
-
-        int s = vertex - lightPaths[vertex->pathIndex] + 1;
-        float weight = Lpath.isBlack() ? 0 : MISweight(scene, Technique::Merging, *vertex, *pt, s, t,
-                                                       lightDistrib, lightToIndex, nullptr);
-        L += weight * Lpath;
-    }
-
-    return L;
+    return weight * camState.beta * Le;
 }
 
-float VCMIntegrator::MISweight(const Scene &scene, const Technique v, Vertex &lightVertex, Vertex &cameraVertex,
-                               int s, int t, const Distribution1D &lightDistrib,
-                               const LightIndexMap &lightToIndex, const Vertex *sampled)
+Spectrum VCMIntegrator::directIllumination(const Scene &scene, Sampler &sampler, const Vertex &camVertex) const
 {
-    if (s + t == 2) return 1;
+    // Sample lights for radiance
+    int lightIndex = lightDistrib->sampleDiscrete(sampler.get1D());
+    const auto &light = scene.lights[lightIndex];
+    float pdfChoice = lightDistrib->discretePDF(lightIndex);
+    Vector3f wi;
+    float pdfConnectW, pdfPos, pdfDir;
+    VisibilityTester visib;
+    Spectrum Li = light->sample_Li(camVertex.getInteraction(), sampler.get2D(), &wi, &pdfConnectW, &visib);
+    if (!visib.unoccluded(scene)) return 0;
+    if (Li.isBlack()) return 0;
 
-    // Temporarily update vertex properties for current strategy
-    // Look up connection vertices and their predecessors
-    Vertex *qs, *qsMinus, *pt, *ptMinus;
-    qs = s > 0 ? &lightVertex : nullptr;
-    qsMinus = s > 1 ? (&lightVertex - 1) : nullptr;
-    pt = t > 0 ? &cameraVertex : nullptr;
-    ptMinus = t > 1 ? (&cameraVertex - 1) : nullptr;
+    // Compute light and surface pdfs
+    Interaction pShape = visib.getP1();
+    light->pdf_Le(Ray(pShape.p, -wi, INFINITY, pShape.time), pShape.n, &pdfPos, &pdfDir);
+    float pdfFwdW = camVertex.pdfSolidAngle(camVertex.wo(), wi);
+    float pdfRevW = camVertex.pdfSolidAngle(wi, camVertex.wo());
+    if (pdfFwdW == 0 || pdfRevW == 0) return 0;
 
-    // Mark connection vertices as non-generate
-    ScopedAssignment<bool> a2, a3;
-    if (pt) a2 = { &pt->delta, false };
-    if (qs) a3 = { &qs->delta, false };
+    // Compute MIS quantities
+    float pdfTraceW = pdfPos * pdfDir;
+    float cosToLight = dot(camVertex.ns(), wi), cosAtLight = dot(pShape.n, -wi);
+    float wLight = pdfFwdW / (pdfChoice * pdfConnectW);
+    float wCam = (pdfTraceW * cosToLight) / (pdfConnectW * cosAtLight) *
+                 (wVM + camVertex.dVCM + camVertex.dVC * pdfRevW);
+    float weight = 1.0f / (wLight + 1.0f + wCam);
 
-    // Compute vertex merging weight
-    if (v == Technique::Merging) {
-        float wy = qs->dVCM / etaVCM + REMAP0(qs->pdfSolidAngle(scene, ptMinus, *qsMinus)) * qs->dVM;
-        float wz = pt->dVCM / etaVCM + REMAP0(pt->pdfSolidAngle(scene, qsMinus, *ptMinus)) * pt->dVM;
-        return 1.0f / (wy + 1.0f + wz);
-    }
-
-    // Update sample vertex for s = 1 or t = 1 strategy
-    ScopedAssignment<Vertex> a1;
-    if (s == 1) a1 = { qs, *sampled };
-    else if (t == 1) a1 = { pt, *sampled };
-
-    // Update reverse density of p[t-1], p[t-2], q[s-1], q[s-2]
-    ScopedAssignment<float> a4, a5, a6, a7;
-    if (pt) a4 = { &pt->pdfRev, s > 0 ? qs->pdf(scene, qsMinus, *pt)
-                                      : pt->pdfLightOrigin(scene, *ptMinus, lightDistrib, lightToIndex)};
-    if (ptMinus) a5 = { &ptMinus->pdfRev, s > 0 ? pt->pdf(scene, qs, *ptMinus)
-                                                : pt->pdfLight(scene, *ptMinus) };
-    if (qs) a6 = { &qs->pdfRev, pt->pdf(scene, ptMinus, *qs) }; // no t = 0 strategy
-    if (qsMinus) a7 = { &qsMinus->pdfRev, qs->pdf(scene, pt, *qsMinus) };
-
-    // Compute vertex connection weight
-    if (s == 0) { // eye vertex directly sampled on light source
-        float pdfRev = REMAP0(pt->pdfLightSolidAngle(scene, *ptMinus));
-        float wz = REMAP0(pt->pdfRev) * pt->dVCM + REMAP0(pt->pdfFwd) * pdfRev * pt->dVC;
-        return 1.0f / (1.0f + wz);
-    } 
-    else if (s == 1) {
-        float wy = REMAP0(qs->pdfFwd) / REMAP0(qs->pdfRev);
-        float wz = wy * REMAP0(pt->pdfRev) * (etaVCM + pt->dVCM + pt->pdfSolidAngle(scene, qs, *ptMinus) * pt->dVC);
-        return 1.0f / (wy + 1.0f + wz);
-    }
-    else if (t == 1) {
-        float wy = REMAP0(pt->pdfFwd) / REMAP0(pt->pdfRev) * REMAP0(qs->pdfRev) * 
-                   (etaVCM + qs->dVCM + qs->pdfSolidAngle(scene, pt, *qsMinus) * qs->dVC);
-        return 1.0f / (wy + 1.0f);
-    }
-
-    return 0;
+    // Return contribution
+    Spectrum Tr = visib.compute_Tr(scene, sampler);
+    Spectrum contrib = weight * camVertex.beta * Li * Tr * cosToLight / (pdfChoice * pdfConnectW);
+    return contrib;
 }
 
-#define REMAP0(f) ((f) == 0 ? 1 : (f))
+Spectrum VCMIntegrator::connectVertices(const Scene &scene, Sampler &sampler, const Vertex &lightVertex,
+                                        const Vertex &camVertex) const
+{
+    // Get the connection
+    Vector3f dir = lightVertex.p() - camVertex.p();
+    float distSq = dir.lengthSq();
+    float dist = sqrt(distSq);
+    dir /= dist;
+
+    // Evaluate BSDF at camera and light vertex
+    Spectrum f_cam = camVertex.compute_f(dir, TransportMode::Radiance);
+    if (f_cam.isBlack()) return 0;
+    float cosCam = dot(camVertex.ns(), dir);
+    float pdfCamFwdW = camVertex.pdfSolidAngle(camVertex.wo(), dir);
+    float pdfCamRevW = camVertex.pdfSolidAngle(dir, camVertex.wo());
+
+    Spectrum f_light = lightVertex.compute_f(-dir, TransportMode::Importance);
+    if (f_light.isBlack()) return 0;
+    float cosLight = dot(camVertex.ns(), -dir);
+    float pdfLightFwdW = lightVertex.pdfSolidAngle(lightVertex.wo(), dir);
+    float pdfLightRevW = lightVertex.pdfSolidAngle(-dir, lightVertex.wo());
+
+    // Compute geometry and throughput term
+    float G = cosLight * cosCam / distSq;
+    if (G <= 0) return 0;
+    VisibilityTester visib(lightVertex.getInteraction(), camVertex.getInteraction());
+    if (!visib.unoccluded(scene)) return 0;
+    Spectrum Tr = visib.compute_Tr(scene, sampler);
+
+    // Compute MIS quantities
+    float pdfCamFwdA = pdfCamFwdW * distSq / cosLight;
+    float pdfLightFwdA = pdfLightFwdW * distSq / cosCam;
+    float wLight = pdfCamFwdA * (wVM + lightVertex.dVCM + lightVertex.dVC * pdfLightRevW);
+    float wCam = pdfLightFwdA * (wVM + camVertex.dVCM + camVertex.dVC * pdfCamRevW);
+    float weight = 1.0f / (wLight + 1.0f + wCam);
+
+    // Return contribution
+    Spectrum contrib = weight * lightVertex.beta * f_light * G * Tr * f_cam * camVertex.beta;
+    return contrib;
+}
 
 void VCMIntegrator::render(const Scene &scene) {
     ProfilePhase __(Stage::IntegratorRender);
-    Stats::nIterations = nIterations;
 
     // Initialize pixel bounds
     Film *film = camera->film;
     const Bounds2i sampleBounds = film->getSampleBounds();
     const Vector2i sampleExtent = sampleBounds.diagonal();
-    nPixels = sampleBounds.area();
+    nLightSubpaths = nPixels = sampleBounds.area();
     constexpr int tileSize = 16;
     const int nXTiles = (sampleExtent.x + tileSize - 1) / tileSize;
     const int nYTiles = (sampleExtent.y + tileSize - 1) / tileSize;
@@ -463,43 +513,48 @@ void VCMIntegrator::render(const Scene &scene) {
     // Initialize light distribution
     if (scene.lights.empty())
         WARNING("No lights in the scene. Rendering black image...");
-    auto lightDistrib = computeLightPowerDistribution(scene.lights);
-    LightIndexMap lightToIndex;
+    lightDistrib = computeLightPowerDistribution(scene.lights);
     for (size_t i = 0; i < scene.lights.size(); i++)
         lightToIndex[scene.lights[i].get()] = i;
 
     // Main render loop
     ProgressReporter reporter(nIterations * 2, "Rendering ");
     for (int ite = 0; ite < nIterations; ite++) {
+        // Compute VCM quantities
+        float radius = initialRadius * pow(float(ite + 1), 0.5f * (alpha - 1));
+        float etaVCM = nPixels * PI * SQ(radius);
+        wVM = useVM ? etaVCM : 0;
+        wVC = useVC ? (1.0f / etaVCM) : 0;
+
+        // Prepare memory arenas for each thread
         vector<MemoryArena> lightArenas(Parallel::maxThreadIndex());
 
         // Sample light path
-        unique_ptr<Vertex *[]> lightPaths(new Vertex *[nPixels]);
-        vector<int> lightPathLengths(nPixels);
-        constexpr int chunkSize = 256;
-        int nChunk = nPixels / chunkSize + 1;
+        unique_ptr<Vertex *[]> lightPaths(new Vertex *[nLightSubpaths]);
+        vector<int> lightPathLengths(nLightSubpaths);
+        constexpr int chunkSize = 1024;
+        int nChunk = nLightSubpaths / chunkSize + 1;
 
         Parallel::forLoop([&] (int chunkIndex) {
             auto &arena = lightArenas[Parallel::getThreadIndex()];
             auto sampler = globalSampler.clone(chunkIndex);
             for (int i = 0; i < chunkSize; i++) {
+                // Preparation
                 int pathIndex = chunkIndex * chunkSize + i;
                 if (pathIndex >= nPixels) return;
                 sampler->startPixel(Point2i(chunkIndex, i));
                 sampler->setSampleNumber(ite);
-                lightPaths[pathIndex] = arena.alloc<Vertex>(maxDepth + 1);
-                lightPathLengths[pathIndex] =
-                        generateLightSubpath(scene, *sampler, arena, sampler->get1D(), *lightDistrib,
-                                             lightToIndex, lightPaths[pathIndex]);
-                for (int k = 0; k < lightPathLengths[pathIndex]; k++)
-                    lightPaths[pathIndex][k].pathIndex = pathIndex; // append pathIndex to vertices for VM
+                lightPaths[pathIndex] = arena.alloc<Vertex>(maxDepth);
+
+                // Generate light sample and start random walk
+                SubpathState lightState = generateLightSample(scene, *sampler);
+                lightPathLengths[pathIndex] = lightRandomWalk(scene, *sampler, arena, lightState,
+                                                              lightPaths[pathIndex], film);
             }
         }, nChunk);
 
         // Build range search struct
-        searchRadius = initialSearchRadius * pow(float(ite + 1), 0.5f * (alpha - 1));
-        etaVCM = nPixels * PI * SQ(searchRadius);
-        LightVerticesGrid grid(lightPaths.get(), lightPathLengths, searchRadius, maxDepth, scene.getWorldBound(),
+        LightVerticesGrid grid(lightPaths.get(), lightPathLengths, radius, maxDepth, scene.getWorldBound(),
                                lightArenas);
         reporter.update();
 
@@ -524,36 +579,92 @@ void VCMIntegrator::render(const Scene &scene) {
                 int pixelOffset = pPixelO.x + pPixelO.y * (sampleBounds.pMax.x - sampleBounds.pMin.x);
 
                 // Sample camera path
+                if (lightTraceOnly) break;
                 Point2f pFilm = Point2f(pPixel) + tileSampler->get2D();
-                Vertex *cameraVertices = arena.alloc<Vertex>(maxDepth + 2);
-                int nCamera = generateCameraSubpath(scene, *tileSampler, arena, *camera, pFilm, cameraVertices);
-                Vertex *lightVertices = lightPaths[pixelOffset];
-                int nLight = lightPathLengths[pixelOffset];
+                SubpathState camState = generateCameraSample(*tileSampler, pFilm);
 
+                // Start camera random walk and accumulate radiance
                 Spectrum L;
-                for (int t = 1; t <= nCamera; t++) {
+                RayDifferential &ray = camState.ray;
+                Spectrum &beta = camState.beta;
+                int &length = camState.pathLength;
+
+                while (true) {
+                    // Trace a ray and sample the medium, if any
+                    MediumInteraction mi;
+                    SurfaceInteraction isect;
+                    bool foundIsect = scene.intersect(ray, &isect);
+                    if (ray.medium)
+                        beta *= ray.medium->sample(ray, *tileSampler, arena, &mi);
+                    if (beta.isBlack()) break;
+                    bool isMediumInteraction = mi.isValid();
+
+                    if (!isMediumInteraction) {
+                        if (!foundIsect) {
+                            // Get radiance from enviroment for rays without medium or surface interaction
+                            for (const auto &light : scene.lights)
+                                if (light->flags & int(LightFlags::Infinite))
+                                    L += getLightRadiance(light.get(), camState);
+                            break;
+                        } else {
+                            // Compute scattering functions for camera subpath and skip over medium boundaries
+                            isect.computeScatteringFunctions(ray, arena, true, TransportMode::Radiance);
+                            if (!isect.bsdf) {
+                                ray = isect.spawnRay(ray.d);
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Complete MIS quantities evaluation
+                    if (camState.pathLength > 1 || !camState.isInfiniteLight) {
+                        float distSq = SQ(ray.tMax);
+                        camState.dVCM *= distSq;
+                        if (!isMediumInteraction) { // cosine fix only applies to surface interaction
+                            float cosTheta = dot(isect.wo, isect.shading.n);
+                            camState.dVCM /= cosTheta;
+                            camState.dVC /= cosTheta;
+                            camState.dVM /= cosTheta;
+                        }
+                    }
+
+                    // Handle intersection with area light source
+                    if (!isMediumInteraction) {
+                        auto area = isect.primitive->getAreaLight();
+                        if (area) {
+                            L += getLightRadiance(area, camState, &isect);
+                            break;
+                        }
+                    }
+
+                    if (length >= maxDepth) break;
+
                     // Vertex connection
-                    for (int s = 0; s <= nLight; s++) {
-                        int depth = t + s - 2;
-                        if ((s == 1 && t == 1) || depth < 0 || depth > maxDepth) continue;
+                    Vertex camVertex = isMediumInteraction ? Vertex(camState, mi) : Vertex(camState, isect);
+                    if (!camState.isDelta() && useVC) {
+                        // Connect to a light source
+                        L += directIllumination(scene, *tileSampler, camVertex);
 
-                        // Vertex connection
-                        Point2f pFilmNew = pFilm;
-                        Spectrum Lvc =
-                                connectVertices(scene, lightVertices, cameraVertices, s, t, *lightDistrib,
-                                                lightToIndex, *camera, *tileSampler, &pFilmNew);
-                        if (t == 1) // connect directly to camera
-                            film->addSplat(pFilmNew, Lvc);
-                        else
-                            L += Lvc;
+                        // Connect to light vertices
+                        for (int s = 0; s < lightPathLengths[pixelOffset]; s++) {
+                            auto &lightVertex = lightPaths[pixelOffset][s];
+                            if (lightVertex.pathLength + camVertex.pathLength >= maxDepth) break;
+                            L += connectVertices(scene, *tileSampler, lightVertex, camVertex);
+                        }
                     }
 
-                    // Vertex merging (for t >= 2)
-                    if (t >= 2) {
-                        Spectrum Lvm = mergeVertices(scene, grid, lightPaths.get(), cameraVertices, t,
-                                                     *lightDistrib, lightToIndex);
-                        L += Lvm;
+                    // Vertex merging
+                    if (useVM && (isMediumInteraction || !camVertex.si.bsdf->isDelta())) {
+                        RangeQuery query(*this, camVertex);
+                        grid.process(query);
+                        L += query.getContribution();
+                        if (usePPM) break;
                     }
+
+                    // Sample next event
+                    if (!sampleScattering(*tileSampler, camVertex, camState, TransportMode::Radiance)) break;
+
+                    length++;
                 }
 
                 filmTile->addSample(pFilm, L);
@@ -569,12 +680,12 @@ void VCMIntegrator::render(const Scene &scene) {
     reporter.done();
 }
 
-VCMIntegrator *VCMIntegrator::create(const ParamSet &params, shared_ptr<Sampler> sampler,
+VCMIntegrator * VCMIntegrator::create(const ParamSet &params, shared_ptr<Sampler>,
                                      shared_ptr<const Camera> camera)
 {
     int maxDepth = params.findOneInt("maxdepth", 7);
     int nIterations = params.findOneInt("iterations", params.findOneInt("numiterations", 10));
     float radius = params.findOneFloat("radius", 0.01f);
     float alpha = params.findOneFloat("alpha", 0.75f);
-    return new VCMIntegrator(camera, nIterations, maxDepth, radius, alpha);
+    return new VCMIntegrator(camera, AlgorithmType::VCM, nIterations, maxDepth, radius, alpha);
 }

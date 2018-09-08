@@ -48,10 +48,12 @@ class CoefficientSpectrum {
 public:
     CoefficientSpectrum(float v = 0.f) {
         for (int i = 0; i < nSpectrumSamples; ++i) channels[i] = v;
+        DCHECK(!hasNaNs());
     }
 
     CoefficientSpectrum(const CoefficientSpectrum &s) {
         for (int i = 0; i < nSpectrumSamples; ++i) channels[i] = s.channels[i];
+        DCHECK(!hasNaNs());
     }
 
     void print(FILE *f) const {

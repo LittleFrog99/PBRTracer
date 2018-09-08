@@ -38,6 +38,10 @@ public:
         return flags & (int(LightFlags::DeltaPosition) | int(LightFlags::DeltaDirection));
     }
 
+    bool isInfiniteLight() const {
+        return flags & (int(LightFlags::Infinite) | int(LightFlags::DeltaDirection));
+    }
+
     const int flags;
     const int nSamples;
     const MediumInterface mediumInterface;

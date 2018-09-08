@@ -88,6 +88,7 @@ struct SurfaceInteraction : public Interaction {
                                     TransportMode mode = TransportMode::Radiance);
     void computeDifferentials(const RayDifferential &r) const;
     Spectrum compute_Le(const Vector3f &w) const; // is calculated when intersecting an emissive surface
+    bool isEmissive() const;
 
     Point2f uv;
     Vector3f dpdu, dpdv;

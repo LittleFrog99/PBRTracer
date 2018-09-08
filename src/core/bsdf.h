@@ -4,6 +4,7 @@
 #include "interaction.h"
 
 enum BxDFType {
+    BSDF_NONE = 0,
     BSDF_REFLECTION = 1 << 0,
     BSDF_TRANSMISSION = 1 << 1,
     BSDF_DIFFUSE = 1 << 2,
@@ -96,6 +97,12 @@ public:
         for (int i = 0; i < nBxDFs; ++i)
             if (bxdfs[i]->matchesFlags(flags)) ++num;
         return num;
+    }
+
+    bool isDelta() const {
+        for (int i = 0; i < nBxDFs; i++)
+            if (!bxdfs[i]->matchesFlags(BSDF_SPECULAR)) return false;
+        return true;
     }
 
     void add(BxDF *b) {

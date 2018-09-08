@@ -90,3 +90,8 @@ Spectrum SurfaceInteraction::compute_Le(const Vector3f &w) const {
     const auto area = primitive->getAreaLight();
     return area ? area->compute_L(*this, w) : 0.0f;
 }
+
+bool SurfaceInteraction::isEmissive() const {
+    if (primitive) return primitive->getAreaLight();
+    return false;
+}

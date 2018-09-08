@@ -78,7 +78,7 @@ Spectrum InfiniteAreaLight::sample_Le(const Point2f &u1, const Point2f &u2, floa
     return Spectrum(Lmap->lookup(uv));
 }
 
-void InfiniteAreaLight::pdf_Le(const Ray &ray, const Normal3f &nLight, float *pdfPos, float *pdfDir) const
+void InfiniteAreaLight::pdf_Le(const Ray &ray, const Normal3f &, float *pdfPos, float *pdfDir) const
 {
     Vector3f d = -worldToLight(ray.d);
     float theta = sphericalTheta(d), phi = sphericalPhi(d);
