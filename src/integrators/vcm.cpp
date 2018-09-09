@@ -4,14 +4,14 @@
 
 class VCMIntegrator::RangeQuery {
 public:
-    RangeQuery(const VCMIntegrator &vcm, const Vertex &cameraVertex)
-        : vcm(vcm), cameraVertex(cameraVertex) {}
+    RangeQuery(const VCMIntegrator &vcm, const Vertex &cameraVertex, float radius)
+        : vcm(vcm), cameraVertex(cameraVertex), radius(radius) {}
 
     const Spectrum & getContribution() const { return contrib; }
 
     const Point3f & getPosition() const { return cameraVertex.p(); }
 
-    void process(const Vertex &lightVertex, float radius) {
+    void process(const Vertex &lightVertex) {
         // Reject if full path length not in range
         int depth = lightVertex.pathLength + cameraVertex.pathLength;
         if (depth > vcm.getMaxDepth() || depth < 2) return;
@@ -24,12 +24,13 @@ public:
         float pdfRevW = lightVertex.pdfSolidAngle(dirLight, dirCam); // equation 39
 
         // Compute MIS weight
-        float wLight = lightVertex.dVCM * vcm.getVCWeightFactor() + lightVertex.dVM * pdfFwdW;
-        float wCam = cameraVertex.dVCM * vcm.getVCWeightFactor() + cameraVertex.dVM * pdfRevW;
+        float wVC = vcm.getVCWeightFactor();
+        float wLight = lightVertex.dVCM * wVC + lightVertex.dVM * pdfFwdW;
+        float wCam = cameraVertex.dVCM * wVC + cameraVertex.dVM * pdfRevW;
         float weight = vcm.doPPM() ? 1.0f : 1.0f / (wLight + 1.0f + wCam); // equation 37
 
         // Compute normalization factor
-        Spectrum norm = 1;
+        Spectrum norm;
         int nLightSubpaths = vcm.getLightSubpathNumber();
         if (lightVertex.type == VertexType::Surface)
             norm = 1.0f / (nLightSubpaths * PI * SQ(radius));
@@ -44,16 +45,12 @@ public:
 private:
     const VCMIntegrator &vcm;
     const Vertex &cameraVertex;
+    const float radius;
     Spectrum contrib;
 };
 
 class VCMIntegrator::LightVerticesGrid {
 public:
-    struct VertexNode {
-        Vertex *vertex;
-        VertexNode *next;
-    };
-
     LightVerticesGrid(Vertex **vertices, vector<int> &pathLengths, float searchRadius, int maxDepth,
                       const Bounds3f &worldBound, vector<MemoryArena> &arenas)
         : hashSize(pathLengths.size()), grid(pathLengths.size()), searchRadius(searchRadius),
@@ -102,10 +99,16 @@ public:
                     for (auto *node = grid[hash(index)].load(memory_order_relaxed); node; node = node->next) {
                         auto *vertex = node->vertex;
                         if (distanceSq(center, vertex->p()) > SQ(searchRadius)) continue;
-                        query.process(*vertex, searchRadius);
+                        query.process(*vertex);
                     }
                 }
     }
+
+private:
+    struct VertexNode {
+        Vertex *vertex;
+        VertexNode *next;
+    };
 
     bool toGridIndex(const Point3f &p, Point3i *pi) const {
         bool inBounds = true;
@@ -120,8 +123,7 @@ public:
 
     const atomic<VertexNode *> & operator [] (const Point3i &index) const { return grid[hash(index)]; }
 
-private:
-    inline unsigned hash(const Point3i &p) const {
+    unsigned hash(const Point3i &p) const {
         unsigned hash = (p.x * 73856093) ^ (p.y * 19349663) ^ (p.z * 83492791);
         return hash % unsigned(hashSize);
     }
@@ -201,17 +203,19 @@ VCMIntegrator::generateLightSample(const Scene &scene, Sampler &sampler) const
     lightPDFs(light.get(), pdfChoice, pdfPos, pdfDir, &pdfTrace, &pdfConnect);
 
     // Initialize light subpath state
+    float cosAtLight = absDot(nLight, ray.d);
     lightState.ray = ray;
-    lightState.beta = Le * absDot(nLight, ray.d) / pdfTrace;
+    lightState.beta = Le * cosAtLight / pdfTrace;
     lightState.pathLength = 1;
     lightState.isInfiniteLight = light->isInfiniteLight();
+    lightState.isSpecularPath = true;
 
     // Compute MIS quantities
     lightState.dVCM = pdfConnect / pdfTrace;
     if (light->isDeltaLight())
         lightState.dVC = 0.0f;
     else {
-        float usedCosLight = light->isInfiniteLight() ? 1.0f : absDot(nLight, ray.d);
+        float usedCosLight = light->isInfiniteLight() ? 1.0f : cosAtLight;
         lightState.dVC = usedCosLight / pdfTrace;
     }
     lightState.dVM = lightState.dVC * wVC;
@@ -228,8 +232,8 @@ int VCMIntegrator::lightRandomWalk(const Scene &scene, Sampler &sampler, MemoryA
     int stored = 0;
 
     while (true) {
-        MediumInteraction mi;
         // Trace a ray and sample the medium, if any
+        MediumInteraction mi;
         SurfaceInteraction isect;
         bool foundIsect = scene.intersect(ray, &isect);
         if (ray.medium)
@@ -249,29 +253,28 @@ int VCMIntegrator::lightRandomWalk(const Scene &scene, Sampler &sampler, MemoryA
 
         // Complete MIS quantities evaluation
         if (lightState.pathLength > 1 || !lightState.isInfiniteLight) {
-            float distSq = SQ(ray.tMax);
+            float distSq = SQ(ray.tMax) / ray.d.lengthSq();
             lightState.dVCM *= distSq;
-            if (!isMediumInteraction) { // cosine fix only applies to surface interaction
-                float cosTheta = dot(isect.wo, isect.shading.n);
-                lightState.dVCM /= cosTheta;
-                lightState.dVC /= cosTheta;
-                lightState.dVM /= cosTheta;
-            }
+        }
+        if (!isMediumInteraction) { // cosine fix only applies to surface interaction
+            float cosTheta = dot(isect.wo, isect.shading.n);
+            lightState.dVCM /= cosTheta;
+            lightState.dVC /= cosTheta;
+            lightState.dVM /= cosTheta;
         }
 
         // Store light vertices
         if (isMediumInteraction)
             path[stored++] = Vertex(lightState, mi);
-        else
-            if (!lightState.isDelta() && (useVC || useVM))
+        else if (!lightState.isDelta() && (useVC || useVM))
                 path[stored++] = Vertex(lightState, isect);
 
-        if (++length >= maxDepth) break;
-
         // Connect to camera
-        connectToCamera(scene, sampler, path[stored - 1], film);
+        if (!lightState.isDelta() && (useVC || lightTraceOnly))
+            connectToCamera(scene, sampler, path[stored - 1], film);
 
         // Sample scattering functions and continue random walk
+        if (++length >= maxDepth) break;
         if (!sampleScattering(sampler, path[stored - 1], lightState, TransportMode::Importance)) break;
     }
 
@@ -302,7 +305,7 @@ void VCMIntegrator::connectToCamera(const Scene &scene, Sampler &sampler, const 
     // Compute MIS weight
     float bsdfRevPdfW = lightVertex.pdfSolidAngle(wi, lightVertex.wo());
     float wLight = (camPdfA / nLightSubpaths) * (wVM + lightVertex.dVCM + lightVertex.dVC * bsdfRevPdfW);
-    float weight = lightTraceOnly ? 1.0f : 1.0f / (wLight + 1.0f);
+    float weight = lightTraceOnly ? 1.0f : (1.0f / (wLight + 1.0f));
     Spectrum contrib = weight * L * camPdfA / nLightSubpaths;
 
     // Add splat to film
@@ -417,15 +420,16 @@ Spectrum VCMIntegrator::getLightRadiance(const Light *light, SubpathState &camSt
     float wCam = pdfConnect * camState.dVCM + pdfTrace * camState.dVC;
     float weight = 1.0f / (1.0f + wCam);
 
-    return weight * camState.beta * Le;
+    Le *= (weight * camState.beta);
+    return Le;
 }
 
 Spectrum VCMIntegrator::directIllumination(const Scene &scene, Sampler &sampler, const Vertex &camVertex) const
 {
     // Sample lights for radiance
-    int lightIndex = lightDistrib->sampleDiscrete(sampler.get1D());
+    float pdfChoice;
+    int lightIndex = lightDistrib->sampleDiscrete(sampler.get1D(), &pdfChoice);
     const auto &light = scene.lights[lightIndex];
-    float pdfChoice = lightDistrib->discretePDF(lightIndex);
     Vector3f wi;
     float pdfConnectW, pdfPos, pdfDir;
     VisibilityTester visib;
@@ -436,7 +440,7 @@ Spectrum VCMIntegrator::directIllumination(const Scene &scene, Sampler &sampler,
     // Compute light and surface pdfs
     Interaction pShape = visib.getP1();
     light->pdf_Le(Ray(pShape.p, -wi, INFINITY, pShape.time), pShape.n, &pdfPos, &pdfDir);
-    float pdfFwdW = camVertex.pdfSolidAngle(camVertex.wo(), wi);
+    float pdfFwdW = camVertex.pdfSolidAngle(wi);
     float pdfRevW = camVertex.pdfSolidAngle(wi, camVertex.wo());
     if (pdfFwdW == 0 || pdfRevW == 0) return 0;
 
@@ -466,14 +470,14 @@ Spectrum VCMIntegrator::connectVertices(const Scene &scene, Sampler &sampler, co
     // Evaluate BSDF at camera and light vertex
     Spectrum f_cam = camVertex.compute_f(dir, TransportMode::Radiance);
     if (f_cam.isBlack()) return 0;
-    float cosCam = dot(camVertex.ns(), dir);
+    float cosCam = absDot(camVertex.ns(), dir);
     float pdfCamFwdW = camVertex.pdfSolidAngle(camVertex.wo(), dir);
     float pdfCamRevW = camVertex.pdfSolidAngle(dir, camVertex.wo());
 
     Spectrum f_light = lightVertex.compute_f(-dir, TransportMode::Importance);
     if (f_light.isBlack()) return 0;
-    float cosLight = dot(camVertex.ns(), -dir);
-    float pdfLightFwdW = lightVertex.pdfSolidAngle(lightVertex.wo(), dir);
+    float cosLight = absDot(lightVertex.ns(), -dir);
+    float pdfLightFwdW = lightVertex.pdfSolidAngle(lightVertex.wo(), -dir);
     float pdfLightRevW = lightVertex.pdfSolidAngle(-dir, lightVertex.wo());
 
     // Compute geometry and throughput term
@@ -522,7 +526,7 @@ void VCMIntegrator::render(const Scene &scene) {
     for (int ite = 0; ite < nIterations; ite++) {
         // Compute VCM quantities
         float radius = initialRadius * pow(float(ite + 1), 0.5f * (alpha - 1));
-        float etaVCM = nPixels * PI * SQ(radius);
+        float etaVCM = nLightSubpaths * PI * SQ(radius);
         wVM = useVM ? etaVCM : 0;
         wVC = useVC ? (1.0f / etaVCM) : 0;
 
@@ -641,7 +645,7 @@ void VCMIntegrator::render(const Scene &scene) {
 
                     // Vertex connection
                     Vertex camVertex = isMediumInteraction ? Vertex(camState, mi) : Vertex(camState, isect);
-                    if (!camState.isDelta() && useVC) {
+                    if (useVC && !camState.isDelta()) {
                         // Connect to a light source
                         L += directIllumination(scene, *tileSampler, camVertex);
 
@@ -654,8 +658,8 @@ void VCMIntegrator::render(const Scene &scene) {
                     }
 
                     // Vertex merging
-                    if (useVM && (isMediumInteraction || !camVertex.si.bsdf->isDelta())) {
-                        RangeQuery query(*this, camVertex);
+                    if (useVM && (isMediumInteraction || !camState.isDelta())) {
+                        RangeQuery query(*this, camVertex, radius);
                         grid.process(query);
                         L += query.getContribution();
                         if (usePPM) break;

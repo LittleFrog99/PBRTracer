@@ -47,7 +47,7 @@ private:
     LightIndexMap lightToIndex;
 
     const int nIterations, maxDepth;
-    bool useVM, useVC, lightTraceOnly, usePPM;
+    bool useVM = false, useVC = false, lightTraceOnly = false, usePPM = false;
     const float initialRadius, alpha;
     float wVC, wVM;
     int nPixels, nLightSubpaths;
@@ -130,6 +130,10 @@ struct VCMIntegrator::Vertex {
             pdf = mi.phase->compute_p(wo, wi);
 
         return pdf;
+    }
+
+    float pdfSolidAngle(const Vector3f &wi) const {
+        return pdfSolidAngle(wo(), wi);
     }
 
     float pdfSolidAngle(const Vertex *prev, const Vertex &next) const {
