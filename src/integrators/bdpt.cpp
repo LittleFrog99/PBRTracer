@@ -6,6 +6,47 @@
 STAT_PERCENT("Integrator/Zero-radiance paths", zeroRadiancePaths, totalPaths);
 STAT_INT_DISTRIB("Integrator/Path length", pathLength);
 
+class BDPTIntegrator::Visualizer {
+public:
+    Visualizer(const Film *film, int maxDepth) {
+        bufferCount = (1 + maxDepth) * (6 + maxDepth) / 2;
+        weightFilms.reserve(bufferCount);
+
+        for (int depth = 0; depth <= maxDepth; depth++)
+            for (int s = 0; s <= depth + 2; s++) {
+                int t = depth + 2 - s;
+                if (t == 0 || (s == 1 && t == 1)) continue;
+                string filename = StringPrint::printf("bdpt_d%02i_s%02i_t%02i.png", depth, s, t);
+                weightFilms[bufferIndex(s, t)] = make_unique<Film>(film->fullResolution,
+                                                                   Bounds2f(Point2f(0, 0), Point2f(1, 1)),
+                                                                   new BoxFilter(1.0f),
+                                                                   film->diagonal * 1000, filename, 1.0f);
+            }
+    }
+
+    void addSplat(const Point2f &pFilm, const Spectrum &L, int s, int t) {
+        auto film = weightFilms[bufferIndex(s, t)].get();
+        film->addSplat(pFilm, L);
+    }
+
+    void writeImage(float scale) {
+        for (int i = 0; i < bufferCount; i++) {
+            auto film = weightFilms[i].get();
+            if (film)
+                film->writeImage(scale);
+        }
+    }
+
+private:
+    uint bufferIndex(uint s, uint t) {
+        uint above = s + t - 2;
+        return s + above * (5 + above) / 2;
+    }
+
+    vector<unique_ptr<Film>> weightFilms;
+    int bufferCount;
+};
+
 int BDPTIntegrator::generateCameraSubpath(const Scene &scene, Sampler &sampler, MemoryArena &arena, int maxDepth,
                                           const Camera &camera, const Point2f &pFilm, Vertex *path)
 {
@@ -44,7 +85,7 @@ int BDPTIntegrator::generateLightSubpath(const Scene &scene, Sampler &sampler, M
     Normal3f nLight;
     float pdfPos, pdfDir;
     Spectrum Le = light->sample_Le(sampler.get2D(), sampler.get2D(), time, &ray, &nLight, &pdfPos, &pdfDir);
-    if (Le.isBlack() || pdfPos == 0 || pdfDir == 0) return 0;
+    if (Le.isBlack() || pdfPos == 0.0f || pdfDir == 0.0f) return 0;
 
     // Generate first vertex on light subpath and start random walk
     path[0] = Vertex::createLight(light.get(), ray, nLight, Le, pdfPos * pdfChoice);
@@ -57,7 +98,7 @@ int BDPTIntegrator::generateLightSubpath(const Scene &scene, Sampler &sampler, M
         if (nVertices > 0) {
             path[1].pdfFwd = pdfPos;
             if (path[1].isOnSurface())
-                path[1].pdfFwd *= absDot(ray.d, path[1].ns());
+                path[1].pdfFwd *= absDot(ray.d, path[1].ng());
         }
         path[0].pdfFwd = infiniteLightDensity(scene.lights, lightDistrib, lightToIndex, ray.d);
     }
@@ -117,7 +158,7 @@ int BDPTIntegrator::randomWalk(const Scene &scene, RayDifferential &ray, Sampler
             Vector3f wi, wo = isect.wo;
             BxDFType flags;
             Spectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdfFwd, BSDF_ALL, &flags);
-            if (f.isBlack() || pdfFwd == 0) break;
+            if (f.isBlack() || pdfFwd == 0.0f) break;
             beta *= f * absDot(wi, isect.shading.n) / pdfFwd;
             pdfRev = isect.bsdf->pdf(wi, wo, BSDF_ALL);
             if (flags & BSDF_SPECULAR) {
@@ -153,66 +194,74 @@ Spectrum BDPTIntegrator::connectVertices(const Scene &scene, Vertex *lightVertic
         const Vertex &pt = cameraVertices[t - 1]; // last camera vertice
         if (pt.isLight())
             L = pt.compute_Le(scene, cameraVertices[t - 2]) * pt.beta;
+        DCHECK(!L.hasNaNs());
     }
     else if (t == 1) // only one camera vertex
     {
         // Sample a point on the camera and connect it to the light subpath
         const Vertex &qs = lightVertices[s - 1];
-        if (!qs.isConnectible()) return 0;
-        VisibilityTester visib;
-        Vector3f wi;
-        float pdf;
-        Spectrum Wi = camera.sample_Wi(qs.getInteraction(), sampler.get2D(), &wi, &pdf, pRaster, &visib);
-        if (pdf == 0 || Wi.isBlack()) return 0;
-        sampled = Vertex::createCamera(&camera, visib.getP1(), Wi / pdf);
-        L = qs.beta * qs.compute_f(sampled, TransportMode::Importance) * sampled.beta;
-        if (!L.isBlack()) L *= visib.compute_Tr(scene, sampler);
-        if (qs.isOnSurface()) L *= absDot(wi, qs.ns());
+        if (qs.isConnectible()) {
+            VisibilityTester visib;
+            Vector3f wi;
+            float pdf;
+            Spectrum Wi = camera.sample_Wi(qs.getInteraction(), sampler.get2D(), &wi, &pdf, pRaster, &visib);
+            if (pdf > 0 && !Wi.isBlack()) {
+                sampled = Vertex::createCamera(&camera, visib.getP1(), Wi / pdf);
+                L = qs.beta * qs.compute_f(sampled, TransportMode::Importance) * sampled.beta;
+                if (!L.isBlack()) L *= visib.compute_Tr(scene, sampler);
+                if (qs.isOnSurface()) L *= absDot(wi, qs.ns());
+            }
+        }
+        DCHECK(!L.hasNaNs());
     }
     else if (s == 1) // only one light vertex
     {
         // Sample a point on the light and connect it to the camera subpath
         const Vertex &pt = cameraVertices[t - 1];
         if (pt.isConnectible()) {
-            float lightPdf;
+            float pdfChoice;
             VisibilityTester visib;
             Vector3f wi;
-            float pdf;
-            int lightNum = lightDistrib.sampleDiscrete(sampler.get1D(), &lightPdf);
+            float pdfDir;
+            int lightNum = lightDistrib.sampleDiscrete(sampler.get1D(), &pdfChoice);
             const auto &light = scene.lights[lightNum];
-            Spectrum lightWeight = light->sample_Li(pt.getInteraction(), sampler.get2D(), &wi, &pdf, &visib);
-            if (pdf == 0 || lightWeight.isBlack()) return 0;
-
-            EndpointInteraction ei(visib.getP1(), light.get());
-            sampled = Vertex::createLight(ei, lightWeight / (pdf * lightPdf), 0);
-            sampled.pdfFwd = sampled.pdfLightOrigin(scene, pt, lightDistrib, lightToIndex);
-            L = pt.beta * pt.compute_f(sampled, TransportMode::Radiance) * sampled.beta;
-            if (pt.isOnSurface())
-                L *= absDot(wi, pt.ns());
-            if (!L.isBlack())
-                L *= visib.compute_Tr(scene, sampler);
+            Spectrum Li = light->sample_Li(pt.getInteraction(), sampler.get2D(), &wi, &pdfDir, &visib);
+            if (pdfDir > 0 && !Li.isBlack()) {
+                EndpointInteraction ei(visib.getP1(), light.get());
+                sampled = Vertex::createLight(ei, Li / (pdfDir * pdfChoice), 0);
+                sampled.pdfFwd = sampled.pdfLightOrigin(scene, pt, lightDistrib, lightToIndex);
+                L = pt.beta * pt.compute_f(sampled, TransportMode::Radiance) * sampled.beta;
+                if (pt.isOnSurface())
+                    L *= absDot(wi, pt.ns());
+                if (!L.isBlack())
+                    L *= visib.compute_Tr(scene, sampler);
+            }
         }
+        DCHECK(!L.hasNaNs());
     }
     else
     {
         // Handle all other bidirectional connection cases
         const Vertex &qs = lightVertices[s - 1], &pt = cameraVertices[t - 1];
         if (qs.isConnectible() && pt.isConnectible()) {
-            L = qs.beta * qs.compute_f(pt, TransportMode::Radiance) *
-                pt.compute_f(qs, TransportMode::Importance) * pt.beta;
+            L = qs.beta * qs.compute_f(pt, TransportMode::Importance) *
+                pt.compute_f(qs, TransportMode::Radiance) * pt.beta;
             if (!L.isBlack())
                 L *= compute_G(scene, sampler, qs, pt);
         }
+        DCHECK(!L.hasNaNs());
     }
 
     totalPaths++;
-    if (L.isBlack()) zeroRadiancePaths++;
+    if (L.isBlack()) {
+        zeroRadiancePaths++;
+        return 0;
+    }
     REPORT_VALUE(pathLength, s + t - 2);
 
     // Compute MIS weight for connection strategy
-    *misWeight = L.isBlack() ? 0 : MISweight(scene, lightVertices, cameraVertices, sampled, s, t, lightDistrib,
-                                             lightToIndex);
-
+    float weight = MISweight(scene, lightVertices, cameraVertices, sampled, s, t, lightDistrib, lightToIndex);
+    if (misWeight) *misWeight = weight;
     return L;
 }
 
@@ -268,7 +317,7 @@ float BDPTIntegrator::MISweight(const Scene &scene, Vertex *lightVertices, Verte
             sumRi += ri;
     }
 
-    return 1 / (1.0f + sumRi);
+    return 1.0f / (1.0f + sumRi);
 }
 
 void BDPTIntegrator::render(const Scene &scene) {
@@ -280,6 +329,7 @@ void BDPTIntegrator::render(const Scene &scene) {
     const int nXTiles = (sampleExtent.x + tileSize - 1) / tileSize;
     const int nYTiles = (sampleExtent.y + tileSize - 1) / tileSize;
     ProgressReporter reporter(nXTiles * nYTiles, "Rendering");
+    Visualizer visual(film, maxDepth);
 
     // Render and write the output image to disk
     if (scene.lights.empty())
@@ -327,10 +377,12 @@ void BDPTIntegrator::render(const Scene &scene) {
                         float misWeight = 0;
                         Spectrum Lpath = connectVertices(scene, lightVertices, cameraVertices, s, t, *lightDistrib,
                                                          lightToIndex, *camera, *tileSampler, &pFilmNew, &misWeight);
+                        Lpath *= misWeight;
+                        visual.addSplat(pFilmNew, Lpath, s, t);
                         if (t == 1) // connect directly to camera
-                            film->addSplat(pFilmNew, Lpath * misWeight);
+                            film->addSplat(pFilmNew, Lpath);
                         else
-                            L += Lpath * misWeight;
+                            L += Lpath;
                     }
                 }
                 filmTile->addSample(pFilm, L);
@@ -343,9 +395,10 @@ void BDPTIntegrator::render(const Scene &scene) {
         reporter.update();
 
     }, Point2i(nXTiles, nYTiles));
-
     reporter.done();
+
     film->writeImage(1.0f / sampler->samplesPerPixel);
+    visual.writeImage(1.0f / sampler->samplesPerPixel);
 }
 
 BDPTIntegrator * BDPTIntegrator::create(const ParamSet &params, shared_ptr<Sampler> sampler,

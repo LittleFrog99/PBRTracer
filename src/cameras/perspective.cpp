@@ -95,7 +95,7 @@ Spectrum PerspectiveCamera::compute_We(const Ray &ray, Point2f *pRaster2) const 
     if (!insideExclusive(Point2f(pRaster), sampleBounds)) return 0;
 
     // Compute importance for point on image plane
-    float lensArea = lensRadius == 0 ? 1.0f : (PI * SQ(lensRadius));
+    float lensArea = lensRadius == 0.0f ? 1.0f : (PI * SQ(lensRadius));
     return 1.0f / (A * lensArea * QUAD(cosTheta));
 }
 
@@ -129,7 +129,7 @@ Spectrum PerspectiveCamera::sample_Wi(const Interaction &ref, const Point2f &u, 
                                       Point2f *pRaster, VisibilityTester *vis) const
 {
     // Uniform sample a lens interaction _lensIntr_
-    Point2 pLens = lensRadius * Sampling::concentricSampleDisk(u);
+    Point2f pLens = lensRadius * Sampling::concentricSampleDisk(u);
     Point3f pLensWorld = cameraToWorld(ref.time, Point3f(pLens.x, pLens.y, 0));
     Interaction lensIntr(pLensWorld, ref.time, medium);
     lensIntr.n = Normal3f(cameraToWorld(ref.time, Vector3f(0, 0, 1)));

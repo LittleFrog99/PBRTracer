@@ -55,6 +55,7 @@ class Film {
 public:
     Film(const Point2i &resolution, const Bounds2f &cropWindow, Filter *filter,
          float diagonal, const string &filename, float scale, float maxSampleLuminance = INFINITY);
+    Film(const Film &film);
     static Film * create(const ParamSet &params, Filter *filter);
 
     Bounds2i getSampleBounds() const;

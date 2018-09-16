@@ -27,7 +27,7 @@ private:
     struct SubpathState;
     class RangeQuery;
     class LightVerticesGrid;
-    using LightIndexMap = BDPTIntegrator::LightIndexMap;
+    enum class Technique { Connection, Merging };
 
     void lightPDFs(const Light *light, float pdfChoice, float pdfPos, float pdfDir, float *pdfTrace,
                    float *pdfConnect) const;
@@ -122,7 +122,7 @@ struct VCMIntegrator::Vertex {
         return compute_f(wi, mode);
     }
 
-    float pdfSolidAngle(const Vector3f &wo, const Vector3f &wi) const {
+    float pdfW(const Vector3f &wo, const Vector3f &wi) const {
         float pdf = 0;
         if (type == VertexType::Surface)
             pdf = si.bsdf->pdf(wo, wi);
@@ -132,15 +132,15 @@ struct VCMIntegrator::Vertex {
         return pdf;
     }
 
-    float pdfSolidAngle(const Vector3f &wi) const {
-        return pdfSolidAngle(wo(), wi);
+    float pdfW(const Vector3f &wi) const {
+        return pdfW(wo(), wi);
     }
 
-    float pdfSolidAngle(const Vertex *prev, const Vertex &next) const {
+    float pdfW(const Vertex *prev, const Vertex &next) const {
         // Compute directions to preceeding and next vertex
         Vector3f wp, wn = normalize(next.p() - p());
         if (prev) wp = normalize(prev->p() - p());
-        return pdfSolidAngle(wp, wn);
+        return pdfW(wp, wn);
     }
 
 };

@@ -13,9 +13,18 @@ public:
 
     ~ScopedAssignment() { if (target) *target = backup; }
 
+    ScopedAssignment(const ScopedAssignment &) = delete;
+    ScopedAssignment & operator = (const ScopedAssignment &) = delete;
+
+    ScopedAssignment & operator = (ScopedAssignment &&other) {
+        target = other.target;
+        backup = other.backup;
+        other.target = nullptr;
+        return *this;
+    }
+
 private:
-    T *target;
-    T backup;
+    T *target, backup;
 };
 
 #endif // UTILITY_SCOPED_ASSIGNMENT

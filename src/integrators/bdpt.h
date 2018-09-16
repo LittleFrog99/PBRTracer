@@ -6,6 +6,8 @@
 #include "core/primitive.h"
 #include <unordered_map>
 
+typedef unordered_map<const Light *, size_t> LightIndexMap;
+
 class BDPTIntegrator : public Integrator {
 public:
     BDPTIntegrator(shared_ptr<Sampler> &sampler, shared_ptr<const Camera> camera, int maxDepth,
@@ -21,7 +23,7 @@ public:
     enum class VertexType { Camera, Light, Surface, Medium };
     struct Vertex;
     struct EndpointInteraction;
-    typedef unordered_map<const Light *, size_t> LightIndexMap;
+    class Visualizer;
 
     static int generateCameraSubpath(const Scene &scene, Sampler &sampler, MemoryArena &arena, int maxDepth,
                                      const Camera &camera, const Point2f &pFilm, Vertex *path);
@@ -163,7 +165,9 @@ struct BDPTIntegrator::Vertex {
     const Normal3f & ns() const { return (type == VertexType::Surface) ? si.shading.n : getInteraction().n; }
 
     Spectrum compute_f(const Vertex &next, TransportMode mode) const {
-        Vector3f wi = normalize(next.p() - p());
+        Vector3f wi = next.p() - p();
+        if (wi.lengthSq() == 0) return 0;
+        wi = normalize(wi);
         switch (type) {
         case VertexType::Surface:
             return si.bsdf->compute_f(si.wo, wi) * correctShadingNormal(si, si.wo, wi, mode);
@@ -201,14 +205,18 @@ struct BDPTIntegrator::Vertex {
 
     Spectrum compute_Le(const Scene &scene, const Vertex &v) const {
         if (!isLight()) return 0;
-        Vector3f w = normalize(v.p() - p());
+        Vector3f w = v.p() - p();
+        if (w.lengthSq() == 0) return 0;
+        w = normalize(w);
         if (isInfiniteLight()) {
             Spectrum Le;
             for (const auto &light : scene.lights)
-                Le += light->compute_Le(Ray(p(), w));
+                Le += light->compute_Le(Ray(p(), -w));
             return Le;
+        } else {
+            const auto light = si.primitive->getAreaLight();
+            return light->compute_L(si, w);
         }
-        return 0;
     }
 
     float convertDensity(float pdf, const Vertex &next) const {
@@ -225,8 +233,15 @@ struct BDPTIntegrator::Vertex {
         if (type == VertexType::Light)
             return pdfLight(scene, next);
         // Compute directions to preceeding and next vertex
-        Vector3f wp, wn = normalize(next.p() - p());
-        if (prev) wp = normalize(prev->p() - p());
+        Vector3f wp, wn = next.p() - p();
+        if (wn.lengthSq() == 0) return 0;
+        wn = normalize(wn);
+        if (prev) {
+            wp = prev->p() - p();
+            if (wp.lengthSq() == 0) return 0;
+            wp = normalize(wp);
+        } else
+            CHECK(type == VertexType::Camera);
 
         // Compute directional density depending on the vertex type
         float pdf = 0, unused;
@@ -238,6 +253,10 @@ struct BDPTIntegrator::Vertex {
             pdf = mi.phase->compute_p(wp, wn);
 
         return convertDensity(pdf, next);
+    }
+
+    const Light * getLight() const {
+        return type == VertexType::Light ? ei.light : si.primitive->getAreaLight();
     }
 
     float pdfLight(const Scene &scene, const Vertex &v) const {
@@ -252,9 +271,9 @@ struct BDPTIntegrator::Vertex {
             scene.getWorldBound().boundingSphere(&worldCenter, &worldRadius);
             pdf = 1 / (PI * SQ(worldRadius));
         } else {
-            const auto light = type == VertexType::Light ? ei.light : si.primitive->getAreaLight();
+            const auto light = getLight();
             float pdfPos, pdfDir;
-            light->pdf_Le(Ray(p(), w, time()), ng(), &pdfPos, &pdfDir);
+            light->pdf_Le(Ray(p(), w, INFINITY, time()), ng(), &pdfPos, &pdfDir);
             pdf = pdfDir * invDistSq;
         }
         if (v.isOnSurface())
@@ -265,18 +284,19 @@ struct BDPTIntegrator::Vertex {
     float pdfLightOrigin(const Scene &scene, const Vertex &v, const Distribution1D &lightDistrib,
                          const LightIndexMap &lightToIndex) const
     {
-        Vector3f w = normalize(v.p() - p());
+        Vector3f w = v.p() - p();
+        if (w.lengthSq() == 0) return 0;
+        w = normalize(w);
         if (isInfiniteLight()) {
             return infiniteLightDensity(scene.lights, lightDistrib, lightToIndex, w); // solid angle density
         } else {
             float pdfPos = 0, pdfDir = 0, pdfChoice = 0;
-            const auto light = type == VertexType::Light ? ei.light : si.primitive->getAreaLight();
-            size_t index = lightToIndex.find(light)->second;
+            auto light = getLight();
+            int index = lightToIndex.find(light)->second;
             pdfChoice = lightDistrib.discretePDF(index);
             light->pdf_Le(Ray(p(), w, INFINITY, time()), ng(), &pdfPos, &pdfDir);
             return pdfPos * pdfChoice;
         }
-        return 0;
     }
 
     VertexType type;

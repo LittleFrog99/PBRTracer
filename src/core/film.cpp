@@ -65,7 +65,7 @@ Film::Film(const Point2i &resolution, const Bounds2f &cropWindow, Filter *filter
             filterTable[offset] = filter->evaluate(p);
         }
     }
-}
+} 
 
 Bounds2i Film::getSampleBounds() const {
     Vector2f halfPixel = Vector2f(0.5f);

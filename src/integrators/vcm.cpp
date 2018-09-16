@@ -16,17 +16,17 @@ public:
         int depth = lightVertex.pathLength + cameraVertex.pathLength;
         if (depth > vcm.getMaxDepth() || depth < 2) return;
 
-        // Compute forward and reverse pdf w.r.t solid angle
+        // Compute forward and reverse pdf w.r.t. solid angle
         Vector3f dirCam = cameraVertex.wo(), dirLight = lightVertex.wo();
         Spectrum f = cameraVertex.compute_f(dirLight, TransportMode::Radiance);
         if (f.isBlack()) return;
-        float pdfFwdW = cameraVertex.pdfSolidAngle(dirCam, dirLight); // equation 38
-        float pdfRevW = lightVertex.pdfSolidAngle(dirLight, dirCam); // equation 39
+        float pdfLightRevW = lightVertex.pdfW(dirCam, dirLight); // equation 38
+        float pdfCamRevW = cameraVertex.pdfW(dirLight, dirCam); // equation 39
 
         // Compute MIS weight
         float wVC = vcm.getVCWeightFactor();
-        float wLight = lightVertex.dVCM * wVC + lightVertex.dVM * pdfFwdW;
-        float wCam = cameraVertex.dVCM * wVC + cameraVertex.dVM * pdfRevW;
+        float wLight = lightVertex.dVCM * wVC + lightVertex.dVM * pdfLightRevW;
+        float wCam = cameraVertex.dVCM * wVC + cameraVertex.dVM * pdfCamRevW;
         float weight = vcm.doPPM() ? 1.0f : 1.0f / (wLight + 1.0f + wCam); // equation 37
 
         // Compute normalization factor
@@ -51,8 +51,8 @@ private:
 
 class VCMIntegrator::LightVerticesGrid {
 public:
-    LightVerticesGrid(Vertex **vertices, vector<int> &pathLengths, float searchRadius, int maxDepth,
-                      const Bounds3f &worldBound, vector<MemoryArena> &arenas)
+    LightVerticesGrid(Vertex **vertices, vector<int> &pathLengths, float searchRadius, const Bounds3f &worldBound,
+                      vector<MemoryArena> &arenas)
         : hashSize(pathLengths.size()), grid(pathLengths.size()), searchRadius(searchRadius),
           bounds(worldBound)
     {
@@ -123,9 +123,9 @@ private:
 
     const atomic<VertexNode *> & operator [] (const Point3i &index) const { return grid[hash(index)]; }
 
-    unsigned hash(const Point3i &p) const {
-        unsigned hash = (p.x * 73856093) ^ (p.y * 19349663) ^ (p.z * 83492791);
-        return hash % unsigned(hashSize);
+    uint hash(const Point3i &p) const {
+        uint hash = (p.x * 73856093) ^ (p.y * 19349663) ^ (p.z * 83492791);
+        return hash % uint(hashSize);
     }
 
     const int hashSize;
@@ -267,7 +267,7 @@ int VCMIntegrator::lightRandomWalk(const Scene &scene, Sampler &sampler, MemoryA
         if (isMediumInteraction)
             path[stored++] = Vertex(lightState, mi);
         else if (!lightState.isDelta() && (useVC || useVM))
-                path[stored++] = Vertex(lightState, isect);
+            path[stored++] = Vertex(lightState, isect);
 
         // Connect to camera
         if (!lightState.isDelta() && (useVC || lightTraceOnly))
@@ -293,7 +293,7 @@ void VCMIntegrator::connectToCamera(const Scene &scene, Sampler &sampler, const 
     // Sample camera importance
     Spectrum Wi = camera->sample_Wi(lightVertex.getInteraction(), sampler.get2D(), &wi, &camPdfA, &pRaster,
                                     &visib);
-    if (camPdfA == 0 || Wi.isBlack()) return;
+    if (camPdfA == 0.0f || Wi.isBlack()) return;
     Spectrum beta = Wi / camPdfA;
     L = beta * lightVertex.compute_f(wi, TransportMode::Importance) * lightVertex.beta;
     if (L.isBlack()) return;
@@ -303,7 +303,7 @@ void VCMIntegrator::connectToCamera(const Scene &scene, Sampler &sampler, const 
         L *= absDot(wi, lightVertex.ns());
 
     // Compute MIS weight
-    float bsdfRevPdfW = lightVertex.pdfSolidAngle(wi, lightVertex.wo());
+    float bsdfRevPdfW = lightVertex.pdfW(wi, lightVertex.wo());
     float wLight = (camPdfA / nLightSubpaths) * (wVM + lightVertex.dVCM + lightVertex.dVC * bsdfRevPdfW);
     float weight = lightTraceOnly ? 1.0f : (1.0f / (wLight + 1.0f));
     Spectrum contrib = weight * L * camPdfA / nLightSubpaths;
@@ -337,7 +337,7 @@ bool VCMIntegrator::sampleScattering(Sampler &sampler, const Vertex &vertex, Sub
         auto &isect = vertex.si;
         auto wo = isect.wo;
         Spectrum f = isect.bsdf->sample_f(wo, &wi, sampler.get2D(), &pdfFwdW, BSDF_ALL, &state.flags);
-        if (f.isBlack() || pdfFwdW == 0) return false;
+        if (f.isBlack() || pdfFwdW == 0.0f) return false;
 
         // Compute MIS quantities
         float cosTheta = absDot(wi, isect.shading.n);
@@ -348,7 +348,7 @@ bool VCMIntegrator::sampleScattering(Sampler &sampler, const Vertex &vertex, Sub
             state.dVM *= cosTheta;
             state.isSpecularPath &= 1;
         } else {
-            pdfRevW = vertex.pdfSolidAngle(wi, wo);
+            pdfRevW = vertex.pdfW(wi, wo);
             state.dVC = (cosTheta / pdfFwdW) * (state.dVC * pdfRevW + state.dVCM + wVM);
             state.dVM = (cosTheta / pdfFwdW) * (state.dVM * pdfRevW + state.dVCM * wVC + 1.0f);
             state.dVCM = 1.0f / pdfFwdW;
@@ -440,8 +440,8 @@ Spectrum VCMIntegrator::directIllumination(const Scene &scene, Sampler &sampler,
     // Compute light and surface pdfs
     Interaction pShape = visib.getP1();
     light->pdf_Le(Ray(pShape.p, -wi, INFINITY, pShape.time), pShape.n, &pdfPos, &pdfDir);
-    float pdfFwdW = camVertex.pdfSolidAngle(wi);
-    float pdfRevW = camVertex.pdfSolidAngle(wi, camVertex.wo());
+    float pdfFwdW = camVertex.pdfW(wi);
+    float pdfRevW = camVertex.pdfW(wi, camVertex.wo());
     if (pdfFwdW == 0 || pdfRevW == 0) return 0;
 
     // Compute MIS quantities
@@ -471,14 +471,14 @@ Spectrum VCMIntegrator::connectVertices(const Scene &scene, Sampler &sampler, co
     Spectrum f_cam = camVertex.compute_f(dir, TransportMode::Radiance);
     if (f_cam.isBlack()) return 0;
     float cosCam = absDot(camVertex.ns(), dir);
-    float pdfCamFwdW = camVertex.pdfSolidAngle(camVertex.wo(), dir);
-    float pdfCamRevW = camVertex.pdfSolidAngle(dir, camVertex.wo());
+    float pdfCamFwdW = camVertex.pdfW(camVertex.wo(), dir);
+    float pdfCamRevW = camVertex.pdfW(dir, camVertex.wo());
 
     Spectrum f_light = lightVertex.compute_f(-dir, TransportMode::Importance);
     if (f_light.isBlack()) return 0;
     float cosLight = absDot(lightVertex.ns(), -dir);
-    float pdfLightFwdW = lightVertex.pdfSolidAngle(lightVertex.wo(), -dir);
-    float pdfLightRevW = lightVertex.pdfSolidAngle(-dir, lightVertex.wo());
+    float pdfLightFwdW = lightVertex.pdfW(lightVertex.wo(), -dir);
+    float pdfLightRevW = lightVertex.pdfW(-dir, lightVertex.wo());
 
     // Compute geometry and throughput term
     float G = cosLight * cosCam / distSq;
@@ -558,8 +558,7 @@ void VCMIntegrator::render(const Scene &scene) {
         }, nChunk);
 
         // Build range search struct
-        LightVerticesGrid grid(lightPaths.get(), lightPathLengths, radius, maxDepth, scene.getWorldBound(),
-                               lightArenas);
+        LightVerticesGrid grid(lightPaths.get(), lightPathLengths, radius, scene.getWorldBound(), lightArenas);
         reporter.update();
 
         Parallel::forLoop2D([&] (const Point2i tile) {
@@ -680,8 +679,8 @@ void VCMIntegrator::render(const Scene &scene) {
         reporter.update();
     } // end iteration
 
-    film->writeImage(1.0f / nIterations);
     reporter.done();
+    film->writeImage(1.0f / nIterations);
 }
 
 VCMIntegrator * VCMIntegrator::create(const ParamSet &params, shared_ptr<Sampler>,

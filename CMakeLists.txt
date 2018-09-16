@@ -33,13 +33,14 @@ SET(SOURCES_ACCELERATORS
 SET(SOURCES_INTEGRATORS
     src/integrators/whitted.cpp src/integrators/directlighting.cpp src/integrators/path.cpp
     src/integrators/volpath.cpp src/integrators/sppm.cpp src/integrators/bdpt.cpp
-    src/integrators/vcm.cpp)
+    src/integrators/vcm.cpp src/integrators/mlt.cpp)
 
 SET(SOURCES_CAMERAS
     src/cameras/ortho.cpp src/cameras/perspective.cpp src/cameras/environment.cpp)
 
 SET(SOURCES_SAMPLERS
-    src/samplers/stratified.cpp src/samplers/halton.cpp src/samplers/sobol.cpp)
+    src/samplers/stratified.cpp src/samplers/halton.cpp src/samplers/sobol.cpp
+    src/samplers/pss.cpp)
 
 SET(SOURCES_BSDFS
     src/bsdfs/fresnel.cpp src/bsdfs/microfacet.cpp src/bsdfs/diffusion.cpp)

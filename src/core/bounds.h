@@ -35,7 +35,7 @@ public:
     bool operator!=(const Bounds2<T> &b) const { return b.pMin != pMin || b.pMax != pMax; }
 
     Point2<T> lerp(const Point2f &t) const {
-        return Point2<T>(lerp(t.x, pMin.x, pMax.x), lerp(t.y, pMin.y, pMax.y));
+        return Point2<T>(Math::lerp(t.x, pMin.x, pMax.x), Math::lerp(t.y, pMin.y, pMax.y));
     }
 
     Vector2<T> offset(const Point2<T> &p) const {
